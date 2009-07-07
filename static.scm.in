@@ -1,0 +1,913 @@
+#!@prefix@/lib/scsh/scshvm \
+-o @prefix@/lib/scsh/scshvm -h 8000000 -i @prefix@/lib/scsh/scsh.image -lm @prefix@/lib/scsh/vm/ps-interface.scm -lm @prefix@/lib/scsh/vm/interfaces.scm -lm @prefix@/lib/scsh/vm/package-defs.scm -lm @prefix@/lib/scsh/vm/s48-package-defs.scm -dm -m static-heaps -e static-heap-linker -s
+!#
+
+#!
+For testing load this at a scsh prompt
+,config ,load ../vm/ps-interface.scm
+,config ,load ../vm/interfaces.scm
+,config ,load ../vm/package-defs.scm
+,config ,load ../vm/s48-package-defs.scm
+,config ,load static.scm
+,load-package static-heaps
+,in static-heaps
+!#
+
+;;; Static heap package for the Scheme Shell
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Copyright (c) 1995-1996 by Brian D. Carlstrom.
+;;;
+;;; based on Scheme48 implementation.
+;;; Copyright (c) 1993, 1994 by Richard Kelsey and Jonathan Rees.
+;;;
+;;; The business of this package is converting a Scheme 48 bytecode
+;;; image as embodied in a .image file to a C representation. This C
+;;; code is then compiled and linked in with a virtual machine. One
+;;; pleasant side effect of this is reduced startup times. Another
+;;; good thing is that immutable parts of the image can be shared
+;;; between processes.
+
+(define-structure static-heaps
+  (export static-heap-linker)
+  (open scheme heap memory data stob struct
+	heap-extra
+	vm-architecture
+	formats
+	enumerated
+	signals
+	tables
+	defrec-package
+	scsh)
+  (begin
+    
+;;; static-heap-linker
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; the external entry point
+;;; real work in static-heap-linker1
+;;; argl is a list of the command line arguments
+    (define (static-heap-linker argl)
+      (static-heap-linker1 (parse-options argl))
+      (exit 0))
+
+;;; parse-options
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
+;;; parses the command line options 
+;;; returns them in an options structure
+    (define (parse-options argl)
+      (let ((options (make-options)))
+
+	(let loop ((args (cdr argl)))
+	  (cond ((null? args)
+		 (cond ((not (options:output-executable options))
+			(display "error: -o is a required argument") 
+			(newline)
+			(usage (car argl)))
+		       ((not (options:input-image options))
+			(display "error: -i is a required argument") 
+			(newline)
+			(usage (car argl)))))
+		((equal? (car args) "-i")
+		 (cond ((not (null? (cdr args)))
+			(set-options:input-image options (cadr args))
+			(loop (cddr args)))
+		       (else 
+			(display "error: -i requires argument") (newline)
+			(usage (car argl)))))
+		((equal? (car args) "-o")
+		 (cond ((not (null? (cdr args)))
+			(set-options:output-executable options (cadr args))
+			(loop (cddr args)))
+		       (else 
+			(display "error: -o requires argument") (newline)
+			(usage (car argl)))))
+		((equal? (car args) "--args")
+		 (cond ((not (null? (cdr args)))
+			(set-options:args-parser options (cadr args))
+			(loop (cddr args)))
+		       (else 
+			(display "error: --args requires argument") (newline)
+			(usage (car argl)))))
+		((equal? (car args) "--temp")
+		 (cond ((not (null? (cdr args)))
+			(set-options:temp-dir options (cadr args))
+			(loop (cddr args)))
+		       (else 
+			(display "error: --temp requires argument") (newline)
+			(usage (car argl)))))
+		((equal? (car args) "--cc")
+		 (cond ((not (null? (cdr args)))
+			(set-options:cc-command options (cadr args))
+			(loop (cddr args)))
+		       (else 
+			(display "error: --cc requires argument") (newline)
+			(usage (car argl)))))
+		((equal? (car args) "--ld")
+		 (cond ((not (null? (cdr args)))
+			(set-options:ld-command options (cadr args))
+			(loop (cddr args)))
+		       (else 
+			(display "error: --ld requires argument") (newline)
+			(usage (car argl)))))
+		((equal? (car args) "--libs")
+		 (cond ((not (null? (cdr args)))
+			(set-options:libraries options (cadr args))
+			(loop (cddr args)))
+		       (else 
+			(display "error: --libs requires argument") (newline)
+			(usage (car argl)))))
+		(else
+		 (format #t "error: unknown argument ~a" (car args)) 
+		 (newline)
+		 (usage (car argl)))))
+	(set-options:args-parser
+	 options
+	 (if (options:args-parser options)
+	     (list (options:args-parser options))
+	     '()))
+	(set-options:temp-dir 
+	 options
+	 (or (options:temp-dir options)
+	     (getenv "TMPDIR") 
+	     "@TMPDIR@"))
+	(set-options:cc-command
+	 options
+	 (or (options:cc-command options)
+	     (getenv "CC") 
+	     "@CC@ @CFLAGS@"))
+	(set-options:ld-flags
+	 options
+	 (or (options:ld-flags options)
+	     (getenv "LDFLAGS") 
+	     "@LDFLAGS@"))
+	(set-options:libraries
+	 options
+	 (or (options:libraries options)
+	     (getenv "LIBS") 
+	     "@LIBS@"))
+	options))
+
+;;; usage reporting
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    (define (usage program-name)
+      (format #t 
+	      (string-append
+	       "usage: ~a ~%" 
+	       "          [-i image]~%"
+	       "          [-o executable]~%"
+	       "          [--args object]~%"
+	       "          [--temp directory]~%"
+	       "          [--cc command]~%"
+	       "          [--ld command]~%"
+	       "          [--libs libraries]~%")
+	      program-name)
+      (exit 1))
+	
+;;; options structure
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    (define-record options
+      (input-image #f)			; the input scheme image file
+      (output-executable #f)		; the output executable file
+      (args-parser #f)			; .o file for replacement process_args
+      (temp-dir #f)			; place for intermediate .c .o files
+      (cc-command #f)			; command to compile a .c file
+      (ld-flags #f)			; flags needed to link executable
+      (libraries #f)			; linbraries need to link executable
+      )
+
+;;; heap structure
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    (define-record heap
+      (length    0)
+      (objects '())
+      )
+
+;;; static-heap-linker1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    (define (static-heap-linker1 options)
+
+      ;;; munge some options into a more usable form
+      (set-options:temp-dir 
+       options
+       (format #f "~a/scsh~s" (options:temp-dir options) (pid)))
+      (set-options:output-executable 
+       options
+       (string-append (cwd) "/" (options:output-executable options)))
+
+      ;;; Read the image
+      (let ((start ; entry point of image
+	      (read-heap-image (options:input-image options))))
+
+	;;; Process the image
+	(receive (pure impure reloc externs)
+	    (create-heaps-and-tables)
+
+	  ;;; Prepare for output
+	  ;;; if directory exists blow it away
+	  ;;; useful for repeated runs from within same scsh process
+	  (if (file-exists? (options:temp-dir options))
+	      (cond ((file-directory? (options:temp-dir otions))
+		     (with-cwd (options:temp-dir options)
+			       (let loop ((files (directory-files 
+						  (options:temp-dir options) 
+						  #t)))
+				 (cond ((not (null? files))
+					(delete-file (car files))
+					(loop (cdr files))))))
+		     (delete-directory (options:temp-dir options)))
+		    (else
+		     (delete-file (options:temp-dir options)))))
+	  (create-directory (options:temp-dir options) #o755 #t)
+	  
+	  ;;; Process the info we gather to make it the output file
+	  (with-cwd (options:temp-dir options)
+		    (write-c-header-file pure impure externs)
+		    (compile-main-c-file start reloc options)
+		    (compile-c-image pure impure reloc externs options)
+		    (link-files options)
+		    (let loop ((files (directory-files 
+				      (options:temp-dir options) #t)))
+		      (cond ((not (null? files))
+			     (delete-file (car files))
+			     (loop (cdr files))))))
+	  (delete-directory (options:temp-dir options)))))
+
+;;; read-heap-image
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; reads the scheme48 bytecode image into memory.
+;;; returns entry point.
+    (define (read-heap-image infile)
+      (let ((bytes (file-info:size (file-info infile))))
+	(init (inexact->exact (floor (* 1.1 bytes))) infile)))
+    ;; XXX the 1.1 is because we need a little extra space for find-all-xs
+
+;;; create-heaps-and-tables
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Walks over the in memory scheme 48 heap image. 
+;;; Returns
+;;;   1.) vector of heaps describing   pure heap objects
+;;;   2.) vector of heaps describing impure heap objects
+;;;   3.) vector of tables descibing relocations
+;;;   4.) table of external references
+    (define (create-heaps-and-tables)
+      (let* ((n       (nchunks))	; number of chunks we have in image
+	     (  pure  (make-vector n))	; immutable bits of each chunk
+	     (impure  (make-vector n))	;   mutable bits of each chunk
+	     (reloc   (make-vector n))	; relocation information
+	     (externs (make-table)))	; external references
+	;; create empty heaps for each chunk
+	(let loop ((i 0))
+	  (cond ((not (= i n))
+		 (vector-set!   pure i (make-heap))
+		 (vector-set! impure i (make-heap))
+		 (vector-set!  reloc i (make-table))
+		 (loop (+ i 1)))))
+	;; here is where we iterate through all the bits
+	;; we construct our own data structures describing the layout
+	(scsh-for-each-stored-object
+	 (lambda (chunk)
+	   (display "."))
+	 (lambda (chunk x len)
+	   (let* ((heap			; choose the appropriate heap
+		   (vector-ref (if (mutable? x) impure pure) chunk)))
+	     ;; add the relocation information
+	     (table-set! (vector-ref reloc chunk) x (heap:length heap))
+	     ;; add object reference to heap chunk
+	     (set-heap:objects heap (cons x (heap:objects heap)))
+	     ;; update current heap chunk length
+	     (set-heap:length  heap (+ len  (heap:length  heap)))
+	     ;; if we have an external reference handle add it to the list
+	     (if (= (header-type (stob-header x)) (enum stob external))
+		 (table-set! externs 
+			     (external-value x) 
+			     (vm-string->string (external-name x))))))
+	 (lambda (chunk) 'foo))
+	(newline)
+	;; put all the heaps in the correct order
+	(let loop ((i 0))
+	  (cond ((not (= i n))
+		 (let ((p (vector-ref   pure i))
+		       (i (vector-ref impure i)))
+		   (set-heap:objects p (reverse (heap:objects p)))
+		   (set-heap:objects i (reverse (heap:objects i))))
+		 (loop (+ i 1)))))
+	(values pure impure reloc externs)))
+
+;;; vm-string->string
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; converts a vm-string to a scheme one that we can handle
+    (define (vm-string->string x)
+      (cond ((vm-string? x)
+	     (let ((len (vm-string-length x)))
+	       (let loop ((i 0) 
+			  (l '()))
+		 (cond ((= i len) 
+			(list->string (reverse l)))
+		       (else
+			(loop (+ i 1) (cons (vm-string-ref x i) l)))))))
+	    (else
+	     (message x " is not a vm-string"))))
+
+;;; write-c-header-file
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; declares the c long arrays for each heap chunk 
+;;; declares the extern references to other c functions
+    (define (write-c-header-file pure impure externs)
+      (call-with-output-file "static.h"
+	(lambda (port)
+	  (format port "/* Static Heap File Automatically Generated~%")
+	  (format port " * by scsh/static.scm */~%")
+	  ;; declare the long arrays for each heap chunk
+	  (let ((n (nchunks)))
+	    (do ((i 0 (+ i 1)))
+		((= i n))
+	      (format port "extern const long p~s[~s];~%" i 
+		      (quotient (heap:length (vector-ref   pure i)) 4)))
+	    (do ((i 0 (+ i 1)))
+		((= i n))
+	      (format port "extern long i~s[~s];~%" i
+		      (quotient (heap:length (vector-ref impure i)) 4))))
+	  ;; declare the external references
+	  (table-walk
+	   (lambda (address name)
+	     (format port "const extern ~a();~%" name))
+	   externs)
+	  )))
+
+;;; compile-main-c-file
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; creates the top level interfaces that scheme48 wants to see
+;;;  p_count i_count
+;;;    number of chunks
+;;;  p_areas i_areas
+;;;    pointers to each chunk
+;;;  p_sizes i_sizes
+;;;    sizes of each chunk
+;;; entry
+;;;    the starting entry point
+    (define (compile-main-c-file start reloc options)
+      (let ((n (nchunks))
+	    (cc (append (line->list (options:cc-command options)) '(-c))))
+	(call-with-output-file "static.c"
+	  (lambda (port)
+	    (format port "#include \"static.h\"~%")
+	    (format port "const long p_count = ~s;~%" n)
+	    (format port "const long i_count = ~s;~%" n)
+	    
+	    (format port "const long * const p_areas[~s] = {" n)
+	    (do ((i 0 (+ i 1)))
+		((= i n))
+	      (format port "(const long *) &p~s, " i))
+	    (format port "};~%")
+	    (format port "long * const i_areas[~s] = {" n)
+	    (do ((i 0 (+ i 1)))
+		((= i n))
+	      (format port "(long *) &i~s, " i))
+	    (format port "};~%")
+
+	    (format port "const long p_sizes[~s] = {" n)
+	    (do ((i 0 (+ i 1)))
+		((= i n))
+	      (format port "sizeof(p~s), " i))
+	    (format port "};~%")
+	    (format port "const long i_sizes[~s] = {" n)
+	    (do ((i 0 (+ i 1)))
+		((= i n))
+	      (format port "sizeof(i~s), " i))
+	    (format port "};~%")
+
+	    (display "const long entry = " port)
+	    (scsh-emit-descriptor start reloc port)
+	    (write-char #\; port)
+	    (newline port)))
+	(let ((command (append cc '("static.c"))))
+	  (message command)
+	  (run (,@command)))))
+
+;;; compile-c-image
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; responsible for writing and compiling the pure and impure heaps
+    (define (compile-c-image pure impure reloc externs options)
+      (compile-c-image1 pure   "p" "const " reloc externs options)
+      (compile-c-image1 impure "i" ""       reloc externs options))
+
+;;; compile-c-image1
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; writes and compiles the c long array
+    (define (compile-c-image1 heap name const reloc externs options)
+      (let* ((n (nchunks))
+	     (process #f)
+	     (cc (append (line->list (options:cc-command options)) '(-c))))
+	;; iterate over all the chunks for this part of heap
+	(let chunk-loop ((c 0))
+	  (cond ((not (= c n))
+		 (let ((filename (format #f "static-~a~s.c" name c)))
+		   (call-with-output-file filename
+		     (lambda (port)	     
+		       (format port "#include \"static.h\"~%")
+		       (format port "~a long ~a~s[]={~%" const name c)
+		       (let ((heap (vector-ref heap c)))
+			 ;; iterate over each object
+			 (let heap-loop ((l (heap:objects heap)))
+			   (cond ((not (null? l))
+				  (scsh-emit-initializer 
+				   (car l) reloc externs port)
+				  (heap-loop (cdr l))))))
+		       (display "};" port)
+		       (newline port)))
+		   ;; wait for last compile before starting new one
+		   (if process
+		       (wait process))
+		   (let ((command (append cc (list filename))))
+		     (message command)
+		     (set! process (& (,@command))))
+		   (chunk-loop (+ 1 c))))
+		(else
+		 (wait process))))))
+
+;;; link-files
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; links the .o's from compile-c-files
+;;; uses the provided flags and libraries
+;;; produces outfile as executable
+    (define (link-files options)
+      (let ((n (nchunks))
+	    (ld (append (line->list (options:cc-command options))
+			(line->list (options:ld-flags options))
+			`(-o ,(options:output-executable options))))
+	    (libs (line->list (options:libraries options))))
+	(let ((command (append ld
+			       (let loop ((i 0)
+					  (l '()))
+				 (cond ((not (= i n))
+					(loop (+ i 1)
+					      (cons 
+					       (format #f "static-i~s.o" i)
+					       (cons
+						(format #f "static-p~s.o" i)
+						l))))
+				       (else 
+					(reverse 		
+					 (cons "static.o"
+					       l)))))
+			       (options:args-parser options)
+			       '("-L" "@prefix@/lib/scsh" "-lscshvm")
+			       libs)))
+	  (message command)
+	  (run (,@command)))))
+
+;;; scsh-emit-initializer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; see scheme48 emit-initialize below
+    (define (scsh-emit-initializer x reloc externs port)
+      ;; emit the header
+      (write-hex port (stob-header x))
+      ;; handle descriptor vectors and vm-strings. 
+      ;; everything else is a byte vector
+      (cond ((d-vector? x)
+	     (scsh-emit-d-vector-initializer x reloc port))
+	    ((vm-string? x)
+	     (scsh-emit-vm-string-initializer x port))
+	    (else
+	     (scsh-emit-b-vector-initializer x externs port)))
+      (if *comments?*
+	  (begin (display " /* " port)
+		 (writex x port)
+		 (display " */" port)))
+      (newline port))
+
+;;; scsh-emit-d-vector
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; descriptor vectors are pretty easy given scsh-emit-descriptor
+    (define (scsh-emit-d-vector-initializer x reloc port)
+      (let ((len (d-vector-length x)))
+	(do ((i 0 (+ i 1)))
+	    ((= i len))
+	  (scsh-emit-descriptor (d-vector-ref x i) reloc port)
+	  (write-char #\, port))))
+
+;;; scsh-emit-descriptor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; for descrriptors we consult the relocation table
+    (define (scsh-emit-descriptor x reloc port)
+      (if (stob? x)
+	  (let ((n (chunk-number x)))
+	    (display "(long)(&" port)
+	    (if (immutable? x)
+		(display "p" port)
+		(display "i" port))
+	    (display n port)
+	    (display "[" port)
+	    (display (quotient (table-ref (vector-ref reloc n) x) 4) port)
+	    (display "])+7" port))
+	  (format port 
+		  (if (negative? x) "-0x~a" "0x~a")
+		  (number->string (abs x) 16))))
+
+;;; scsh-emit-vm-string-initializer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; vm-strings are converted to numbers and byte order adjusted
+    (define (scsh-emit-vm-string-initializer x port)
+      (let* ((len (vm-string-length x)) ; end is jawilson style hack
+	     (end (- (cells->bytes (bytes->cells (+ len 1))) 4)))
+	(do ((i 0 (+ i 4)))
+	    ((= i end) 
+	     (case (- len end)
+	       ((0)
+		(write-hex port 0))
+	       ((1)
+		(write-hex
+		 port
+		 (net-to-host-32 (arithmetic-shift 
+				  (char->ascii (vm-string-ref x i)) 24))))
+	       ((2)
+		(write-hex 
+		 port
+		 (net-to-host-32 
+		  (bitwise-ior
+		   (arithmetic-shift
+		    (char->ascii (vm-string-ref x i))       24)
+		   (arithmetic-shift
+		    (char->ascii (vm-string-ref x (+ i 1))) 16)))))
+	       ((3)
+		(write-hex
+		 port
+		 (net-to-host-32
+		  (bitwise-ior
+		   (bitwise-ior
+		    (arithmetic-shift 
+		     (char->ascii (vm-string-ref x i))       24)
+		    (arithmetic-shift 
+		     (char->ascii (vm-string-ref x (+ i 1))) 16))
+		   (arithmetic-shift  
+		    (char->ascii (vm-string-ref x (+ i 2)))  8)))))))
+	  (write-hex port
+		     (net-to-host-32 (bitwise-ior
+				      (bitwise-ior
+				       (arithmetic-shift 
+					(char->ascii 
+					 (vm-string-ref x i))       24)
+				       (arithmetic-shift 
+					(char->ascii 
+					 (vm-string-ref x (+ i 1))) 16))
+				      (bitwise-ior
+				       (arithmetic-shift 
+					(char->ascii 
+					 (vm-string-ref x (+ i 2)))  8)
+				       (char->ascii  
+					(vm-string-ref x (+ i 3))))))
+		     ))))
+
+;;; scsh-emit-b-vector-initializer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; byte vectors are byte order adjusted too
+    (define (scsh-emit-b-vector-initializer x externs port)
+      (cond ((and (code-vector? x)
+		  (table-ref externs x)) =>
+		  (lambda (name)
+		    (format port "(long) *~a," name)))
+	    (else 
+	     (let* ((len (b-vector-length x)) ;end is jawilson style hack
+		    (end (- (cells->bytes (bytes->cells (+ len 1))) 4)))
+	       (do ((i 0 (+ i 4)))
+		   ((= i end)
+		    (case (- len end)
+		      ((1)
+		       (write-hex
+			port
+			(net-to-host-32 
+			 (arithmetic-shift (b-vector-ref x i) 24))))
+		      ((2)
+		       (write-hex 
+			port
+			(net-to-host-32
+			 (bitwise-ior
+			  (arithmetic-shift (b-vector-ref x i)       24)
+			  (arithmetic-shift (b-vector-ref x (+ i 1)) 16)))))
+		      ((3)
+		       (write-hex
+			port
+			(net-to-host-32
+			 (bitwise-ior
+			  (bitwise-ior
+			   (arithmetic-shift (b-vector-ref x i)       24)
+			   (arithmetic-shift (b-vector-ref x (+ i 1)) 16))
+			  (arithmetic-shift  (b-vector-ref x (+ i 2))  8)))
+			))))
+		 (write-hex 
+		  port
+		  (net-to-host-32 (bitwise-ior
+				   (bitwise-ior
+				    (arithmetic-shift 
+				     (b-vector-ref x i)       24)
+				    (arithmetic-shift 
+				     (b-vector-ref x (+ i 1)) 16))
+				   (bitwise-ior
+				    (arithmetic-shift 
+				     (b-vector-ref x (+ i 2))  8)
+				    (b-vector-ref x (+ i 3))))))))
+	     )))
+
+;;; scsh-for-each-stored-object
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; see scheme48 for-each-stored-object
+;;; Image traversal utility
+
+    (define (scsh-for-each-stored-object chunk-start proc chunk-end)
+      (let ((limit (heap-pointer)))
+	(let chunk-loop ((addr (newspace-begin))
+			 (i 0)
+			 (chunk (+ (newspace-begin) *chunk-size*)))
+	  (if (addr< addr limit)
+	      (begin (chunk-start i)
+		     (let loop ((addr addr))
+		       (if (and (addr< addr limit)
+				(addr< addr chunk))
+			   (let* ((d   (fetch addr))
+				  (len (addr1+ (header-a-units d))))
+			     (if (not (header? d))
+				 (warn "heap is in an inconsistent state" d))
+			     (proc i 
+				   (address->stob-descriptor (addr1+ addr)) 
+				   len)
+			     (loop (addr+ addr len)))
+			   (begin (chunk-end i)
+				  (chunk-loop addr
+					      (+ i 1)
+					      (+ chunk *chunk-size*))))))))))
+;;; write-hex
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; utility routine to print a scheme number as a c hex number
+    (define (write-hex port x) 
+      (format port 
+	      (if (negative? x) "-0x~a," "0x~a,")
+	      (number->string (abs x) 16)))
+
+;;; line->list
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; utility that takes a string and break it into a list at whitespace
+;;; rewrite using scsh stuff?
+    (define (line->list line)
+      (let ((len (string-length line)))
+	(let loop ((start 0)
+		   (end 0)
+		   (l '()))
+	  (cond ((>= end len)
+		 (if (= start end)
+		     l
+		     (append l (list (substring line start end)))))
+		((and (= start end)
+		      (or (char=? (string-ref line start) (ascii->char 32))
+			  (char=? (string-ref line start) (ascii->char 9))))
+		 (loop (+ 1 start) 
+		       (+ 1 end) 
+		       l))
+		((or (char=? (string-ref line end) (ascii->char 32))
+		     (char=? (string-ref line end) (ascii->char 9)))
+		 (loop (+ 1 end) 
+		       (+ 1 end) 
+		       (append l (list (substring line start end)))))
+		((< end len)
+		 (loop start 
+		       (+ 1 end)
+		       l))
+		(else (error "unexpected case in line->list"))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Debugging
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    (define (bin n)
+      (number->string n 2))
+
+    (define (oct n)
+      (number->string n 8))
+
+    (define (dec n)
+      (number->string n 10))
+
+    (define (hex n)
+      (number->string n 16))
+    
+    ;;; Static Heap Code From Scheme48
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;; The Scheme 48 version produced monolithic C files that even
+    ;;; the GNU C Compiler couldn't handle, let alone standard vendor
+    ;;; compilers...
+    ;;; It also relied upon the C compiler to fill in some pointer
+    ;;; information. Because I needed to break up the files, I had to
+    ;;; calculate this information myself.
+
+					; For example:
+					;   (do-it 100000 "~/s48/debug/little.image" "little-heap.c")
+					;
+					; The first argument to do-it should be somewhat larger than the size,
+					; in bytes, of the image file to be converted (which you can obtain with
+					; "ls -l").
+					;
+					; If the image contains 0-length stored objects, then the .c file will
+					; have to be compiled by gcc, since 0-length arrays aren't allowed in
+					; ANSI C.  This wouldn't be difficult to work around.
+    
+    (define *comments?* #f)
+    
+					; 800,000 bytes => 200,000 words => at least 100,000 objects
+					;   50 chunks => 16,000 bytes per chunk => 2,000 objects per chunk
+    (define *chunk-size* 10000)
+
+    (define (do-it bytes infile outfile)
+      (let ((start (init bytes infile)))
+	(call-with-output-file outfile
+	  (lambda (port)
+	    (format port "#define D(x) (long)(&x)+7~%")
+	    (format port "#define H unsigned long~%")
+	    (emit-area-declarations "p" immutable? "const " port)
+	    (emit-area-declarations "i" mutable? "" port)
+	    (emit-area-initializers "p" immutable? "const " port)
+	    (emit-area-initializers "i" mutable? "" port)
+	    (display "const long entry = " port)
+	    (emit-descriptor start port)
+	    (write-char #\; port)
+	    (newline port)))))
+
+    (define (init bytes infile)
+      (create-memory (quotient bytes 2) quiescent) ;Output of ls -l
+      (initialize-heap (memory-begin) (memory-size))
+      (let ((start (read-image infile 0)))
+	(message (nchunks)
+		 " chunks")
+	start))
+
+    (define (nchunks) (+ (chunk-number (heap-pointer)) 1))
+
+					; emit struct declarations for areas
+
+    (define (emit-area-declarations name in-area? const port)
+      (for-each-stored-object
+       (lambda (chunk)
+	 (message name chunk " declaration")
+	 (display "struct " port) (display name port) (display chunk port)
+	 (display " {" port) (newline port))
+       (lambda (x)
+	 (if (in-area? x)
+	     (emit-declaration x port)))
+       (lambda (chunk)
+	 (display "};" port)
+	 (newline port)
+	 (display const port)
+	 (display "extern struct " port) (display name port) (display chunk port)
+	 (write-char #\space port) (display name port) (display chunk port)
+	 (write-char #\; port) (newline port)
+	 chunk)))
+
+    (define (emit-declaration x port)
+      (display "  H x" port)
+      (writex x port)
+      (cond ((d-vector? x)
+	     (display "; long d" port)
+	     (writex x port)
+	     (write-char #\[ port)
+	     (write (d-vector-length x) port))
+	    ((vm-string? x)
+	     (display "; char d" port)
+	     (writex x port)
+	     (write-char #\[ port)
+	     ;; Ensure alignment (thanks Ian)
+	     (write (cells->bytes (bytes->cells (b-vector-length x)))
+		    port))
+	    (else
+	     (display "; unsigned char d" port)
+	     (writex x port)
+	     (write-char #\[ port)
+	     ;; Ensure alignment
+	     (write (cells->bytes (bytes->cells (b-vector-length x)))
+		    port)))
+      (display "];" port)
+      (if *comments?*
+	  (begin (display " /* " port)
+		 (display (enumerand->name (stob-type x) stob) port)
+		 (display " */" port)))
+      (newline port))
+
+					; Emit initializers for areas
+
+    (define (emit-area-initializers name in-area? const port)
+      (for-each-stored-object
+       (lambda (chunk)
+	 (message name chunk " initializer")
+
+	 (display const port)
+	 (display "struct " port) (display name port) (write chunk port)
+	 (write-char #\space port) (display name port) (write chunk port)
+	 (display " =" port) (newline port)
+
+	 (write-char #\{ port) (newline port))
+       (lambda (x)
+	 (if (in-area? x)
+	     (emit-initializer x port)))
+       (lambda (chunk)
+	 (display "};" port) (newline port)))
+
+      (let ((n (nchunks)))
+	(format port "const long ~a_count = ~s;~%" name n)
+	(format port "~a long * const ~a_areas[~s] = {" const name n)
+	(do ((i 0 (+ i 1)))
+	    ((= i n))
+	  (format port "(~a long *)&~a~s, " const name i))
+	(format port "};~%const long ~a_sizes[~s] = {" name n)
+	(do ((i 0 (+ i 1)))
+	    ((= i n))
+	  (format port "sizeof(~a~s), " name i))
+	(format port "};~%")))
+
+
+    (define (message . stuff)
+      (for-each display stuff) (newline))
+
+    (define (emit-initializer x port)
+      (display "  " port)
+      (write (stob-header x) port)
+      (write-char #\, port)
+      (cond ((d-vector? x)
+	     (emit-d-vector-initializer x port))
+	    ((vm-string? x)
+	     (write-char #\" port)
+	     (let ((len (vm-string-length x)))
+	       (do ((i 0 (+ i 1)))
+		   ((= i len) (write-char #\" port))
+		 (let ((c (vm-string-ref x i)))
+		   (cond ((or (char=? c #\") (char=? c #\\))
+			  (write-char #\\ port))
+			 ((char=? c #\newline)
+			  (display "\\n\\" port)))
+		   (write-char c port)))))
+	    (else
+	     (write-char #\{ port)
+	     (let ((len (b-vector-length x)))
+	       (do ((i 0 (+ i 1)))
+		   ((= i len) (write-char #\} port))
+		 (write (b-vector-ref x i) port)
+		 (write-char #\, port)))))
+      (write-char #\, port)
+      (if *comments?*
+	  (begin (display " /* " port)
+		 (writex x port)
+		 (display " */" port)))
+      (newline port))
+
+    (define (emit-d-vector-initializer x port)
+      (write-char #\{ port)
+      (let ((len (d-vector-length x)))
+	(do ((i 0 (+ i 1)))
+	    ((= i len) (write-char #\} port))
+	  (emit-descriptor (d-vector-ref x i) port)
+	  (write-char #\, port))))
+
+    (define (emit-descriptor x port)
+      (if (stob? x)
+	  (begin (if (immutable? x)
+		     (display "D(p" port)
+		     (display "D(i" port))
+		 (display (chunk-number x) port)
+		 (display ".x" port)
+		 (writex x port)
+		 (write-char #\) port))
+	  (write x port)))
+
+
+					; Foo
+
+    (define (writex x port)
+      (write (quotient (- (- x (memory-begin)) 7) 4) port))
+
+    (define (chunk-number x)
+      (quotient (- (- x (memory-begin)) 7) *chunk-size*))
+
+
+					; Image traversal utility
+
+    (define (for-each-stored-object chunk-start proc chunk-end)
+      (let ((limit (heap-pointer)))
+	(let chunk-loop ((addr (newspace-begin))
+			 (i 0)
+			 (chunk (+ (newspace-begin) *chunk-size*)))
+	  (if (addr< addr limit)
+	      (begin (chunk-start i)
+		     (let loop ((addr addr))
+		       (if (and (addr< addr limit)
+				(addr< addr chunk))
+			   (let ((d (fetch addr)))
+			     (if (not (header? d))
+				 (warn "heap is in an inconsistent state" d))
+			     (proc (address->stob-descriptor (addr1+ addr)))
+			     (loop (addr1+ (addr+ addr (header-a-units d)))))
+			   (begin (chunk-end i)
+				  (chunk-loop addr
+					      (+ i 1)
+					      (+ chunk *chunk-size*))))))))))
+
+    (define (mutable? x) (not (immutable? x)))
+
+    ;; End begin
+    ))

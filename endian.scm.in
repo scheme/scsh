@@ -1,0 +1,39 @@
+;;; Endian routines for the Scheme Shell
+;;; Copyright (c) 1995 by Brian D. Carlstrom.
+
+;; Big Endian - Motorola, Sparc, HPPA, etc
+(define (net-to-host-32-big num32)
+  (and (<= 0 num32 #xffffffff)
+       num32))
+
+(define (net-to-host-16-big num16)
+  (and (<= 0 num16 #xffffffff)
+       num16))
+
+;; Little Endian - Intel, Vax, Alpha
+(define (net-to-host-32-little num32)
+  (and (<= 0 num32 #xffffffff)
+       (let* ((num24 (arithmetic-shift num32 -8))
+	      (num16 (arithmetic-shift num24 -8))
+	      (num08 (arithmetic-shift num16 -8))
+	      (byte0 (bitwise-and #b11111111 num08))
+	      (byte1 (bitwise-and #b11111111 num16))
+	      (byte2 (bitwise-and #b11111111 num24))
+	      (byte3 (bitwise-and #b11111111 num32)))
+	 (+ (arithmetic-shift byte3 24)
+	    (arithmetic-shift byte2 16)	
+	    (arithmetic-shift byte1  8)
+	    byte0))))
+
+(define (net-to-host-16-little num16)
+  (and (<= 0 num16 #xffffffff)
+       (let* ((num08 (arithmetic-shift num16 -8))
+	      (byte0 (bitwise-and #b11111111 num08))
+	      (byte1 (bitwise-and #b11111111 num16)))
+	 (+ (arithmetic-shift byte1 8)
+	    byte0))))
+
+(define net-to-host-32 net-to-host-32-@ENDIAN@)
+(define net-to-host-16 net-to-host-16-@ENDIAN@)
+(define host-to-net-32 net-to-host-32-@ENDIAN@)
+(define host-to-net-16 net-to-host-16-@ENDIAN@)
