@@ -41,6 +41,11 @@
 	tables)
   (files weaktables))
 
+(define-structure defrec-package (export (define-record :syntax))
+  (open records record-types scheme)
+  (for-syntax (open scheme error-package receiving))
+  (files defrec))
+
 (define-structure string-collectors string-collectors-interface
   (open scheme
 	defrec-package)
@@ -63,7 +68,6 @@
 (define string-lib srfi-13)
 (define char-set-lib srfi-14)
 
-
 ;;; This guy goes into the FOR-SYNTAX part of scsh's syntax exports.
 (define-structure scsh-syntax-helpers
   (export transcribe-extended-process-form)
@@ -73,26 +77,19 @@
 	scsh-utilities	; check-arg
 	scheme
 	)
-  (files syntax-helpers)
-;  (optimize auto-integrate)
-  )
-
+  (files syntax-helpers))
 
 ;;; The bufpol/{block, line, none} values
 (define-structure buffered-io-flags buffered-io-flags-interface
   (open defenum-package scheme)
-  (files (machine bufpol))
-;  (optimize auto-integrate)
-  )
-
+  (files (machine bufpol)))
 
 
 (define-structures ((tty-flags tty-flags-interface)
 		    (scsh-internal-tty-flags scsh-internal-tty-flags-interface))
   (open scheme ascii bitwise)
-  (files (machine tty-consts))
-;  (optimize auto-integrate)
-  )
+  (files (machine tty-consts)))
+
 
 
 (define-structure scsh-version scsh-version-interface
@@ -271,12 +268,6 @@
     (define ->char-set x->char-set))
   )
 
-(define-structure defrec-package (export (define-record :syntax))
-  (open records scheme)
-  (for-syntax (open scheme error-package receiving))
-  (files defrec)
-;  (optimize auto-integrate)
-  )
 
 (define-structure defenum-package (export (define-enum-constant  :syntax)
 					  (define-enum-constants :syntax)
@@ -585,8 +576,6 @@
 	signals
 	external-calls)
   (files md5))
-
-(define srfi-19 (make-srfi-19 scheme-with-scsh))
 
 (define-structure configure configure-interface
   (open scheme

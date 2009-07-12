@@ -3,47 +3,6 @@
 ;;; scsh-level-0, and export from there.
 ;;;     -Olin <shivers@ai.mit.edu> 8/98
 
-;; From Scheme 48, only here temporarily
-
-(define-structure external-util (export immutable-copy-string)
-  (open scheme
-	primitives	;copy-bytes!
-	features)	;immutable? make-immutable!
-  (begin
-    (define (immutable-copy-string string)
-      (if (immutable? string)
-	  string
-	  (let ((copy (copy-string string)))
-	    (make-immutable! copy)
-	    copy)))
-
-    ; Why isn't this available elsewhere?
-
-    (define (copy-string string)
-      (let* ((length (string-length string))
-	     (new (make-string length #\?)))
-	(copy-bytes! string 0 new 0 length)
-	new))))
-
-(define-interface posix-regexps-interface
-  (export make-regexp
-	  (regexp-option :syntax)
-	  regexp?
-	  regexp-match
-
-	  match?
-	  match-start
-	  match-end
-	  match-submatches
-	  ))
-
-(define-structures ((posix-regexps posix-regexps-interface)
-		    (posix-regexps-internal (export make-match)))
-  (open scheme define-record-types finite-types external-calls
-	signals
-	external-util)
-  (files regexp))
-
 (define-interface basic-re-interface
   (export (re-dsm? (proc (:value) :boolean))
 	  (make-re-dsm (proc (:value :exact-integer :exact-integer) :value))
@@ -53,7 +12,7 @@
 	  (re-dsm:posix (proc (:value) :value))
 	  (set-re-dsm:posix (proc (:value :value) :unspecific))
 	  ((re-dsm:post-dsm re-dsm) (proc (:value) :exact-integer))
-	  (open-dsm (proc (:value) (some-values :value :exact-integer)))
+	  open-dsm
 
 	  (re-seq? (proc (:value) :boolean))
 	  (really-make-re-seq (proc (:value :exact-integer :value) :value))
@@ -95,7 +54,7 @@
 	  (make-re-submatch/tsm (proc (:value :exact-integer :exact-integer) :value))
 	  ((make-re-submatch re-submatch)
 	   (proc (:value &opt :exact-integer :exact-integer) :value))
- 
+
 	  (re-submatch:body (proc (:value) :value))
 	  ((re-submatch:pre-dsm re-submatch:tsm re-submatch:post-dsm)
 	   (proc (:value) :exact-integer))
@@ -227,7 +186,7 @@
 		    (standard-char-sets (export nonl-chars word-chars))
 		    (sre-internal-syntax-tools (export expand-rx)))
   (open defrec-package
-	weak		
+	weak
 	;; re-posix-parsers	; regexp->posix-string
 	let-opt
 	sort				; Posix renderer
@@ -253,10 +212,7 @@
 	   (lambda (exp r c)
 	     (if (sre-form? (cadr exp) r c)
 		 (caddr exp)
-		 (cadddr exp)))))
-
- ; (optimize auto-integrate)
-  )
+		 (cadddr exp))))))
 
 
 ;;; Stuff that could appear in code produced by (rx ...)
@@ -320,11 +276,7 @@
 
 (define-structure re-old-funs re-old-funs-interface
   (open re-level-0 error-package receiving scheme)
-  (files oldfuns)
-;  (optimize auto-integrate)
-)
-
-
+  (files oldfuns))
 
 (define-structure re-subst re-subst-interface
   (open re-level-0
@@ -334,17 +286,11 @@
 	scsh-level-0	; write-string
 	srfi-13		; string-copy!
 	scheme)
-  (files re-subst)
-;  (optimize auto-integrate)
-)
-
+  (files re-subst))
 
 (define-structure re-folders re-folders-interface
   (open re-level-0 let-opt error-package scheme)
-  (files re-fold)
-;  (optimize auto-integrate)
-)
-
+  (files re-fold))
 
 (define-interface re-exports-interface
   (compound-interface re-level-0-interface
@@ -365,11 +311,11 @@
 
 ;;; File	Exports
 ;;; ----	-------
-;;; parse	sre->regexp regexp->sre  
+;;; parse	sre->regexp regexp->sre
 ;;;             parse-sre parse-sres regexp->scheme
 ;;;             char-set->in-pair static-regexp?
 ;;; posixstr	regexp->posix-string
-;;; re-high	compile-regexp regexp-search regexp-search? 
+;;; re-high	compile-regexp regexp-search regexp-search?
 ;;; re-subst	regexp-substitute regexp-substitute/global
 ;;; re-low	match:start match:end match:substring
 ;;;             CRE record, new-cre
