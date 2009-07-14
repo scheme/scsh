@@ -51,6 +51,11 @@
 	defrec-package)
   (files stringcoll))
 
+(define-structure thread-fluids thread-fluids-interface
+  (open scheme define-record-types weak
+	threads primitives)
+  (files thread-fluid))
+
 (define-structure delimited-readers delimited-readers-interface
   (open scheme
 	byte-vectors
@@ -63,6 +68,8 @@
 	ascii
 	i/o-internal ports)
   (files rdelim))
+
+
 
 (define list-lib srfi-1)
 (define string-lib srfi-13)
@@ -151,9 +158,9 @@
 				   initialize-cwd
 				   init-scsh-vars))
 ;   (scsh-regexp-package scsh-regexp-interface)
-)
+   )
   (for-syntax (open scsh-syntax-helpers scheme))
-  (access rts-sigevents sigevents threads)
+  (access sigevents threads)
   (open enumerated
 	defenum-package
 	external-calls           ;JMG new FFI
@@ -496,8 +503,7 @@
   (open scsh-level-0
 	scheme
 	structure-refs
-	low-interrupt
-	rts-sigevents)
+	low-interrupt)
   (files event))
 
 (define-structure simple-syntax (export define-simple-syntax)

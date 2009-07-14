@@ -1,7 +1,7 @@
 ;;; CPP Lib
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Character->Character Partial functions
- 
+
 ;;; Many of these types are pretty weak, but there is no way to
 ;;; specify that a parameter must be a particular record type.
 ;;; Every little bit helps, though.
@@ -23,7 +23,7 @@
 
    ;; ccp-fold kons knil ccp -> value
    (ccp-fold (proc ((proc (:char :char :value) :value) :value :value) :value))
-   
+
    ;; ccp-for-each proc ccp
    (ccp-for-each (proc ((proc (:char :char) :values)) :unspecific))
 
@@ -73,12 +73,7 @@
    ((construct-ccp construct-ccp!) (proc (:value &rest :value) :value))
 
    ;; ccp-unfold p f g seed -> ccp
-   (ccp-unfold (proc ((proc (:value) :boolean)
-		      (procedure :value (some-values :char :char))
-		      (proc (:value) :value)
-		      :value)
-		     :value))
-
+   ccp-unfold
    ;; tr       ccp string [start end] -> string
    ;; ccp-map  ccp string [start end] -> string
    ;; ccp-map! ccp string [start end]
