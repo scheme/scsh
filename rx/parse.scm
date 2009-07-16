@@ -19,7 +19,7 @@
 
 ;;; Character-set dependencies:
 ;;; The only stuff in here dependent on the implementation's character type
-;;; is the char-set parsing and unparsing, which deal with ranges of 
+;;; is the char-set parsing and unparsing, which deal with ranges of
 ;;; characters. We assume an 8-bit ASCII superset.
 
 ;;; every
@@ -27,16 +27,16 @@
 ;;; This code is much hairier than it would otherwise be because of the
 ;;; the presence of ,<exp> forms, which put a static/dynamic duality over
 ;;; a lot of the processing -- we have to be prepared to handle either
-;;; re's or Scheme epressions that produce re's; char-sets or Scheme 
+;;; re's or Scheme epressions that produce re's; char-sets or Scheme
 ;;; expressions that produce char-sets. It's a pain.
 ;;;
 ;;; See comments in re.scm ADT code about building regexp trees that have
 ;;; code in the record fields instead of values.
 ;;;
 ;;; The macro expander works by parsing the regexp form into an re record,
-;;; and simplifying it. If the record is completely static, it is then 
+;;; and simplifying it. If the record is completely static, it is then
 ;;; translated, at macro-expand time, into a Posix regex string. If the
-;;; regexp needs runtime values -- e.g, the computed from and to fields in 
+;;; regexp needs runtime values -- e.g, the computed from and to fields in
 ;;;     (** "ha, " (- min 1) (+ max 1))
 ;;; -- the expander instead produces Scheme ADT constructors to build
 ;;; the regexp at run-time.
@@ -53,7 +53,7 @@
   (cond
    ((re-seq?    re)   (every static-regexp? (re-seq:elts    re)))
    ((re-choice? re)   (every static-regexp? (re-choice:elts re)))
-   
+
    ((re-char-set? re) (char-set? (re-char-set:cset re))) ; Might be code.
 
    ((re-repeat? re)			; FROM & TO fields might be code.
@@ -65,10 +65,10 @@
    ((re-dsm? re)      (static-regexp? (re-dsm:body re)))
    ((re-submatch? re) (static-regexp? (re-submatch:body re)))
 
-   (else (or (re-bos? re) (re-eos? re)	; Otw, if it's not 
+   (else (or (re-bos? re) (re-eos? re)	; Otw, if it's not
 	     (re-bol? re) (re-eol? re)	; one of these, ; then it's Scheme code.
-	     (re-string? re))))) 
-               
+	     (re-string? re)))))
+
 
 ;;; Two useful standard char sets
 (define nonl-chars (char-set-complement (char-set #\newline)))
@@ -135,7 +135,7 @@
 		       seq))
 	    (re-seq (map (lambda (sre) (recur sre cs? cset?))
 			 seq))))
-	  
+
       (define (parse-seq seq) (parse-seq/context seq case-sensitive?))
       (define (parse-char-class sre) (recur sre case-sensitive? #t))
 
@@ -161,14 +161,14 @@
        ((pair? sre)
 	(let ((hygn-eq? (lambda (the-sym) (or (c (car sre) (r the-sym))
 					      (c (car sre) the-sym)))))
-	  (cond 
+	  (cond
 	   ((hygn-eq? '*)
 	    (non-cset)
 	    (build-re-repeat 0 #f (cdr sre)))
 	   ((hygn-eq? '+)
 	    (non-cset)
 	    (build-re-repeat 1 #f (cdr sre)))
-	   ((hygn-eq? '?) 
+	   ((hygn-eq? '?)
 	    (non-cset)
 	    (build-re-repeat 0 1 (cdr sre)))
 	   ((hygn-eq? '=)
@@ -182,10 +182,10 @@
 	    (non-cset)
 	    (build-re-repeat (cadr sre) (caddr sre)
 			     (cdddr sre)))
-	     
+
 	   ;; Choice is special wrt cset? because it's "polymorphic".
 	   ;; Note that RE-CHOICE guarantees to construct a char-set
-	   ;; or single-char string regexp if all of its args are char 
+	   ;; or single-char string regexp if all of its args are char
 	   ;; classes.
 	   ((or (hygn-eq? '|)
 		(hygn-eq? 'or))
@@ -195,12 +195,12 @@
 	      (if cset?
 		  (assoc-cset-op char-set-union 'char-set-union elts r)
 		  (re-choice elts))))
-	     
+
 	   ((or (hygn-eq? ':)
 		(hygn-eq? 'seq))
 	    (non-cset)
 	    (parse-seq (cdr sre)))
-	     
+
 	   ((hygn-eq? 'submatch)
 	    (non-cset)
 	    (let ((seq (parse-seq (cdr sre))))
@@ -212,26 +212,26 @@
 	    (re-dsm (parse-seq (cdddr sre))
 		    (cadr sre)
 		    (caddr sre)))
-	     
+
 	   ;; We could be more aggressive and push the uncase op down into
 	   ;; partially-static regexps, but enough is enough.
 	   ((hygn-eq? 'uncase)
 	    (let ((re-or-cset (parse-seq (cdr sre)))) ; Depending on CSET?.
 	      (if cset?
-		    
+
 		  (if (re-char-set? re-or-cset)	; A char set or code
 		      (re-char-set:cset (uncase re-or-cset))
 		      `(,(r 'uncase) ,re-or-cset))
-		    
+
 		  (if (static-regexp? re-or-cset) ; A regexp or code
 		      (uncase re-or-cset) ; producing a regexp.
 		      `(,(r 'uncase)
 			,(regexp->scheme (simplify-regexp re-or-cset) r))))))
-	     
+
 	   ;; These just change the lexical case-sensitivity context.
 	   ((hygn-eq? 'w/nocase) (parse-seq/context (cdr sre) #f))
 	   ((hygn-eq? 'w/case)   (parse-seq/context (cdr sre) #t))
-	     
+
 	   ;; ,<exp> and ,@<exp>
 	   ((hygn-eq? 'unquote)
 	    (let ((exp (cadr sre)))
@@ -243,7 +243,7 @@
 	      (if cset?
 		  `(,%coerce-dynamic-charset ,exp)
 		  `(,%coerce-dynamic-regexp ,exp))))
-	     
+
 	   ((hygn-eq? '~)
 	    (let* ((cs (assoc-cset-op char-set-union 'char-set-union
 				      (map parse-char-class (cdr sre))
@@ -252,13 +252,13 @@
 			   (char-set-complement cs)
 			   `(,(r 'char-set-complement) ,cs))))
 	      (if cset? cs (make-re-char-set cs))))
-	     
+
 	   ((hygn-eq? '&)
 	    (let ((cs (assoc-cset-op char-set-intersection 'char-set-intersection
 				     (map parse-char-class (cdr sre))
 				     r)))
 	      (if cset? cs (make-re-char-set cs))))
-	     
+
 	   ((hygn-eq? '-)
 	    (if (pair? (cdr sre))
 		(let* ((cs1 (parse-char-class (cadr sre)))
@@ -276,19 +276,19 @@
 					(list cs2))))))
 		  (if cset? cs (make-re-char-set cs)))
 		(error "SRE set-difference operator (- ...) requires at least one argument")))
-	     
+
 	   ((hygn-eq? '/)
 	    (let ((cset (range-class->char-set (cdr sre) case-sensitive?)))
 	      (if cset?
 		  cset
 		  (make-re-char-set cset))))
-	     
+
 	   ((hygn-eq? 'posix-string)
 	    (if (and (= 1 (length (cdr sre)))
 		     (string? (cadr sre)))
 		(posix-string->regexp (cadr sre))
 		(error "Illegal (posix-string ...) SRE body." sre)))
-	     
+
 	   (else
 	    (if (every string? sre)	; A set spec -- ("wxyz").
 		(let ((cs (apply char-set-union
@@ -306,7 +306,7 @@
        ;; It must be a char-class name (ANY, ALPHABETIC, etc.)
        (else
 	(letrec ((hygn-memq? (lambda (sym-list)
-			       (if (null? sym-list) 
+			       (if (null? sym-list)
 				   #f
 				   (or (c sre (r (car sym-list)))
 				       (c sre (car sym-list))
@@ -406,7 +406,7 @@
 	  (lambda (psx)
 	    `(,(r op/posix) ,@args ,maybe-tsm
 	      ',(cre:string psx) ',(cre:tvec psx))))
-       
+
 	 ((number? maybe-tsm)
 	  `(,(r op/tsm) ,@args ,maybe-tsm))
 	 (else
@@ -418,7 +418,7 @@
 	  (lambda (psx)
 	    `(,(r op/posix) ,@args
 	      ',(cre:string psx) ',(cre:tvec psx))))
-	 
+
 	 (else `(,(r op) . ,args))))
 
       (cond
@@ -503,8 +503,8 @@
 
     (if a
 	(if biga
-	    (if space 
-		(and one (cond 
+	    (if space
+		(and one (cond
 			   ((char-set= cs char-set:full) full)
 			   ((char-set= cs nonl-chars) nonl)
 			   ((char-set= cs char-set:printing) print)
@@ -532,7 +532,7 @@
 		      ((char-set= cs char-set:punctuation) punct)
 		      ((char-set= cs char-set:iso-control) ctl)
 		      (else #f))))))))
-		
+
 
 (define (char-set->scheme cs r)
   (let ((try (lambda (cs)
@@ -618,7 +618,7 @@
      ((re-string? re) (re-string:chars re))
 
      ((re-seq? re)    `(,(r ':) . ,(regexp->sres/renamer re r)))
-	 
+
      ((re-choice? re)
       (let ((elts (re-choice:elts re))
 	    (%| (r '|)))
@@ -663,7 +663,7 @@
 
 ;;; Map a char-set to an (| ("...") (/"...")) or (~ ("...") (/"...")) SRE.
 ;;; We try it both ways, and return whichever is shortest.
-;;; We return three values: 
+;;; We return three values:
 ;;; - a string of chars that are members in the set;
 ;;; - a string of chars that, taken in pairs specifying ranges,
 ;;;   give the rest of the members of the set.
@@ -691,7 +691,7 @@
 ;;; - LOOSE		List of singleton chars -- elts of the set.
 ;;; - RANGES		List of (from . to) char ranges.
 ;;;
-;;; E.g., [(#\! #\? #\.) 
+;;; E.g., [(#\! #\? #\.)
 ;;;        ((#\A . #\Z) (#\a . #\z) (#\0 . #\9))]
 
 (define (char-set->in-pair cset)
@@ -714,7 +714,7 @@
 						. ,ranges))))
 			 (values loose ranges)))))
 
-    (let lp ((i 255) (from #f) (to #f) (loose '()) (ranges '()))
+    (let lp ((i 127) (from #f) (to #f) (loose '()) (ranges '()))
       (if (< i 0)
 	  (add-range from to loose ranges)
 

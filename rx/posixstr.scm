@@ -1,18 +1,18 @@
 ;;; Regexp-ADT -> Posix-string translator.
 ;;; Olin Shivers January 1997, May 1998.
 
-;;; - If the regexp value contains nul character constants, or character sets 
+;;; - If the regexp value contains nul character constants, or character sets
 ;;;   that contain the nul character, they will show up in the Posix string
 ;;;   we produce. Spencer's C regexp engine can handle regexp strings that
 ;;;   contain nul bytes, but this might blow up other implementations -- that
 ;;;   is, the nul byte might prematurely terminate the C string passed to the
 ;;;   regexp engine.
-;;; 
+;;;
 ;;; - The code is ASCII-specific in only one place: the expression for
 ;;;   a regexp that matches nothing is the 6-char pattern "[^\000-\177]",
 ;;;   which assumes a 7-bit character code. Note that the static simplifier
-;;;   can remove *all* occurences of this "empty regexp" except for the 
-;;;   un-simplifiable case of a single, top-level empty regexp, e.g. 
+;;;   can remove *all* occurences of this "empty regexp" except for the
+;;;   un-simplifiable case of a single, top-level empty regexp, e.g.
 ;;;       (rx (in))
 ;;;   We can handle this one special case specially, so we shouldn't *ever*
 ;;;   have to produce this ASCII-specific pattern.
@@ -24,19 +24,19 @@
 ;;; These functions translate static regular expressions into Posix regexp
 ;;; strings. They generally return four values:
 ;;;   - string (regexp)
-;;; 
+;;;
 ;;;   - syntax level: 0 parenthesized exp, 1 piece, 2 branch, 3 top
 ;;;     ("piece", "branch" and "top" are Spencer's terms):
 ;;;     + A parenthesized exp is syntactically equivalent to a piece.
 ;;;       (But it's useful to know when an exp is parenthesized for
 ;;;       eliminating redundant submatch-generated parens.)
-;;;     + A piece is something that would bind to a following * 
+;;;     + A piece is something that would bind to a following *
 ;;;       ("a" but not "aa").
 ;;;     + A branch is a sequence of pieces -- something that would bind to a |
 ;;;       ("ab*d" but not "ab*|d"). That is, a branch is not allowed to contain
 ;;;       top-level |'s.
 ;;;     + Top is for a sequence of branches -- "a|b*c|d".
-;;; 
+;;;
 ;;;   - paren count in the returned string.
 ;;;
 ;;;   [This is a newer description; is it correct?]
@@ -54,7 +54,7 @@
 ;;; SORT-LIST
 
 
-;;; Useful little utility -- pad vector V with 
+;;; Useful little utility -- pad vector V with
 ;;; PRE initial and POST following #f's.
 
 (define (pad-vector pre post v)
@@ -92,7 +92,7 @@
 
 (define (regexp->posix-string re)
   ;; We *must* simplify, to guarantee correct translation.
-  (let ((re (simplify-regexp re))) 
+  (let ((re (simplify-regexp re)))
     (if (simple-empty-re? re) (values #f #f #f '#())
 	(translate-regexp re))))
 
@@ -158,7 +158,7 @@
 	(values s level pcount
 		(pad-vector (- offset prev-smcount) 0 submatches)
 		(+ offset (re-tsm re)))))))
-      
+
 
 
 ;;; Force the string to be level < 3 by parenthesizing it if necessary.
@@ -233,10 +233,10 @@
 		      (values (string-append s1 "|" s) 3
 			      (+ pcount1 pcount)
 			      (vector-append submatches1 submatches)))
-		    
+
 		    (values s1 level1 pcount1 submatches1))))))
 
-	(values "[^\000-\377]" 1 0 (n-falses tsm)))))	; Empty choice.
+	(values "[^\000-\177]" 1 0 (n-falses tsm)))))	; Empty choice.
 
 
 
@@ -251,7 +251,7 @@
 
     (cond
      ((and to (> from to))		; Unsatisfiable
-      (values "[^\000-\377]" 1 0 (n-falses tsm))) 
+      (values "[^\000-\177]" 1 0 (n-falses tsm)))
 
      ((and to (= from to 1)) (translate-seq body)) ; RE{1,1} => RE
 
@@ -295,7 +295,7 @@
 			    pre-dsm
 			    (- (re-submatch:tsm re)
 			       (+ 1 pre-dsm (re-tsm body))))
-	
+
       ;; If the whole expression isn't already wrapped in a paren, wrap it.
       ;; This outer paren becomes the new submatch -- add to submatches list.
       (if (= level 0)
@@ -358,7 +358,7 @@
 ;;; - Otherwise, render it both as a [...] and as a [^...] spec, and
 ;;;   take whichever is shortest.
 
-;;; Take a char set, and return the standard 
+;;; Take a char set, and return the standard
 ;;;     [regexp-string, level, pcount, submatches]
 ;;; quadruple.
 ;;;
@@ -373,10 +373,10 @@
 	     (->bracket-string (lambda (cset in?)
 				 (receive (loose ranges) (char-set->in-pair cset)
 				   (hack-bracket-spec loose ranges in?)))))
-	
+
 	(cond
 	 ((= 0 nchars) (values "[^\000-\177]" 1 0 '#())) ; Empty set
-	     
+
 	 ((= 1 nchars)			; Singleton set
 	  (translate-string (string (car (char-set->list cset)))))
 
@@ -402,7 +402,7 @@
 ;;;   -		...-
 ;;;     ^	...^	(or singleton screw-case)
 ;;;
-;;; Two screw cases: 
+;;; Two screw cases:
 ;;;   "^-" must be converted to "-^" for IN.
 ;;;   "^" must be converted to non-class "^" for IN.
 
@@ -410,7 +410,7 @@
 ;;; is a complete mess.
 ;;;
 ;;; The rules on bracket expressions:
-;;; - ] terminates the exp unless it is the first char 
+;;; - ] terminates the exp unless it is the first char
 ;;;   (after an optional leading ^).
 ;;; - .*[\ are not special in bracket expressions.
 ;;; - However, [. [= and [: *are* special, so you can't follow an
@@ -441,7 +441,7 @@
 ;;;   minimises the chances of the problem at the loose/range boundary.
 ;;;   and problems with initial ^ chars.
 ;;; - Sort the loose chars so that ] is first, then -, then .=:, then [,
-;;;   then others, then ^. This eliminates [. [= [: problems in the loose 
+;;;   then others, then ^. This eliminates [. [= [: problems in the loose
 ;;;   chars, and minimises the chances of the problem at the loose/range
 ;;;   boundary.
 ;;; - Shrink ranges by moving an opening or closing range char into the
@@ -454,7 +454,7 @@
 ;;;     we're doing an IN range, shrink out the ^.
 ;;;   + Shrinking a range down to <3 chars means move it's elts into the
 ;;;     loose char set.
-;;; - If both [ and - are in the loose char set, 
+;;; - If both [ and - are in the loose char set,
 ;;;   pull - out as special end-hypen.
 
 ;;; Finally, we have to hack things so that ^ doesn't begin an IN sequence.
@@ -462,7 +462,7 @@
 ;;; - If ^ is the opening loose char, then it's the only loose char.
 ;;;   If there are ranges, move it to the end of the string.
 ;;;   If there are no ranges, then just punt the char-class and convert
-;;;   it to a singleton ^. In fact, do this up-front, for any singleton 
+;;;   it to a singleton ^. In fact, do this up-front, for any singleton
 ;;;   set.
 ;;;
 ;;; If the special end-hyphen flag is set, add - to the end of the string.
@@ -474,7 +474,7 @@
 ;;; Ordering ranges:
 ;;;     1. other ranges (ordered by start char)
 ;;;     2. ranges that begin with ^	(not priority)
-;;;     3. ranges that begin with .=:	
+;;;     3. ranges that begin with .=:
 ;;;     4. ranges that end with [	(priority over #2 & #3)
 
 (define (range< r1 r2)
@@ -492,15 +492,15 @@
 		      ;; Range beginning with ^ comes before that.
 		      (or (char=? r1-start #\^)
 			  (and (not (char=? r2-start #\^))
-			       
+
 			       ;; Other ranges are ordered by start char.
 			       (< (char->ascii r1-start)
 				  (char->ascii r2-start))))))))))
 
 ;;; Order loose chars:
 ;;;   ]   is first,
-;;;   -   is next, 
-;;;   .=: are next, 
+;;;   -   is next,
+;;;   .=: are next,
 ;;;   [   is next,
 ;;;   then others (ordered by ascii val)
 ;;;   ^   is last.
@@ -558,7 +558,7 @@
 
 
 ;;; We assume the bracket-spec is not a singleton, not empty, and not complete.
-;;; (These cases get rendered as the letter, [^\000-\177], and ".", 
+;;; (These cases get rendered as the letter, [^\000-\177], and ".",
 ;;; respectively.) We assume the loose chars and the ranges are all disjoint.
 
 (define (hack-bracket-spec loose ranges in?)

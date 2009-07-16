@@ -638,6 +638,9 @@
           fork-thread
           spoon))
 
+(define-interface condition-handler-interface
+  (export simple-condition-handler))
+
 (define-interface delimited-readers-interface
   (export read-delimited read-delimited! %read-delimited!
           read-line read-paragraph

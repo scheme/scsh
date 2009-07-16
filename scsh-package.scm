@@ -31,7 +31,7 @@
 
 (define-structure scsh-utilities scsh-utilities-interface
   (open bitwise error-package loopholes let-opt scheme define-record-types
-	records
+	records record-types
 	threads threads-internal placeholders locks srfi-1)
   (files utilities))
 
@@ -55,6 +55,10 @@
   (open scheme define-record-types weak
 	threads primitives)
   (files thread-fluid))
+
+(define-structure condition-handler condition-handler-interface
+  (open scheme display-conditions conditions)
+  (files condition-handler))
 
 (define-structure delimited-readers delimited-readers-interface
   (open scheme
@@ -222,7 +226,6 @@
 	i/o
 	i/o-internal
 	channels channel-i/o
-	low-channels
 	byte-vectors
 	threads locks placeholders
 	primitives
@@ -299,7 +302,7 @@
 	handle			; with-handler
 	command-levels  	; user-context
 	write-images		; write-image
-	build-internals		; simple-condition-handler
+	condition-handler      	; simple-condition-handler
 	low-level		; flush-the-symbol-table!
 	command-processor	; command-output
 	package-commands-internal
