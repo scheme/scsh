@@ -503,10 +503,9 @@
   (files here))
 
 (define-structure sigevents sigevents-interface
-  (open scsh-level-0
-	scheme
-	structure-refs
-	low-interrupt)
+  (open scsh-level-0 scheme define-record-types queues
+	structure-refs threads threads-internal
+	low-interrupt wind interrupts architecture)
   (files event))
 
 (define-structure simple-syntax (export define-simple-syntax)

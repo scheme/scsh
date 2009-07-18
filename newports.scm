@@ -22,7 +22,7 @@
 	 (ch-number  (channel-os-index ch)))
     (if (not (= (fdport-data:revealed fdport*) 0))
 	(table-set! fdports ch-number fdport)
-	(begin 
+	(begin
 	  (weak-table-set! fdports ch-number fdport)
 	  (%set-cloexec (fdport-data:fd (port-data fdport)) #t)))))
 
@@ -35,7 +35,7 @@
   (channel-os-index  (fdport-data:channel fdport*)))
 
 (define (fdport-data:closed? fdport*)
-  (eq? (channel-status (fdport-data:channel fdport*)) 
+  (eq? (channel-status (fdport-data:channel fdport*))
        (enum channel-status-option closed)))
 
 ;;; Support for channel-ready?
@@ -69,7 +69,7 @@
     p))
 
 (define (channel-port->output-fdport channel-port)
-  (let ((p (make-buffered-output-port 
+  (let ((p (make-buffered-output-port
 	    output-fdport-handler
 	    (make-fdport-data  (channel-cell-ref(port-data channel-port)) 1)
 	    (make-byte-vector buffer-size 0) 0 buffer-size)))
@@ -83,7 +83,7 @@
 
 (define (channel-port->unbuffered-output-fdport channel-port)
   (let ((p (make-unbuffered-output-port unbuffered-output-fdport-handler
-			     (make-fdport-data 
+			     (make-fdport-data
 			      (channel-cell-ref (port-data channel-port)) 1))))
     (obtain-port-lock channel-port)
     (set-port-lock! p (port-lock channel-port))
@@ -119,7 +119,7 @@
 	     (and (output-port? x) (port-data x)))
 	 => (lambda (d) (fdport-data? d)))
 	(else #f)))
-	
+
 (define fdport-null-method (lambda (x) x #f))
 
 (define null-func (lambda args #t))
@@ -140,7 +140,7 @@
      (steal-channel! (fdport-data:channel fdport*) owner))))
 
 (define input-fdport-handler
-  (make-input-fdport-handler    
+  (make-input-fdport-handler
    (lambda (fdport* buffer start needed)
      (channel-read buffer start needed (fdport-data:channel fdport*)))))
 
@@ -158,7 +158,7 @@
   (make-output-fdport-handler
    (lambda (fdport* buffer start count)
      (channel-write buffer start count (fdport-data:channel fdport*)))))
- 
+
 (define unbuffered-output-fdport-handler
   (let ((buffer (make-byte-vector 1 0)))
     (make-output-fdport-handler
@@ -170,23 +170,23 @@
 ; That was easy.
 
 (define (guess-output-policy port)
-  (if (= 0 (port-limit port)) 
+  (if (= 0 (port-limit port))
       bufpol/none
       bufpol/block))
 
-(define (set-port-buffering port policy . maybe-size) 
+(define (set-port-buffering port policy . maybe-size)
   (cond ((and (fdport? port) (open-input-port? port))
-	 (let ((size (if (pair? maybe-size) (car maybe-size) 
+	 (let ((size (if (pair? maybe-size) (car maybe-size)
 			 (if (= policy bufpol/none) 1 255))))
-	   (if (<= size 0) 
-	       (error "buffer size must be at least 1 for input ports" 
+	   (if (<= size 0)
+	       (error "buffer size must be at least 1 for input ports"
 		      port policy size))
 	   (set-input-port-buffering port policy size)))
 	((and (fdport? port) (open-output-port? port))
-	 (let ((size (if (pair? maybe-size) (car maybe-size) 
+	 (let ((size (if (pair? maybe-size) (car maybe-size)
 			 (if (= policy bufpol/none) 0 255))))
-	   (if (< size 0) 
-	       (error "buffer size must be at least 0 for output ports" 
+	   (if (< size 0)
+	       (error "buffer size must be at least 0 for output ports"
 		      port policy size))
 	   (set-output-port-buffering port policy size)))
 	(else
@@ -195,7 +195,7 @@
 (define (set-output-port-buffering port policy size)
   (cond ((eq? policy bufpol/none)
 	 (if (not (= size 0))
-	     (error "buffer size must be 0 for bufpol/none on output ports" 
+	     (error "buffer size must be 0 for bufpol/none on output ports"
 		    port policy size))
 	 (install-nullbuffer port unbuffered-output-fdport-handler))
 	((eq? policy bufpol/block)
@@ -208,7 +208,7 @@
 		     (really-force-output port)
 		     (obtain-port-lock port)
 		     (set-port-index! port 0))
-		   (begin 
+		   (begin
 		     (obtain-port-lock port)
 		     (copy-bytes! (port-buffer port) 0 new-buffer 0 old-size)))
 	       (install-buffer port new-buffer size)
@@ -244,29 +244,29 @@
      (lambda (fdport*)
        (list 'output-fdport (fdport-data:channel fdport*)))
      (lambda (fdport*)
-       (channel-write proc-buffer 
-		      0 
-		      proc-buffer-index 
+       (channel-write proc-buffer
+		      0
+		      proc-buffer-index
 		      (fdport-data:channel fdport*))
        (close-fdport* fdport*))
      (lambda (fdport* char)
        (byte-vector-set! proc-buffer proc-buffer-index (char->ascii char))
        (set! proc-buffer-index (+ proc-buffer-index 1))
        (cond ((or (eq? char #\newline) (= proc-buffer-index size))
-	      (channel-write proc-buffer 
-			     0 
-			     proc-buffer-index 
+	      (channel-write proc-buffer
+			     0
+			     proc-buffer-index
 			     (fdport-data:channel fdport*))
 	      (set! proc-buffer-index 0))))
      fdport-channel-ready?
      (lambda (fdport* owner)
        (steal-channel! (fdport-data:channel fdport*) owner)))))
 
-	
+
 (define (set-input-port-buffering port policy size)
   (cond ((eq? policy bufpol/none)
 	 (if (not (= size 1))
-	     (error "buffer size must be 1 for bufpol/none on input ports" 
+	     (error "buffer size must be 1 for bufpol/none on input ports"
 		    port policy size))
 	 (set-input-port-buffering port bufpol/block 1))
 	((eq? policy bufpol/block)
@@ -286,14 +286,14 @@
 		(new-buffer (make-byte-vector size 0)))
 	   (if (not gentle?)
 	       (let ((ret (if (> throw-away 0)
-			      (let ((return-buffer 
+			      (let ((return-buffer
 				     (make-byte-vector throw-away 0)))
-				(copy-bytes! old-buffer old-index 
-					     return-buffer 0 
+				(copy-bytes! old-buffer old-index
+					     return-buffer 0
 					     throw-away) return-buffer)
 			      #f)))
-		   (copy-bytes! old-buffer (+ old-index throw-away) 
-				new-buffer 0 
+		   (copy-bytes! old-buffer (+ old-index throw-away)
+				new-buffer 0
 				new-unread)
 		   (set-port-buffer! port new-buffer)
 		   (set-port-index! port 0)
@@ -301,8 +301,8 @@
 		   (set-port-handler! port new-handler)
 		   (release-port-lock port)
 		 ret)
-	        (begin 
-		  (install-drain-port-handler 
+	        (begin
+		  (install-drain-port-handler
 		   old-buffer old-index old-limit port new-handler)
 		  (set-port-buffer! port new-buffer)
 		  (set-port-index! port 0)
@@ -310,17 +310,17 @@
 		  (release-port-lock port)
 		  #t))))
 
-(define (install-drain-port-handler 
+(define (install-drain-port-handler
 	 old-buffer old-start old-limit port new-handler)
    (if (< 0 (- old-limit old-start))
-       (set-port-handler! port 
-			  (make-drain-port-handler 
+       (set-port-handler! port
+			  (make-drain-port-handler
 			   old-buffer old-start old-limit port new-handler))
        (set-port-handler! port new-handler)))
 
 
 ;;; TODO: This reference to port will prevent gc !!!
-(define (make-drain-port-handler 
+(define (make-drain-port-handler
 	 very-old-buffer old-start old-limit port new-handler)
   (let ((old-buffer (make-byte-vector old-limit 0)))
     (copy-bytes! very-old-buffer 0 old-buffer 0 old-limit)
@@ -333,12 +333,12 @@
 			   (else (min needed old-left)))))
 	   (copy-bytes! old-buffer old-start buffer start size)
 	   (set! old-start (+ size old-start))
-	   
+
 	   (if (= old-start (byte-vector-length old-buffer))  ;buffer drained ?
-	       (begin 
+	       (begin
 		 (set-port-handler! port new-handler)
 		 (if (and (integer? needed) (> needed size))
-		     (+ size ((port-handler-buffer-proc new-handler) 
+		     (+ size ((port-handler-buffer-proc new-handler)
 			      data buffer (+ start size) (- needed size)))
 		     size))
 	       size)))))))
@@ -419,13 +419,13 @@
 	    p))
 	 (else (port-maker fd 1))))
 
-(define (fdes->inport fd)  
+(define (fdes->inport fd)
   (let ((port (fdes->port fd make-input-fdport)))
     (if (not (input-port? port))
 	(error "fdes was already assigned to an outport" fd)
 	port)))
 
-(define (fdes->outport fd) 
+(define (fdes->outport fd)
   (let ((port (fdes->port fd make-output-fdport)))
     (if (not (output-port? port))
 	(error "fdes was already assigned to an inport" fd)
@@ -486,15 +486,15 @@
 
 
 (define (init-fdports!)
-  (set-fluid! $current-input-port  
+  (set-fluid! $current-input-port
 	      (channel-port->input-fdport (current-input-port)))
   (set-port-buffering (current-input-port) bufpol/none)
 
-  (set-fluid! $current-output-port 
+  (set-fluid! $current-output-port
 	      (channel-port->output-fdport (current-output-port)))
-  (set-fluid! $current-error-port  
+  (set-fluid! $current-error-port
 	      (channel-port->unbuffered-output-fdport (current-error-port)))
-  (set-fluid! $current-noise-port 
+  (set-fluid! $current-noise-port
 	      (fluid $current-error-port)))
 
 ;;; Generic port operations
@@ -520,7 +520,7 @@
 
 (define (evict-ports fd)
   (cond ((maybe-fdes->port fd) =>	; Shouldn't bump the revealed count.
-         (lambda (port) 
+         (lambda (port)
 	   (%move-fdport (%dup fd) port 0)
 	   #t))
 	(else #f)))
@@ -534,7 +534,7 @@
     (set-fdport-data:revealed fdport* new-revealed)
     (table-set! fdports old-fd #f)
     (close-channel ch)
-    (set-fdport-data:channel 
+    (set-fdport-data:channel
      fdport*
      (make-fd-channel port fd))
     (table-set! fdports fd old-vector-ref)
@@ -579,7 +579,7 @@
      (lambda ()
        (placeholder-set!
 	placeholder
-	((structure-ref threads-internal current-thread)))
+	((structure-ref thread current-thread)))
        (thunk)))
     (placeholder-value placeholder)))
 
@@ -646,7 +646,7 @@
     (set-port-buffering port bufpol/none)
     (s48-write-char char port)))
 
-;;; S48's force-output doesn't default to forcing (current-output-port). 
+;;; S48's force-output doesn't default to forcing (current-output-port).
 (define-r4rs-output (force-output) output s48-force-output
   (values)) ; Do nothing if applied to a file descriptor.
 
@@ -734,7 +734,7 @@
       (let-fluid $current-output-port port thunk))))
 
 ;;; replace rts/channel-port.scm end
-	  
+
 ;;; select
 ;;; -----
 
@@ -810,7 +810,7 @@
 	(timeout (:optional maybe-timeout #f)))
 
     ((structure-ref interrupts disable-interrupts!))
-    
+
     (for-each input-port/fdes-check-unlocked read-list)
     (for-each output-port/fdes-check-unlocked write-list)
 
@@ -823,7 +823,7 @@
 	    (values (list->vector any-read)
 		    (list->vector any-write)
 		    (make-vector 0)))
-	    
+
 	  ;; we need to block
 	  (let ((read-channels (map port/fdes->input-channel read-list))
 		(write-channels (map port/fdes->output-channel write-list)))
@@ -865,7 +865,7 @@
 	(timeout (:optional maybe-timeout #f)))
 
     ((structure-ref interrupts disable-interrupts!))
-    
+
     (for-each input-port/fdes-check-unlocked read-list)
     (for-each output-port/fdes-check-unlocked write-list)
 
@@ -894,7 +894,7 @@
 			(else
 			 (vector-set! write-vec i #f)
 			 (loop (+ 1 i) n)))))))
-		  
+
 	      ;; zero out EXCEPTION-VEC
 	      (let ((length (vector-length exception-vec)))
 		(let loop ((i 0))
@@ -902,9 +902,9 @@
 		      (begin
 			(vector-set! exception-vec i #f)
 			(loop (+ 1 i))))))
-			  
+
 	      (values n-read-ready n-write-ready 0)))
-	    
+
 	  ;; we need to block
 	  (let ((read-channels (map port/fdes->input-channel read-list))
 		(write-channels (map port/fdes->output-channel write-list)))
@@ -916,7 +916,7 @@
 	    (for-each (lambda (channel)
 			(add-pending-channel channel #f))
 		      write-channels)
-	
+
 	    (call-with-values
 	     (lambda ()
 	       (wait-for-channels read-channels write-channels
@@ -939,7 +939,7 @@
 				  (loop (cdr read-channels)
 					n-ready
 					(+ 1 index)))))))
-		     (n-write-ready 
+		     (n-write-ready
 		      (let loop ((write-channels write-channels)
 				 (n-ready 0)
 				 (index 0))
@@ -977,7 +977,7 @@
 	(write-list (filter output-port? ports)))
 
     ((structure-ref interrupts disable-interrupts!))
-    
+
     (for-each input-port/fdes-check-unlocked read-list)
     (for-each output-port/fdes-check-unlocked write-list)
 
@@ -988,7 +988,7 @@
 	  (begin
 	    ((structure-ref interrupts enable-interrupts!))
 	    (append any-read any-write))
-	    
+
 	  (really-select-port-channels timeout read-list write-list)))))
 
 (define (select-port-channels timeout . ports)
@@ -997,18 +997,18 @@
 	(write-list (filter output-port? ports)))
 
     ((structure-ref interrupts disable-interrupts!))
-    
+
     (for-each input-port/fdes-check-unlocked read-list)
     (for-each output-port/fdes-check-unlocked write-list)
 
     (let ((any-read (any-channel-ready read-list))
 	  (any-write (any-channel-ready write-list)))
-      
+
       (if (or (eqv? timeout 0) (pair? any-read) (pair? any-write))
 	  (begin
 	    ((structure-ref interrupts enable-interrupts!))
 	    (append any-read any-write))
-	  
+
 	  (really-select-port-channels timeout read-list write-list)))))
 
 ;; assumes interrupts are disabled and that ports aren't locked
@@ -1016,11 +1016,11 @@
 (define (really-select-port-channels timeout read-list write-list)
   (let ((read-channels (map port/fdes->input-channel read-list))
 	(write-channels (map port/fdes->output-channel write-list)))
-    
+
     (for-each (lambda (channel)
 		(add-pending-channel channel #t))
 	      read-channels)
-    
+
     (for-each (lambda (channel)
 		(add-pending-channel channel #f))
 	      write-channels)

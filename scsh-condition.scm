@@ -3,37 +3,46 @@
 
 ;;; A syscall-error condition-type:
 
-(define-condition-type 'syscall-error '(error))
+(define-condition-type &syscall-error &error
+  make-syscall-error syscall-error?
+  (errno condition-errno)
+  (syscall condition-syscall))
 
-(define syscall-error? (condition-predicate 'syscall-error))
+(define (errno-error errno syscall . irritants)
+  (errno-error-with-message errno (errno-msg errno) syscall irritants))
 
-(define (errno-error errno syscall . stuff)
-  (apply errno-error-with-message errno (errno-msg errno) syscall stuff))
-
-(define (errno-error-with-message errno msg syscall . stuff)
-  (apply signal 'syscall-error errno msg syscall stuff))
+(define (errno-error-with-message errno msg syscall . irritants)
+  (raise
+   (condition
+    (make-syscall-error errno syscall)
+    (make-message-condition msg)
+    (make-irritants-condition irritants))))
 
 (define (with-errno-handler* handler thunk)
   (with-handler
     (lambda (condition more)
       (if (syscall-error? condition)
-	  (let ((stuff (condition-stuff condition)))
-	    (handler (car stuff)	; errno
-		     (cdr stuff)))	; (msg syscall . packet)
+	  (let ((irritants (condition-irritants condition)))
+	    (handler (condition-errno condition)	; errno
+		     (list (condition-message condition)
+                           (condition-syscall condition)
+                           (condition-irritants condition))))	; (msg syscall . packet)
 	  ;; capture VM exceptions (currently only prim-io.scm)
-	  (if (and (exception? condition) 
-		   (eq? (exception-reason condition) 
+	  (if (and (vm-exception? condition)
+		   (eq? (vm-exception-reason condition)
 			'os-error))
-	      (let ((stuff (condition-stuff condition)))
-		(if (> (length stuff) 3)
-		    (handler (caddr stuff) ; errno
+              ;; this information wouldn't be in the irritants in the new
+              ;; condition system. This should be changed later.
+	      (let ((irritants (condition-irritants condition)))
+		(if (> (length irritants) 3)
+		    (handler (caddr irritants) ; errno
 			     (cons
-			      (last stuff) ; msg
+			      (last irritants) ; msg
 			      (cons
 			       (enumerand->name ; syscall (almost ...)
 				(exception-opcode condition) op)
 			        ; packet:
-			       (drop-right (cdddr stuff) 1))))))))
+			       (drop-right (cdddr irritants) 1))))))))
       (more))
     thunk))
 
@@ -42,7 +51,7 @@
 ;;;    ((errno/exist) . body1)
 ;;;    ((errno/wouldblock errno/again) . body2)
 ;;;    (else . body3))
-;;; 
+;;;
 ;;;   . body)
 
 (define-syntax with-errno-handler
@@ -51,7 +60,7 @@
 	   (%cond (rename 'cond))
 	   (%else (rename 'else))
 	   (%weh (rename 'with-errno-handler*))
-	   (%= (rename '=))		 
+	   (%= (rename '=))
 	   (%begin (rename `begin))
 	   (%or (rename `or))
 	   (%call/cc (rename 'call-with-current-continuation))

@@ -22,7 +22,7 @@
 ;;; fcntl* ioctl
 ;;; sigsuspend
 ;;; HP-UX, but I don't use: poll lockf msem_lock msgsnd msgrcv semop
-;;; 
+;;;
 ;;; * Only during a F_SETLKW
 ;;;
 ;;; From rts/interrupt.scm (package interrupts, interface interrupts-interface)
@@ -46,7 +46,7 @@
 (define (interrupt-enable int mask)
   (insert-interrupt int mask))
 
-(define *enabled-interrupts* 
+(define *enabled-interrupts*
    (let lp ((i 0) (mask 0))
      (if (= i number-of-interrupts)
 	 mask
@@ -68,7 +68,7 @@
 ;;; I'm trying to be consistent about the ! suffix -- I don't use it
 ;;; when frobbing process state. This is not a great rule; perhaps I
 ;;; should change it.
-;;; 
+;;;
 ;;; I think you should...
 (define (set-enabled-interrupts new-enabled-interrupts)
   (let ((old-enabled-interrupts *enabled-interrupts*))
@@ -84,7 +84,7 @@
 	      (call-interrupt-handler int)))))))
 
 (define-simple-syntax (with-enabled-interrupts interrupt-set body ...)
-   (begin 
+   (begin
      (with-enabled-interrupts* interrupt-set (lambda () body ...))))
 
 (define (with-enabled-interrupts* interrupt-set thunk)
@@ -95,7 +95,7 @@
       return)))
 
 (define *interrupt-handlers-vector*)
-  
+
 (define (install-fresh-interrupt-handlers-vector!)
   (set! *interrupt-handlers-vector* (make-vector number-of-interrupts #t)))
 
@@ -113,7 +113,7 @@
       ((#t) ((vector-ref default-int-handler-vec int) (enabled-interrupts)))
       ((#f) (if #f #f))
       (else (handler (enabled-interrupts))))))
-    
+
 
 ;;; Get/Set signal handlers
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -149,7 +149,7 @@
 ;;; argument. The interrupt is delivered to a procedure by (1) setting the
 ;;; ENABLED-INTERRUPTS register to 0 (i.e., blocking all interrupts), and (2)
 ;;; applying the procedure to the previous value of the ENABLED-INTERRUPTS
-;;; register. If the procedure returns normally, the ENABLED-INTERRUPTS 
+;;; register. If the procedure returns normally, the ENABLED-INTERRUPTS
 ;;; register will be restored to its previous value.
 
 (define (set-interrupt-handler int handler)
@@ -169,29 +169,29 @@
     (let ((i (%signal->interrupt sig)))
       (if (not (or (= i -1)
 		   (= sig signal/alrm)))	; Leave alarm handler alone.
-	  (set-interrupt-handler 
+	  (set-interrupt-handler
 	   i
 	   #t))))
-  (let ((scsh-initial-thread  ((structure-ref threads-internal current-thread))))
+  (let ((scsh-initial-thread  ((structure-ref threads current-thread))))
     (if (not (eq? (thread-name scsh-initial-thread)
 		  'scsh-initial-thread))
 	(error "sighandler did not find scsh-initial-thread, but"
 	       scsh-initial-thread))
-    
+
     ;; Note: this will prevent any other system to work, since it pushes
     ;; a new command level !
     (if interactive?
 	(set-interrupt-handler interrupt/keyboard
 			       (lambda stuff
-				 ((structure-ref threads-internal schedule-event) 
+				 ((structure-ref threads-internal schedule-event)
 				  scsh-initial-thread
-				  (enum  
-				   (structure-ref threads-internal event-type) 
+				  (enum
+				   (structure-ref threads-internal event-type)
 				   interrupt)
 				  (enum interrupt keyboard))))))
   (run-as-long-as
    deliver-interrupts
-   thunk 
+   thunk
    (structure-ref threads-internal spawn-on-root)
    'deliver-interrupts))
 
@@ -210,7 +210,7 @@
 (import-lambda-definition ignore-signal (sig) "ignore_signal")
 
 (import-lambda-definition handle-signal-default (sig) "handle_signal_default")
-    
+
 ;;; I am ashamed to say the 33 below is completely bogus.
 ;;; What we want is a value that is 1 + max interrupt value.
 
