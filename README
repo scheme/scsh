@@ -1,0 +1,14 @@
+-*- outline -*-
+
+* To get started
+
+Make a symlink named machine to the folder with you're operating system's
+name (e.g. (ln -s linux machine) for linux).
+
+Make a copy of endian.scm.in named endian.scm with instances of @ENDIAN@ replaced
+with either "little" or "big", depending on your machine.
+
+In the user package (the default for scheme48) run the command:
+,exec ,load load.scm
+This will leave the scsh package in the environment. Opening it will probably
+give errors and warnings about missing symbols and similar things for now.
