@@ -1,4 +1,30 @@
 ; Copyright (c) 1993-2001 by Richard Kelsey and Jonathan Rees. See file COPYING.
+;;; This is based on code from the scsh 0.6 distribution. There was not much
+;;; documentation behind the implementation or uses of thread-fluids, but
+;;; I tried to make sure that this emulates the original behavior. Unfortunately,
+;;; at the moment, this implementation is very dangerous and space inefficient.
+;;; It'll be used for now however, just to get things rolling.
+;;;
+;;; When a thread-fluid is made with MAKE-THREAD-FLUID, the given value is set
+;;; as the default. Setting new values to the thread-fluid will not change
+;;; the default's value. When a new thread is created using SPAWN, the
+;;; thread-fluid's value will be the default, reguardless of what that
+;;; thread-fluid's value was set to in any other thread. A thread-fluid's value
+;;; can only be preserved across threads if it is created with
+;;; MAKE-PRESERVED-THREAD-FLUID, and the child thread is created with
+;;; FORK-THREAD or SPOON.
+;;;
+;;; Thread cells were a part of the implementation of thread-fluids in scsh,
+;;; but they were actually a field in the thread record type, and so unique
+;;; to that thread and safe to update. They are replaced here with a global
+;;; list associating thread uids with values. These values are never collected
+;;; because the global list can't be automatically updated once a thread dies.
+;;; There is no mechanism used to keep the list safe for use by multiple
+;;; threads either. I'm not spending time thinking of a better solution for now,
+;;; because I'd like to have scsh stop using thread-fluids altogether if I can
+;;; later.
+;;;
+;;; -Roderic
 
 (define-record-type thread-fluid :thread-fluid
   (really-make-thread-fluid cell)
@@ -72,7 +98,7 @@
 
 (define spoon fork-thread)
 
-; Thread cells
+;;; Thread cells
 
 (define-record-type thread-cell :thread-cell
   (make-thread-cell default)
