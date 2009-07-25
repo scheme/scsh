@@ -579,7 +579,7 @@
      (lambda ()
        (placeholder-set!
 	placeholder
-	((structure-ref thread current-thread)))
+	((structure-ref threads current-thread)))
        (thunk)))
     (placeholder-value placeholder)))
 
