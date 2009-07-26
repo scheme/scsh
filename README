@@ -1,5 +1,11 @@
 -*- outline -*-
 
+* Dependencies
+
+This code depends on the latest version of scheme48 in the development
+repository <http://www.s48.org/cgi-bin/hgwebdir.cgi/s48>, which currently has
+1.9T as the version string.
+
 * To get started
 
 Make a symlink named machine to the folder with you're operating system's
