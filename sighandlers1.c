@@ -49,23 +49,23 @@ s48_ref_t do_default_sigaction(s48_call_t call, s48_ref_t _signal)
   int signal = s48_extract_long_2(call, _signal);
   /* fprintf(stderr, "Doing default for signal %d\n", signal); */
 
-  sigfillset(&ss);				/* Block everyone. */
+  sigfillset(&ss);                              /* Block everyone. */
   sigprocmask(SIG_SETMASK, &ss, &old_ss);
 
-  default_action.sa_handler = SIG_DFL;		/* Set for default. */
+  default_action.sa_handler = SIG_DFL;          /* Set for default. */
   sigemptyset(&default_action.sa_mask);
   default_action.sa_flags = 0;
   sigaction(signal, &default_action, &old_action);
 
-  raise(signal);			      	/* Raise the signal. */
+  raise(signal);                                /* Raise the signal. */
   sigdelset(&ss, signal);
-  sigprocmask(SIG_SETMASK, &ss, 0);		/* Handle it. */
+  sigprocmask(SIG_SETMASK, &ss, 0);             /* Handle it. */
 
   /* Most likely, we'll never get to here, as the default for
   ** the signals we're handling is "terminate," but we'll play it safe.
   */
-  sigaction(signal, &old_action, 0);		/* Restore old handler, */
-  sigprocmask(SIG_SETMASK, &old_ss, 0);		/* and mask.            */
+  sigaction(signal, &old_action, 0);            /* Restore old handler, */
+  sigprocmask(SIG_SETMASK, &old_ss, 0);         /* and mask.            */
   return s48_unspecific_2(call);
 }
 

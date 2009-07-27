@@ -27,36 +27,36 @@
    (lambda ()
      (let lp ((pre-sigevent pre-sigevent))
        (let ((sigevent (sigevent-next pre-sigevent)))
-	 (if sigevent
-	     (if (type-in-set? (sigevent-type sigevent) set)
-		 sigevent
-		 (lp sigevent))
-	     (begin (block-on-queue sigevent-thread-queue)
-		    (lp pre-sigevent))))))))
+         (if sigevent
+             (if (type-in-set? (sigevent-type sigevent) set)
+                 sigevent
+                 (lp sigevent))
+             (begin (block-on-queue sigevent-thread-queue)
+                    (lp pre-sigevent))))))))
 
 ; same as above, but don't block
 (define (rts-next-sigevent/no-wait pre-sigevent set type-in-set?)
   (let ((sigevent (sigevent-next pre-sigevent)))
     (if sigevent
-	(if (type-in-set? (sigevent-type sigevent) set)
-	    sigevent
-	    (rts-next-sigevent/no-wait (sigevent-next sigevent)
-				       set
-				       type-in-set?))
-	#f)))
+        (if (type-in-set? (sigevent-type sigevent) set)
+            sigevent
+            (rts-next-sigevent/no-wait (sigevent-next sigevent)
+                                       set
+                                       type-in-set?))
+        #f)))
 
 
 ;Called when the interrupt actually happened.
 ;;; TODO w-i-i is problaly not necessary since they're off already
 (define (register-interrupt type)
   (let ((waiters (with-interrupts-inhibited
-		  (lambda ()
-		    (set-sigevent-next! *most-recent-sigevent* (make-sigevent type))
-		    (set! *most-recent-sigevent* (sigevent-next *most-recent-sigevent*))
-		    (do ((waiters '() (cons (maybe-dequeue-thread! sigevent-thread-queue)
-					    waiters)))
-			((thread-queue-empty? sigevent-thread-queue)
-			 waiters))))))
+                  (lambda ()
+                    (set-sigevent-next! *most-recent-sigevent* (make-sigevent type))
+                    (set! *most-recent-sigevent* (sigevent-next *most-recent-sigevent*))
+                    (do ((waiters '() (cons (maybe-dequeue-thread! sigevent-thread-queue)
+                                            waiters)))
+                        ((thread-queue-empty? sigevent-thread-queue)
+                         waiters))))))
     (for-each make-ready waiters)))
 
 
@@ -73,12 +73,12 @@
 (define (with-sigevents thunk)
   (set! sigevent-thread-queue (make-queue))
   (set-interrupt-handler! (enum interrupt os-signal)
-			  (lambda (type enabled-interrupts)
-					; type is already set in the unix signal handler
-			    (register-interrupt type)))
+                          (lambda (type enabled-interrupts)
+                                        ; type is already set in the unix signal handler
+                            (register-interrupt type)))
   (set-interrupt-handler! (enum interrupt keyboard)
-			  (lambda (enabled-interrupts)
-			    (register-interrupt (enum interrupt keyboard))))
+                          (lambda (enabled-interrupts)
+                            (register-interrupt (enum interrupt keyboard))))
   (dynamic-wind
    (lambda ()
      (set! sigevents-running? #t))
@@ -90,8 +90,8 @@
 ;;; the vm uses the timer for the scheduler
 (define (schedule-timer-interrupt! msec)
   (spawn (lambda ()
-	   (sleep msec)
-	   (register-interrupt (enum interrupt alarm)))))
+           (sleep msec)
+           (register-interrupt (enum interrupt alarm)))))
 
 (define (next-sigevent pre-event type)
   (if (not (sigevent? pre-event))

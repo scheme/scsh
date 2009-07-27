@@ -22,27 +22,27 @@
   (with-handler
     (lambda (condition more)
       (if (syscall-error? condition)
-	  (let ((irritants (condition-irritants condition)))
-	    (handler (condition-errno condition)	; errno
-		     (list (condition-message condition)
+          (let ((irritants (condition-irritants condition)))
+            (handler (condition-errno condition)        ; errno
+                     (list (condition-message condition)
                            (condition-syscall condition)
-                           (condition-irritants condition))))	; (msg syscall . packet)
-	  ;; capture VM exceptions (currently only prim-io.scm)
-	  (if (and (vm-exception? condition)
-		   (eq? (vm-exception-reason condition)
-			'os-error))
+                           (condition-irritants condition))))   ; (msg syscall . packet)
+          ;; capture VM exceptions (currently only prim-io.scm)
+          (if (and (vm-exception? condition)
+                   (eq? (vm-exception-reason condition)
+                        'os-error))
               ;; this information wouldn't be in the irritants in the new
               ;; condition system. This should be changed later.
-	      (let ((irritants (condition-irritants condition)))
-		(if (> (length irritants) 3)
-		    (handler (caddr irritants) ; errno
-			     (cons
-			      (last irritants) ; msg
-			      (cons
-			       (enumerand->name ; syscall (almost ...)
-				(vm-exception-opcode condition) op)
-			        ; packet:
-			       (drop-right (cdddr irritants) 1))))))))
+              (let ((irritants (condition-irritants condition)))
+                (if (> (length irritants) 3)
+                    (handler (caddr irritants) ; errno
+                             (cons
+                              (last irritants) ; msg
+                              (cons
+                               (enumerand->name ; syscall (almost ...)
+                                (vm-exception-opcode condition) op)
+                                ; packet:
+                               (drop-right (cdddr irritants) 1))))))))
       (more))
     thunk))
 
@@ -57,38 +57,38 @@
 (define-syntax with-errno-handler
   (lambda (exp rename compare)
     (let* ((%lambda (rename 'lambda))
-	   (%cond (rename 'cond))
-	   (%else (rename 'else))
-	   (%weh (rename 'with-errno-handler*))
-	   (%= (rename '=))
-	   (%begin (rename `begin))
-	   (%or (rename `or))
-	   (%call/cc (rename 'call-with-current-continuation))
-	   (%cwv (rename 'call-with-values))
+           (%cond (rename 'cond))
+           (%else (rename 'else))
+           (%weh (rename 'with-errno-handler*))
+           (%= (rename '=))
+           (%begin (rename `begin))
+           (%or (rename `or))
+           (%call/cc (rename 'call-with-current-continuation))
+           (%cwv (rename 'call-with-values))
 
-	   (%ret (rename 'ret)) ; I think this is the way to gensym.
+           (%ret (rename 'ret)) ; I think this is the way to gensym.
 
-	   (err-var (caaadr exp))
-	   (data-var (car (cdaadr exp)))
-	   (clauses (cdadr exp))
-	   (body (cddr exp))
+           (err-var (caaadr exp))
+           (data-var (car (cdaadr exp)))
+           (clauses (cdadr exp))
+           (body (cddr exp))
 
-	   (arms (map (lambda (clause)
-			(let ((test (if (compare (car clause) %else)
-					%else
-					(let ((errs (car clause)))
-					  `(,%or . ,(map (lambda (err)
-							   `(,%= ,err ,err-var))
-							 errs))))))
-			  `(,test
-			    (,%cwv (,%lambda () . ,(cdr clause)) ,%ret))))
-		      clauses)))
+           (arms (map (lambda (clause)
+                        (let ((test (if (compare (car clause) %else)
+                                        %else
+                                        (let ((errs (car clause)))
+                                          `(,%or . ,(map (lambda (err)
+                                                           `(,%= ,err ,err-var))
+                                                         errs))))))
+                          `(,test
+                            (,%cwv (,%lambda () . ,(cdr clause)) ,%ret))))
+                      clauses)))
 
       `(,%call/cc (,%lambda (,%ret)
          (,%weh
-	    (,%lambda (,err-var ,data-var)
-	      (,%cond . ,arms))
-	    (,%lambda () . ,body)))))))
+            (,%lambda (,err-var ,data-var)
+              (,%cond . ,arms))
+            (,%lambda () . ,body)))))))
 
 ;;;; S48 already has this machinery, i.e., (SET-INTERACTIVE?! flag)
 ;;;; Interactive => breakpoint on errors.
@@ -108,7 +108,7 @@
 ;
 ;(define (scsh-error-handler condition more)
 ;  (if (and (error? condition)
-;	   (not (fluid $interactive-errors?)))
+;          (not (fluid $interactive-errors?)))
 ;      (begin (display condition (current-error-port))
-;	     (exit -1))
+;            (exit -1))
 ;      (more)))

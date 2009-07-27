@@ -24,7 +24,7 @@ s48_value s48_vcommand (char* fmt, va_list ap)
   char* command;
   s48_value ret;
 
-#ifdef HAVE_VASPRINTF  
+#ifdef HAVE_VASPRINTF
   if (vasprintf(&command, fmt, ap) == -1){
     fprintf(stderr, "error in vasprintf\n");
     exit(1);
@@ -38,11 +38,11 @@ s48_value s48_vcommand (char* fmt, va_list ap)
 #endif
   fprintf (stderr,"The command is: %s\n", command);
   S48_SHARED_BINDING_CHECK (s48_command_binding);
- 
+
   ret = s48_call_scheme (S48_SHARED_BINDING_REF (s48_command_binding),
-			 1,
-			 s48_enter_string (command));
- 
+                         1,
+                         s48_enter_string (command));
+
   free (command);
   va_end (ap);
   return ret;

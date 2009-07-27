@@ -27,7 +27,7 @@
 ;;;
 ;;; From rts/interrupt.scm (package interrupts, interface interrupts-interface)
 ;;;     WITH-INTERRUPTS INTERRUPT-HANDLERS SET-ENABLED-INTERRUPTS !
-;;;	ENABLED-INTERRUPTS
+;;;     ENABLED-INTERRUPTS
 ;;; Must define WITH-INTERRUPTS* and WITH-INTERRUPTS.
 
 ;;; Map a Unix async signal to its S48 interrupt value.
@@ -38,7 +38,7 @@
 (define (signal->interrupt sig)
   (let ((int (%signal->interrupt sig)))
     (if (>= int 0) int
-	(error "Unix signal has no Scheme 48 interrupt." sig))))
+        (error "Unix signal has no Scheme 48 interrupt." sig))))
 
 
 (define (interrupt-enabled? int mask)
@@ -50,8 +50,8 @@
 (define *enabled-interrupts*
    (let lp ((i 0) (mask 0))
      (if (= i number-of-interrupts)
-	 mask
-	 (lp (+ i 1) (interrupt-enable i mask)))))
+         mask
+         (lp (+ i 1) (interrupt-enable i mask)))))
 
 (define (enabled-interrupts) *enabled-interrupts*)
 
@@ -76,13 +76,13 @@
     ;;; set it here so the handlers see the correct value
     (set! *enabled-interrupts* new-enabled-interrupts)
     (do ((int 0 (+ int 1)))
-	((= int number-of-interrupts) new-enabled-interrupts)
+        ((= int number-of-interrupts) new-enabled-interrupts)
       (let ((old-state (interrupt-enabled? int old-enabled-interrupts))
-	    (new-state (interrupt-enabled? int new-enabled-interrupts)))
-	(if (and (not old-state) new-state (interrupt-pending? int))
-	    (begin
-	      (remove-pending-interrupt int)
-	      (call-interrupt-handler int)))))))
+            (new-state (interrupt-enabled? int new-enabled-interrupts)))
+        (if (and (not old-state) new-state (interrupt-pending? int))
+            (begin
+              (remove-pending-interrupt int)
+              (call-interrupt-handler int)))))))
 
 (define-simple-syntax (with-enabled-interrupts interrupt-set body ...)
    (begin
@@ -135,14 +135,14 @@
   ;; Non-Unix-signal interrupts just get their default values from
   ;; the current value of I-H.
   (let ((v (make-vector 32)))
-    (do ((sig 31 (- sig 1)))			; For each Unix signal
-	((< sig 0))				; make & install a default
-      (let ((i (%signal->interrupt sig)))	; signal handler.
-	(if (>= i 0)	; Don't mess with non-signal interrupts.
-	    (vector-set! v i (if (memv sig signals-ignored-by-default)
-				 (lambda (enabled-interrupts) #f)
-				 (lambda (enabled-interrupts)
-				   (%do-default-sigaction sig)))))))
+    (do ((sig 31 (- sig 1)))                    ; For each Unix signal
+        ((< sig 0))                             ; make & install a default
+      (let ((i (%signal->interrupt sig)))       ; signal handler.
+        (if (>= i 0)    ; Don't mess with non-signal interrupts.
+            (vector-set! v i (if (memv sig signals-ignored-by-default)
+                                 (lambda (enabled-interrupts) #f)
+                                 (lambda (enabled-interrupts)
+                                   (%do-default-sigaction sig)))))))
     v))
 
 
@@ -157,8 +157,8 @@
   (if (or (< int 0) (>= int number-of-interrupts))
       (error "ill signum in set-interrupt-handler!" int)
       (let ((old-handler (vector-ref *interrupt-handlers-vector* int)))
-	(vector-set! *interrupt-handlers-vector* int handler)
-	old-handler)))
+        (vector-set! *interrupt-handlers-vector* int handler)
+        old-handler)))
 
 (define (interrupt-handler int)
   (interrupt-handler-ref int))
@@ -169,27 +169,27 @@
       ((< sig 0))
     (let ((i (%signal->interrupt sig)))
       (if (not (or (= i -1)
-		   (= sig signal/alrm)))	; Leave alarm handler alone.
-	  (set-interrupt-handler
-	   i
-	   #t))))
+                   (= sig signal/alrm)))        ; Leave alarm handler alone.
+          (set-interrupt-handler
+           i
+           #t))))
   (let ((scsh-initial-thread  ((structure-ref threads current-thread))))
     (if (not (eq? (thread-name scsh-initial-thread)
-		  'scsh-initial-thread))
-	(error "sighandler did not find scsh-initial-thread, but"
-	       scsh-initial-thread))
+                  'scsh-initial-thread))
+        (error "sighandler did not find scsh-initial-thread, but"
+               scsh-initial-thread))
 
     ;; Note: this will prevent any other system to work, since it pushes
     ;; a new command level !
     (if interactive?
-	(set-interrupt-handler interrupt/keyboard
-			       (lambda stuff
-				 ((structure-ref threads-internal schedule-event)
-				  scsh-initial-thread
-				  (enum
-				   (structure-ref threads-internal event-type)
-				   interrupt)
-				  (enum interrupt keyboard))))))
+        (set-interrupt-handler interrupt/keyboard
+                               (lambda stuff
+                                 ((structure-ref threads-internal schedule-event)
+                                  scsh-initial-thread
+                                  (enum
+                                   (structure-ref threads-internal event-type)
+                                   interrupt)
+                                  (enum interrupt keyboard))))))
   (run-as-long-as
    deliver-interrupts
    thunk
@@ -199,11 +199,11 @@
 (define (deliver-interrupts)
   (let lp ((last ((structure-ref sigevents most-recent-sigevent))))
     (let* ((event ((structure-ref sigevents next-sigevent-set)
-		   last full-interrupt-set))
-	   (interrupt ((structure-ref sigevents sigevent-type) event)))
+                   last full-interrupt-set))
+           (interrupt ((structure-ref sigevents sigevent-type) event)))
       (if (interrupt-enabled? interrupt (enabled-interrupts))
-	  (call-interrupt-handler interrupt)
-	  (make-interrupt-pending interrupt))
+          (call-interrupt-handler interrupt)
+          (make-interrupt-pending interrupt))
       (lp event))))
 
 ;;; Dealing with synchronous signals
@@ -218,9 +218,9 @@
 (define int->sig-vec
   (let ((v (make-vector 33 #f)))
     (do ((sig 32 (- sig 1)))
-	((< sig 0))
+        ((< sig 0))
       (let ((i (%signal->interrupt sig)))
-	(if (not (= i -1)) (vector-set! v i sig))))
+        (if (not (= i -1)) (vector-set! v i sig))))
     v))
 
 (define (int->signal i) (and (<= 0 i 32) (vector-ref int->sig-vec i)))

@@ -51,25 +51,25 @@
    (lambda ()
      (let loop ((args args) (rev-old-vals '()))
        (if (null? (cdr args))
-	   (values (car args) (reverse rev-old-vals))
-	   (loop (cddr args)
-		 (cons (thread-fluid (car args))
-		       rev-old-vals)))))
+           (values (car args) (reverse rev-old-vals))
+           (loop (cddr args)
+                 (cons (thread-fluid (car args))
+                       rev-old-vals)))))
    (lambda (thunk old-vals)
     (dynamic-wind
      (lambda ()
        (let loop ((args args))
-	 (if (not (null? (cdr args)))
-	     (begin
-	       (set-thread-fluid! (car args) (cadr args))
-	       (loop (cddr args))))))
+         (if (not (null? (cdr args)))
+             (begin
+               (set-thread-fluid! (car args) (cadr args))
+               (loop (cddr args))))))
      thunk
      (lambda ()
        (let loop ((args args) (old-vals old-vals))
-	 (if (not (null? (cdr args)))
-	     (begin
-	       (set-thread-fluid! (car args) (car old-vals))
-	       (loop (cddr args) (cdr old-vals))))))))))
+         (if (not (null? (cdr args)))
+             (begin
+               (set-thread-fluid! (car args) (car old-vals))
+               (loop (cddr args) (cdr old-vals))))))))))
 
 (define (make-thread-fluid top)
   (really-make-thread-fluid (make-thread-cell top)))
@@ -86,9 +86,9 @@
     (walk-population
      (lambda (t-fluid)
        (set! args
-	     (cons t-fluid
-		   (cons (thread-fluid t-fluid)
-			 args))))
+             (cons t-fluid
+                   (cons (thread-fluid t-fluid)
+                         args))))
      *preserved-fluids*)
     (lambda ()
       (apply let-thread-fluids args))))
