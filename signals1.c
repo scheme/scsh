@@ -1,7 +1,6 @@
 /* Need to turn off synchronous error signals (SIGPIPE, SIGSYS). */
-#include <sysdep.h>
 #include "scsh_aux.h"
-
+#include "temp_constants.h"
 /* Make sure our exports match up w/the implementation: */
 #include "signals1.h"
 

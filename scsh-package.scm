@@ -168,6 +168,7 @@
   (open enumerated
 	defenum-package
 	external-calls           ;JMG new FFI
+        load-dynamic-externals
 	structure-refs
 	receiving
 	defrec-package

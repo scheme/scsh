@@ -32,18 +32,18 @@
 (define-syntax import-os-error-syscall
   (syntax-rules ()
     ((import-os-error-syscall syscall (%arg ...) c-name)
-     (begin 
+     (begin
        (import-lambda-definition syscall/eintr (%arg ...) c-name)
        (define (syscall %arg ...)
 	 (let ((arg %arg) ...)
-	   (continuation-capture 
+	   (continuation-capture
 	    (lambda (cont)
 	      (let loop ()
 		(with-handler
 		 (lambda (condition more)
-		   (if (and (exception? condition) (eq? (exception-reason condition) 
+		   (if (and (vm-exception? condition) (eq? (vm-exception-reason condition)
 							'os-error))
-		       (let ((stuff (exception-arguments condition)))
+		       (let ((stuff (condition-irritants condition)))
 			 (if (= (cadr stuff) errno/intr)
 			     (loop)
 			     (continuation-graft
@@ -52,12 +52,12 @@
 				(apply errno-error-with-message
 				       (cadr stuff)   ; errno
 				       (caddr stuff)  ;msg
-				       syscall 
+				       syscall
 				       (cdddr stuff)))))) ;packet
 		       (more)))
 		 (lambda ()
 		   (syscall/eintr %arg ...))))))))))))
-  
+
 ;;; Process
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; we can't algin env here, because exec-path/env calls
@@ -98,7 +98,7 @@
 (import-os-error-syscall %chdir (directory) "scsh_chdir")
 
 ;;; These calls change/reveal the process working directory
-;;; 
+;;;
 
 (define (process-chdir . maybe-dir)
   (let ((dir (:optional maybe-dir (home-dir))))
@@ -129,7 +129,7 @@
 (import-os-error-syscall set-process-user-effective-uid (uid) "scsh_seteuid")
 
 (import-os-error-syscall %user-login-name () "my_username")
- 
+
 (define (user-login-name)
   (or (%user-login-name)
       (error "Cannot get your name")))
@@ -183,8 +183,8 @@
 ;;; ports.
 
 (define (generic-file-op thing fd-op fname-op)
-  (if (string? thing) 
-      (with-resources-aligned (list cwd-resource euid-resource egid-resource) 
+  (if (string? thing)
+      (with-resources-aligned (list cwd-resource euid-resource egid-resource)
 			      (lambda () (fname-op thing)))
       (call/fdes thing fd-op)))
 
@@ -231,7 +231,7 @@
 ;  (file-access? fname 4))
 
 
-(import-os-error-syscall %create-hard-link (original-name new-name) 
+(import-os-error-syscall %create-hard-link (original-name new-name)
   "scsh_link")
 
 (import-os-error-syscall %create-fifo (path mode) "scsh_mkfifo")
@@ -249,23 +249,23 @@
 
 (import-os-error-syscall %delete-directory (path) "scsh_rmdir")
 
-(import-os-error-syscall %utime (path ac m) "scm_utime") 
+(import-os-error-syscall %utime (path ac m) "scm_utime")
 
 (import-os-error-syscall %utime-now (path) "scm_utime_now")
 
 ;;; (SET-FILE-TIMES path [access-time mod-time])
 
 (define (set-file-times path . maybe-times)
-  (with-resources-aligned 
-   (list cwd-resource euid-resource egid-resource) 
-   (lambda ()      
+  (with-resources-aligned
+   (list cwd-resource euid-resource egid-resource)
+   (lambda ()
      (if (pair? maybe-times)
 	 (let* ((access-time (real->exact-integer (car maybe-times)))
 		(mod-time (if (pair? (cddr maybe-times))
 			      (error "Too many arguments to set-file-times/errno"
 				     (cons path maybe-times))
 			      (real->exact-integer (cadr maybe-times)))))
-	   (%utime path access-time 
+	   (%utime path access-time
 		   mod-time ))
 	 (%utime-now path)))))
 
@@ -314,8 +314,8 @@
 		    (vector-ref ans-vec 8)
 		    (vector-ref ans-vec 9)
 		    (vector-ref ans-vec 10))))
-						      
-		
+
+
 (define (file-info fd/port/fname . maybe-chase?)
   (let ((chase? (:optional maybe-chase? #t)))
     (%file-info fd/port/fname chase?)))
@@ -329,7 +329,7 @@
 ;;; the OLD-NAME arg is "const". It *should* be const.
 
 (import-os-error-syscall %create-symlink (old-name new-name) "scsh_symlink")
-  
+
 ;;; "no-declare" as there is no agreement among the OS's as to whether or not
 ;;; the PATH arg is "const". It *should* be const.
 
@@ -345,7 +345,7 @@
 (import-os-error-syscall %delete-file (path) "scsh_unlink")
 
 (define (delete-file path)
-  (with-resources-aligned (list cwd-resource euid-resource egid-resource) 
+  (with-resources-aligned (list cwd-resource euid-resource egid-resource)
 			  (lambda () (%delete-file path))))
 
 (import-os-error-syscall %sync-file (fd) "scsh_fsync")
@@ -394,7 +394,7 @@
 (import-os-error-syscall %open (path flags mode) "scsh_open")
 
 (define (open-fdes path flags . maybe-mode) ; mode defaults to 0666
-    (with-resources-aligned 
+    (with-resources-aligned
      (list cwd-resource umask-resource euid-resource egid-resource)
      (lambda ()
       (%open path flags (:optional maybe-mode #o666)))))
@@ -434,7 +434,7 @@
 ;;; (define-foreign signal-process-group/errno
 ;;;   (killpg (integer proc-group) (integer signal))
 ;;;   (to-scheme integer errno_or_false))
-;;; 
+;;;
 ;;; (define-errno-syscall (signal-process-group proc-group signal)
 ;;;   signal-process-group/errno)
 
@@ -451,12 +451,12 @@
 
 
 (import-os-error-syscall
- %uid->user-info 
+ %uid->user-info
  (uid user-info-record)
  "user_info_uid")
 
 (import-os-error-syscall
- %name->user-info 
+ %name->user-info
  (name user-info-record)
  "user_info_name")
 
@@ -464,7 +464,7 @@
   (let ((empty-user-info (make-user-info #f uid #f #f #f)))
     (if (%uid->user-info uid empty-user-info)
 	empty-user-info
-	(error "Cannot get user's information" uid->user-info uid)))) 
+	(error "Cannot get user's information" uid->user-info uid))))
 
 
 (define (name->user-info name)
@@ -501,12 +501,12 @@
   ((disclose gi) (list "group-info" (group-info:name gi))))
 
 (import-os-error-syscall
- %gid->group-info 
+ %gid->group-info
  (gid group-info-record)
  "group_info_gid")
 
 (import-os-error-syscall
- %name->group-info 
+ %name->group-info
  (name group-info-record)
  "group_info_name")
 
@@ -515,7 +515,7 @@
     (if (%gid->group-info gid empty-group-info)
 	empty-group-info
 	(error "Cannot get group's information for gid" gid))))
-							
+
 (define (name->group-info name)
   (let ((empty-group-info (make-group-info name #f #f)))
     (if (%name->group-info name empty-group-info)
@@ -581,9 +581,9 @@
 (define-record-resumer type/directory-stream #f)
 
 (define (open-directory-stream name)
-  (let ((dir (make-directory-stream 
+  (let ((dir (make-directory-stream
 	      name
-	      (with-resources-aligned 
+	      (with-resources-aligned
 	       (list cwd-resource euid-resource egid-resource)
 	       (lambda ()
 		 (open-dir name))))))
@@ -636,7 +636,7 @@
 
 ;;; (var . val) / "var=val" rep conversion:
 
- 
+
 
 (define (split-env-string var=val)
   (let ((i (string-index var=val #\=)))
@@ -662,12 +662,12 @@
 
 (import-os-error-syscall %load-env () "scm_envvec")
 
-(define (environ-env->alist) 
+(define (environ-env->alist)
   (let ((env-list.envvec (%load-env)))
-    (cons (env-list->alist (car env-list.envvec)) 
+    (cons (env-list->alist (car env-list.envvec))
 	  (cdr env-list.envvec))))
 
-	   
+
 ;;; ALIST->ENV
 
 ;;; (%create-env ((vector 'X) -> address))

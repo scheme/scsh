@@ -40,7 +40,7 @@
 			      (last irritants) ; msg
 			      (cons
 			       (enumerand->name ; syscall (almost ...)
-				(exception-opcode condition) op)
+				(vm-exception-opcode condition) op)
 			        ; packet:
 			       (drop-right (cdddr irritants) 1))))))))
       (more))

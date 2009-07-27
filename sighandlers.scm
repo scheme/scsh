@@ -32,7 +32,8 @@
 
 ;;; Map a Unix async signal to its S48 interrupt value.
 ;;; -1 => Not defined.
-(import-lambda-definition %signal->interrupt (sig) "sig2interrupt")
+(import-dynamic-externals "/home/roderic/scsh/sighandlers1")
+(import-lambda-definition-2 %signal->interrupt (sig) "sig2interrupt")
 
 (define (signal->interrupt sig)
   (let ((int (%signal->interrupt sig)))

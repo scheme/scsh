@@ -22,11 +22,11 @@ extern int errno;
 
 /* Translate Unix signal numbers to S48 interrupt numbers. */
 
-s48_value sig2interrupt(s48_value _signal)
+s48_ref_t sig2interrupt(s48_call_t call, s48_ref_t _signal)
 {
-  int signal = s48_extract_fixnum (_signal);
-  return s48_enter_fixnum (( signal < 0 || signal > max_sig ) ? -1 : 
-			   sig2int[signal]);
+  int signal = s48_extract_long_2(call, _signal);
+  return s48_enter_long_2 (call, (signal < 0 || signal > max_sig) ? -1 :
+                           sig2int[signal]);
 }
 
 /* This guy is responsible for making the default action for a
@@ -42,11 +42,11 @@ s48_value sig2interrupt(s48_value _signal)
 **
 ** Weird, I know.
 */
-s48_value do_default_sigaction(s48_value _signal)
+s48_ref_t do_default_sigaction(s48_call_t call, s48_ref_t _signal)
 {
   sigset_t ss, old_ss;
   struct sigaction default_action, old_action;
-  int signal = s48_extract_fixnum(_signal);
+  int signal = s48_extract_long_2(call, _signal);
   /* fprintf(stderr, "Doing default for signal %d\n", signal); */
 
   sigfillset(&ss);				/* Block everyone. */
@@ -66,33 +66,30 @@ s48_value do_default_sigaction(s48_value _signal)
   */
   sigaction(signal, &old_action, 0);		/* Restore old handler, */
   sigprocmask(SIG_SETMASK, &old_ss, 0);		/* and mask.            */
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value ignore_signal(s48_value _signal)
+s48_ref_t ignore_signal(s48_call_t call, s48_ref_t _signal)
 {
-  void (*res)(int) = signal(s48_extract_fixnum(_signal), SIG_IGN);
+  void (*res)(int) = signal(s48_extract_long_2(call, _signal), SIG_IGN);
   if (res == SIG_ERR)
-    s48_raise_os_error_1(errno, _signal);
-  return S48_UNSPECIFIC;
+    s48_os_error_2(call, "ignore_signal", errno, 1, _signal);
+  return s48_unspecific_2(call);
 }
 
-s48_value handle_signal_default(s48_value _signal)
+s48_ref_t handle_signal_default(s48_call_t call, s48_ref_t _signal)
 {
-  void(*res)(int) = signal(s48_extract_fixnum(_signal), SIG_DFL);
+  void(*res)(int) = signal(s48_extract_long_2(call, _signal), SIG_DFL);
   if (res == SIG_ERR)
-    s48_raise_os_error_1(errno, _signal);
-  return S48_UNSPECIFIC;
+    s48_os_error_2(call, "handle_signal_default", errno, 1, _signal);
+  return s48_unspecific_2(call);
 }
 
-
-s48_value s48_init_sighandlers(void)
+void s48_on_load(void)
 {
-    S48_EXPORT_FUNCTION(sig2interrupt);
-    S48_EXPORT_FUNCTION(do_default_sigaction);
-    S48_EXPORT_FUNCTION(ignore_signal);
-    S48_EXPORT_FUNCTION(handle_signal_default);
-
-    return S48_UNSPECIFIC;
+  S48_EXPORT_FUNCTION(sig2interrupt);
+  S48_EXPORT_FUNCTION(do_default_sigaction);
+  S48_EXPORT_FUNCTION(ignore_signal);
+  S48_EXPORT_FUNCTION(handle_signal_default);
 }
 
