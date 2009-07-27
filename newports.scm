@@ -136,8 +136,9 @@
    close-fdport*
    bufferproc
    fdport-channel-ready?
-   (lambda (fdport* owner)
-     (steal-channel! (fdport-data:channel fdport*) owner))))
+   ;; (lambda (fdport* owner)
+   ;;   (steal-channel! (fdport-data:channel fdport*) owner))
+   ))
 
 (define input-fdport-handler
   (make-input-fdport-handler
@@ -151,8 +152,9 @@
    close-fdport*
    bufferproc
    fdport-channel-ready?
-   (lambda (fdport* owner)
-     (steal-channel! (fdport-data:channel fdport*) owner))))
+   ;; (lambda (fdport* owner)
+   ;;   (steal-channel! (fdport-data:channel fdport*) owner))
+   ))
 
 (define output-fdport-handler
   (make-output-fdport-handler
@@ -259,8 +261,9 @@
 			     (fdport-data:channel fdport*))
 	      (set! proc-buffer-index 0))))
      fdport-channel-ready?
-     (lambda (fdport* owner)
-       (steal-channel! (fdport-data:channel fdport*) owner)))))
+     ;; (lambda (fdport* owner)
+     ;;   (steal-channel! (fdport-data:channel fdport*) owner))
+     )))
 
 
 (define (set-input-port-buffering port policy size)
@@ -555,7 +558,7 @@
   (force-output fdport))
 
 (define (flush-all-ports)
-  (let ((thunks (output-port-forcers #f #f)))
+  (let ((thunks (output-port-forcers #f)))
     (cond ((null? thunks)
 	   #f)
 	  (else
@@ -584,7 +587,7 @@
     (placeholder-value placeholder)))
 
 (define (flush-all-ports-no-threads)
-  (let ((thunks (output-port-forcers #f #t)))
+  (let ((thunks (output-port-forcers #f)))
     (for-each (lambda (thunk) (thunk)) thunks)))
 
 ;;; Extend R4RS i/o ops to handle file descriptors.
