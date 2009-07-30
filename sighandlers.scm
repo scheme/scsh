@@ -129,7 +129,7 @@
 ;;; to our waiting parent proc correctly reflects how we died, and also
 ;;; makes the core dump happen if it should. Details, details.
 
-(import-lambda-definition %do-default-sigaction (signal) "do_default_sigaction")
+(import-lambda-definition-2 %do-default-sigaction (signal) "do_default_sigaction")
 
 (define default-int-handler-vec
   ;; Non-Unix-signal interrupts just get their default values from
@@ -208,9 +208,9 @@
 
 ;;; Dealing with synchronous signals
 
-(import-lambda-definition ignore-signal (sig) "ignore_signal")
+(import-lambda-definition-2 ignore-signal (sig) "ignore_signal")
 
-(import-lambda-definition handle-signal-default (sig) "handle_signal_default")
+(import-lambda-definition-2 handle-signal-default (sig) "handle_signal_default")
 
 ;;; I am ashamed to say the 33 below is completely bogus.
 ;;; What we want is a value that is 1 + max interrupt value.

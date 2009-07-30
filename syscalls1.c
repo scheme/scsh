@@ -3,7 +3,6 @@
 ** Copyright (c) 1993,1994 by Olin Shivers.
 */
 
-#include "sysdep.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/signal.h>
@@ -20,9 +19,9 @@
 /* This lossage brought to you by Solaris and BIND */
 /* We thank Solaris for forcing users to get a new BIND */
 /* We thank BIND for blowing away the Solaris includea for MAXHOSTNAMELEN */
-#ifndef MAXHOSTNAMELEN		
+#ifndef MAXHOSTNAMELEN
 #include <arpa/nameser.h>
-#ifndef MAXHOSTNAMELEN		
+#ifndef MAXHOSTNAMELEN
 #define MAXHOSTNAMELEN      MAXDNAME
 #endif
 #endif
@@ -34,7 +33,7 @@
 #include <string.h>
 #include <utime.h>
 #ifdef HAVE_CRYPT_H
-#include <crypt.h> 
+#include <crypt.h>
 #endif
 #include "cstuff.h"
 #include <limits.h>     /* NGROUPS_MAX on solaris */
@@ -58,110 +57,52 @@ extern char **environ;
 
 /* Args: pid, flags; returns [retval, status] */
 
-s48_value wait_pid(s48_value s48_pid, s48_value s48_flags)
+s48_ref_t wait_pid(s48_call_t call, s48_ref_t s48_pid, s48_ref_t s48_flags)
 {
   int status=0;
   pid_t pid;
   int flags;
   pid_t result_pid;
-  s48_value sch_retval = S48_UNSPECIFIC;
+  s48_ref_t sch_retval = s48_unspecific_2(call);
+  s48_ref_t sch_result_pid = s48_unspecific_2(call);
+  s48_ref_t sch_status = s48_unspecific_2(call);
+  s48_ref_t sch_status_list = s48_unspecific_2(call);
 
-  s48_value sch_result_pid = S48_UNSPECIFIC;
-  s48_value sch_status = S48_UNSPECIFIC;
-  s48_value sch_status_list = S48_UNSPECIFIC;
-  S48_DECLARE_GC_PROTECT(5);
-
-  S48_GC_PROTECT_5(s48_pid, s48_flags,
-		   sch_result_pid, sch_status, sch_status_list);
-
-  pid = (pid_t) s48_extract_integer (s48_pid); 
-  flags = s48_extract_integer (s48_flags); 
+  pid = (pid_t) s48_extract_long_2(call, s48_pid);
+  flags = s48_extract_long_2(call, s48_flags);
 
   result_pid = waitpid(pid, &status, flags);
   if (result_pid == -1)
-    if (errno == ECHILD) sch_result_pid = s48_enter_fixnum(0);
-    else s48_raise_os_error_2 (errno, s48_pid, s48_flags);
+    if (errno == ECHILD) sch_result_pid = s48_enter_long_2(call, 0);
+    else s48_os_error_2(call, "wait_pid", errno, 2, s48_pid, s48_flags);
   else {
-    sch_result_pid = s48_enter_integer (result_pid);
-    sch_status = s48_enter_integer (status);
+    sch_result_pid = s48_enter_long_2(call, result_pid);
+    sch_status = s48_enter_long_2(call, status);
   }
-  sch_status_list = s48_cons (sch_status, S48_NULL);
-  sch_retval = s48_cons (sch_result_pid, sch_status_list);
-
-  S48_GC_UNPROTECT();
+  sch_status_list = s48_cons_2 (call, sch_status, s48_null_2(call));
+  sch_retval = s48_cons_2 (call, sch_result_pid, sch_status_list);
 
   return sch_retval;
 }
 
-
-/* env:  Scheme vector of Scheme strings, e.g., #("TERM=vt100" ...) or #T.
-** argv: Scheme vector of Scheme strings.
-** prog: String.
-** 
-** We don't typecheck the args. You must do the typechecking
-** on the Scheme side.
-*/
-
-s48_value scheme_exec(s48_value prog, s48_value argv, s48_value env)
+s48_ref_t scsh_exit(s48_call_t call, s48_ref_t status)
 {
-  int i, j, e;
-  int argc = S48_VECTOR_LENGTH(argv);
-
-  char **unix_argv = Malloc(char*, argc+1);
-  char **unix_env;
-
-  if( unix_argv == NULL ) s48_raise_os_error_3(errno, prog, argv, env);
-
-  /* Scheme->Unix convert the argv parameter. */
-  for(i=0; i<argc; i++)
-    unix_argv[i] = s48_extract_string(S48_VECTOR_REF(argv,i));
-  unix_argv[argc] = NULL;
-
-  /* Scheme->Unix convert the env parameter. */
-  if( env == S48_TRUE ) unix_env = environ;
-  else {
-    int envlen = S48_VECTOR_LENGTH(env);
-    unix_env = Malloc(char*, envlen+1);
-
-    if( !unix_env ){
-      Free(unix_argv);
-      s48_raise_os_error_3(errno, prog, argv, env);
-    }
-
-    for(j=0; j<envlen; j++)
-      unix_env[j] = s48_extract_string(S48_VECTOR_REF(env,j));
-    unix_env[envlen] = NULL;
-  }
-  s48_stop_alarm_interrupts();
-  execve(s48_extract_string (prog), unix_argv, unix_env); /* Do it. */
-  e = errno;
-  s48_start_alarm_interrupts();
-  if( env != S48_TRUE ) {
-    Free(unix_env);
-  }
-  Free(unix_argv);
-  return s48_enter_integer(e); /* Don't raise an exception since
-				  we're maybe just testing the path */
+  exit(s48_extract_long_2(call, status));
+  return s48_false_2(call);
 }
 
-s48_value scsh_exit(s48_value status)
+s48_ref_t scsh__exit(s48_call_t call, s48_ref_t status)
 {
-    exit(s48_extract_fixnum(status));
-    return S48_FALSE;
+  _exit(s48_extract_long_2(call, status));
+  return s48_false_2(call);
 }
 
-s48_value scsh__exit(s48_value status)
-{
-    _exit(s48_extract_fixnum(status));
-    return S48_FALSE;
-}
-
-s48_value scsh_fork()
+s48_ref_t scsh_fork(s48_call_t call)
 {
   pid_t pid = fork();
   if (pid == -1)
-    s48_raise_os_error(errno);
-  else return s48_enter_fixnum (pid);
+    s48_os_error_2(call, "scsh_fork", errno, 0);
+  else return s48_enter_long_2(call, pid);
 }
 
 /* Random file and I/O stuff
@@ -169,12 +110,12 @@ s48_value scsh_fork()
 */
 
 /* Returns (r w) */
-s48_value scheme_pipe()
+s48_ref_t scheme_pipe()
 {
   int fds[2];
-  s48_value sch_retval = S48_UNSPECIFIC;
+  s48_ref_t sch_retval = s48_unspecific_2(call);
 
-  if(pipe(fds) == -1) 
+  if(pipe(fds) == -1)
     s48_raise_os_error(errno);
   else {
     sch_retval = s48_cons(s48_enter_fixnum(fds[0]),
@@ -184,7 +125,7 @@ s48_value scheme_pipe()
     return sch_retval;
 }
 
-s48_value scsh_kill (s48_value sch_pid, s48_value sch_signal)
+s48_ref_t scsh_kill (s48_ref_t sch_pid, s48_ref_t sch_signal)
 {
   int retval = kill ((pid_t) s48_extract_fixnum (sch_pid),
 		     s48_extract_fixnum (sch_signal));
@@ -192,11 +133,11 @@ s48_value scsh_kill (s48_value sch_pid, s48_value sch_signal)
     s48_raise_os_error_2(errno, sch_pid, sch_signal);
   else return s48_enter_fixnum (retval);
 }
-  
+
 
 /* Read the symlink. */
 #ifdef MAXPATHLEN
-s48_value scsh_readlink(s48_value sch_path)
+s48_ref_t scsh_readlink(s48_ref_t sch_path)
 {
   char linkpath[MAXPATHLEN+1];
   int retval = readlink(s48_extract_string (sch_path), linkpath, MAXPATHLEN);
@@ -209,13 +150,13 @@ s48_value scsh_readlink(s48_value sch_path)
     }
 }
 #else
-s48_value scsh_readlink(s48_value sch_path)
+s48_ref_t scsh_readlink(s48_ref_t sch_path)
 {
   char *linkpath;
   int size;
   int retval;
-  s48_value sch_sym_link_path = S48_UNSPECIFIC;
-  
+  s48_ref_t sch_sym_link_path = s48_unspecific_2(call);
+
   for (size = 256;; size *=2){
 
     linkpath = Malloc(char,size);
@@ -228,7 +169,7 @@ s48_value scsh_readlink(s48_value sch_path)
       free (linkpath);
       s48_raise_os_error_1(errno, sch_path);
     }
-    
+
     if (retval < size){
       sch_sym_link_path = s48_enter_substring (linkpath, retval);
       free (linkpath);
@@ -240,30 +181,30 @@ s48_value scsh_readlink(s48_value sch_path)
 #endif
 
 
-s48_value scsh_rename(s48_value sch_from, s48_value sch_to)
+s48_ref_t scsh_rename(s48_ref_t sch_from, s48_ref_t sch_to)
 {
   int retval = rename (s48_extract_string (sch_from),
 		       s48_extract_string (sch_to));
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_from, sch_to);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_rmdir(s48_value sch_path)
+s48_ref_t scsh_rmdir(s48_ref_t sch_path)
 {
   int retval = rmdir (s48_extract_string (sch_path));
   if (retval == -1)
     s48_raise_os_error_1(errno, sch_path);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
 
 
-/* Scheme interfaces to utime(). 
+/* Scheme interfaces to utime().
 ** Complicated by need to pass real 32-bit quantities.
 */
 
-s48_value scm_utime(s48_value sch_path, s48_value sch_ac, s48_value sch_mod)
+s48_ref_t scm_utime(s48_ref_t sch_path, s48_ref_t sch_ac, s48_ref_t sch_mod)
 {
   struct utimbuf t;
   int retval;
@@ -279,18 +220,18 @@ s48_value scm_utime(s48_value sch_path, s48_value sch_ac, s48_value sch_mod)
 
   if (retval == -1)
     s48_raise_os_error_3(errno, sch_path, sch_ac, sch_mod);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scm_utime_now(s48_value sch_path){
+s48_ref_t scm_utime_now(s48_ref_t sch_path){
   int retval = utime (s48_extract_string (sch_path), 0);
   if (retval == -1)
     s48_raise_os_error_1(errno, sch_path);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
 
-s48_value set_cloexec(s48_value _fd, s48_value _val)
+s48_ref_t set_cloexec(s48_ref_t _fd, s48_ref_t _val)
 {
   int fd = s48_extract_fixnum (_fd);
   int val = (_val == S48_TRUE) ? 1 : 0;
@@ -307,7 +248,7 @@ s48_value set_cloexec(s48_value _fd, s48_value _val)
   else return S48_FALSE;
 }
 
-s48_value scsh_chdir(s48_value directory)
+s48_ref_t scsh_chdir(s48_ref_t directory)
 {
   int retval = chdir (s48_extract_string (directory));
   if (retval == -1)
@@ -321,7 +262,7 @@ s48_value scsh_chdir(s48_value directory)
 
 /* Posix rules: If PATH_MAX is defined, it's the length of longest path.
 ** Otherwise, _POSIX_PATH_MAX = 255, and is a lower bound on said length.
-** I'm writing out 255 as a literal because HP-UX isn't finding 
+** I'm writing out 255 as a literal because HP-UX isn't finding
 ** _POSIX_PATH_MAX.
 */
 #ifdef PATH_MAX
@@ -331,11 +272,11 @@ s48_value scsh_chdir(s48_value directory)
 #endif
 
 /* Simple-minded POSIX version. */
-s48_value scheme_cwd()
+s48_ref_t scheme_cwd()
 {
   char *buf;
   int size = scsh_path_max + 1; /* +1 for terminating nul byte... */
-  s48_value cwd = S48_UNSPECIFIC;
+  s48_ref_t cwd = s48_unspecific_2(call);
 
   buf = Malloc(char,size);
   if(!buf) goto lose;
@@ -349,9 +290,9 @@ s48_value scheme_cwd()
       buf = nbuf;
     }
   cwd = s48_enter_string(buf);		/* win */
-  
+
   Free(buf);
-  
+
   return cwd;
 
  lose:
@@ -368,15 +309,15 @@ s48_value scheme_cwd()
 ** but cig can't handle it.
 */
 
-s48_value process_times()
+s48_ref_t process_times()
 {
   struct tms tms;
 
-  s48_value sch_result_utime = S48_UNSPECIFIC;
-  s48_value sch_result_stime = S48_UNSPECIFIC;
-  s48_value sch_result_cutime = S48_UNSPECIFIC;
-  s48_value sch_result_cstime = S48_UNSPECIFIC;
-  s48_value sch_result_retval = S48_UNSPECIFIC;
+  s48_ref_t sch_result_utime = s48_unspecific_2(call);
+  s48_ref_t sch_result_stime = s48_unspecific_2(call);
+  s48_ref_t sch_result_cutime = s48_unspecific_2(call);
+  s48_ref_t sch_result_cstime = s48_unspecific_2(call);
+  s48_ref_t sch_result_retval = s48_unspecific_2(call);
 
   S48_DECLARE_GC_PROTECT(4);
 
@@ -387,7 +328,7 @@ s48_value process_times()
 		   sch_result_stime,
 		   sch_result_cutime,
 		   sch_result_cstime);
-		  
+
   sch_result_utime = s48_enter_integer(tms.tms_utime);
   sch_result_stime = s48_enter_integer(tms.tms_stime);
   sch_result_cutime = s48_enter_integer(tms.tms_cutime);
@@ -404,11 +345,11 @@ s48_value process_times()
   return sch_result_retval;
 }
 
-s48_value cpu_clock_ticks_per_sec() 
+s48_ref_t cpu_clock_ticks_per_sec()
 {
 #ifdef _SC_CLK_TCK
   static long clock_tick = 0;
-    
+
   if (clock_tick == 0){
     clock_tick = sysconf(_SC_CLK_TCK); /* POSIX.1, POSIX.2 */
     if (clock_tick == -1)
@@ -421,10 +362,10 @@ s48_value cpu_clock_ticks_per_sec()
 #else
   return s48_enter_fixnum(60);
 #endif
-#endif    
+#endif
 }
 
-s48_value scsh_chmod(s48_value sch_path, s48_value sch_mode)
+s48_ref_t scsh_chmod(s48_ref_t sch_path, s48_ref_t sch_mode)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(2);
@@ -438,10 +379,10 @@ s48_value scsh_chmod(s48_value sch_path, s48_value sch_mode)
 
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_path, sch_mode);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_fchmod(s48_value sch_fd, s48_value sch_mode)
+s48_ref_t scsh_fchmod(s48_ref_t sch_fd, s48_ref_t sch_mode)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(2);
@@ -455,10 +396,10 @@ s48_value scsh_fchmod(s48_value sch_fd, s48_value sch_mode)
 
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_fd, sch_mode);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_chown(s48_value sch_path, s48_value sch_uid, s48_value sch_gid)
+s48_ref_t scsh_chown(s48_ref_t sch_path, s48_ref_t sch_uid, s48_ref_t sch_gid)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(3);
@@ -473,10 +414,10 @@ s48_value scsh_chown(s48_value sch_path, s48_value sch_uid, s48_value sch_gid)
 
   if (retval == -1)
     s48_raise_os_error_3(errno, sch_path, sch_uid, sch_gid);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_fchown(s48_value sch_fd, s48_value sch_uid, s48_value sch_gid)
+s48_ref_t scsh_fchown(s48_ref_t sch_fd, s48_ref_t sch_uid, s48_ref_t sch_gid)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(3);
@@ -488,13 +429,13 @@ s48_value scsh_fchown(s48_value sch_fd, s48_value sch_uid, s48_value sch_gid)
 		  s48_extract_integer(sch_gid));
 
   S48_GC_UNPROTECT();
-  
+
   if (retval == -1)
     s48_raise_os_error_3(errno, sch_fd, sch_uid, sch_gid);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_access(s48_value sch_path, s48_value sch_mode)
+s48_ref_t scsh_access(s48_ref_t sch_path, s48_ref_t sch_mode)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(2);
@@ -508,34 +449,34 @@ s48_value scsh_access(s48_value sch_path, s48_value sch_mode)
 
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_path, sch_mode);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_link(s48_value sch_name1, s48_value sch_name2)
+s48_ref_t scsh_link(s48_ref_t sch_name1, s48_ref_t sch_name2)
 {
   int retval = link (s48_extract_string (sch_name1),
 		     s48_extract_string (sch_name2));
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_name1, sch_name2);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_mkfifo(s48_value sch_path, s48_value sch_mode)
+s48_ref_t scsh_mkfifo(s48_ref_t sch_path, s48_ref_t sch_mode)
 {
   int retval = mkfifo (s48_extract_string (sch_path),
 		       s48_extract_fixnum (sch_mode));
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_path, sch_mode);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_mkdir(s48_value sch_path, s48_value sch_mode)
+s48_ref_t scsh_mkdir(s48_ref_t sch_path, s48_ref_t sch_mode)
 {
   int retval = mkdir (s48_extract_string (sch_path),
 		      s48_extract_fixnum (sch_mode));
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_path, sch_mode);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
 /* S_ISSOCK(mode) and S_ISLNK(mode) are not POSIX. You lose on a NeXT. Ugh. */
@@ -555,13 +496,13 @@ s48_value scsh_mkdir(s48_value sch_path, s48_value sch_mode)
 */
 
 /* Internal aux function -- loads stat values into Scheme vector: */
-s48_value really_stat(struct stat *s, s48_value vec)
+s48_ref_t really_stat(struct stat *s, s48_ref_t vec)
 {
   int modes, typecode = -1;
   S48_DECLARE_GC_PROTECT(1);
- 
+
   S48_GC_PROTECT_1(vec);
- 
+
   modes = s->st_mode;
   if( S_ISBLK(modes) )       typecode = 0;
   else if( S_ISCHR(modes) )  typecode = 1;
@@ -570,7 +511,7 @@ s48_value really_stat(struct stat *s, s48_value vec)
   else if( S_ISREG(modes) )  typecode = 4;
   else if( S_ISSOCK(modes) ) typecode = 5;
   else if( S_ISLNK(modes) )  typecode = 6;
-  
+
   S48_VECTOR_SET(vec,0,s48_enter_fixnum(typecode));
   S48_VECTOR_SET(vec,1, s48_enter_integer(s->st_dev));
   S48_VECTOR_SET(vec,2, s48_enter_integer(s->st_ino));
@@ -587,10 +528,10 @@ s48_value really_stat(struct stat *s, s48_value vec)
      These aren't POSIX, and, e.g., are not around on SGI machines.
      Too bad -- blksize is useful. Unix sux. */
   S48_GC_UNPROTECT();
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scheme_stat(s48_value path, s48_value vec, s48_value chase_p)
+s48_ref_t scheme_stat(s48_ref_t path, s48_ref_t vec, s48_ref_t chase_p)
 {
   struct stat s;
   const char * cp_path = s48_extract_string(path);
@@ -601,7 +542,7 @@ s48_value scheme_stat(s48_value path, s48_value vec, s48_value chase_p)
   return really_stat (&s, vec);
 }
 
-s48_value scheme_fstat(s48_value fd, s48_value vec)
+s48_ref_t scheme_fstat(s48_ref_t fd, s48_ref_t vec)
 {
   struct stat s;
   int retval = fstat (s48_extract_fixnum (fd), &s);
@@ -609,16 +550,16 @@ s48_value scheme_fstat(s48_value fd, s48_value vec)
   return really_stat (&s, vec);
 }
 
-s48_value scsh_symlink(s48_value sch_name1, s48_value sch_name2)
+s48_ref_t scsh_symlink(s48_ref_t sch_name1, s48_ref_t sch_name2)
 {
   int retval = symlink (s48_extract_string (sch_name1),
 			s48_extract_string (sch_name2));
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_name1, sch_name2);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_truncate(s48_value sch_path, s48_value sch_length)
+s48_ref_t scsh_truncate(s48_ref_t sch_path, s48_ref_t sch_length)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(2);
@@ -632,10 +573,10 @@ s48_value scsh_truncate(s48_value sch_path, s48_value sch_length)
 
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_path, sch_length);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_ftruncate(s48_value sch_fdes, s48_value sch_length)
+s48_ref_t scsh_ftruncate(s48_ref_t sch_fdes, s48_ref_t sch_length)
 {
   int retval;
 
@@ -650,34 +591,34 @@ s48_value scsh_ftruncate(s48_value sch_fdes, s48_value sch_length)
 
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_fdes, sch_length);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_unlink(s48_value sch_path)
+s48_ref_t scsh_unlink(s48_ref_t sch_path)
 {
   int retval = unlink (s48_extract_string (sch_path));
   if (retval == -1)
     s48_raise_os_error_1(errno, sch_path);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_fsync(s48_value sch_fdes)
+s48_ref_t scsh_fsync(s48_ref_t sch_fdes)
 {
   int retval = fsync (s48_extract_fixnum (sch_fdes));
   if (retval == -1)
     s48_raise_os_error_1(errno, sch_fdes);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_sync()
+s48_ref_t scsh_sync()
 {
 #ifdef HAVE_SYNC
   sync();
 #endif
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_close(s48_value sch_fdes)
+s48_ref_t scsh_close(s48_ref_t sch_fdes)
 {
   int retval = close (s48_extract_fixnum (sch_fdes));
   if (retval == 0)
@@ -687,7 +628,7 @@ s48_value scsh_close(s48_value sch_fdes)
   else s48_raise_os_error_1 (errno, sch_fdes);
 }
 
-s48_value scsh_dup(s48_value sch_fdes)
+s48_ref_t scsh_dup(s48_ref_t sch_fdes)
 {
   int retval = dup (s48_extract_fixnum (sch_fdes));
   if (retval == -1)
@@ -695,17 +636,17 @@ s48_value scsh_dup(s48_value sch_fdes)
   return s48_enter_fixnum (retval);
 }
 
-s48_value scsh_dup2(s48_value sch_oldd,  s48_value sch_newd)
+s48_ref_t scsh_dup2(s48_ref_t sch_oldd,  s48_ref_t sch_newd)
 {
-  int retval = dup2 (s48_extract_fixnum (sch_oldd), 
+  int retval = dup2 (s48_extract_fixnum (sch_oldd),
 		     s48_extract_fixnum (sch_newd));
   if (retval == -1)
     s48_raise_os_error_2 (errno, sch_oldd, sch_newd);
   return s48_enter_fixnum (retval);
 }
 
-s48_value scsh_lseek(s48_value sch_fdes, s48_value sch_offset, 
-		     s48_value sch_whence)
+s48_ref_t scsh_lseek(s48_ref_t sch_fdes, s48_ref_t sch_offset,
+		     s48_ref_t sch_whence)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(3);
@@ -723,18 +664,18 @@ s48_value scsh_lseek(s48_value sch_fdes, s48_value sch_offset,
   return s48_enter_integer (retval);
 }
 
-s48_value scsh_open(s48_value sch_path, s48_value sch_flags, s48_value sch_mode)
+s48_ref_t scsh_open(s48_ref_t sch_path, s48_ref_t sch_flags, s48_ref_t sch_mode)
 {
   int retval = open (s48_extract_string (sch_path),
 		     s48_extract_fixnum (sch_flags),
 		     s48_extract_fixnum (sch_mode));
   if (retval == -1)
     s48_raise_os_error_3 (errno, sch_path, sch_flags, sch_mode);
-  
+
   return s48_enter_fixnum (retval);
 }
 
-s48_value char_ready_fdes(s48_value sch_fd)
+s48_ref_t char_ready_fdes(s48_ref_t sch_fd)
 {
   fd_set readfds;
   struct timeval timeout;
@@ -747,30 +688,30 @@ s48_value char_ready_fdes(s48_value sch_fd)
   timeout.tv_usec=0;
 
   result=select(fd+1, &readfds, NULL, NULL, &timeout);
-  
-  if(result == -1 ) 
+
+  if(result == -1 )
     s48_raise_os_error_1(errno, sch_fd);
   if(result)
     return(S48_TRUE);
-  return(S48_FALSE);	
+  return(S48_FALSE);
 }
 
-    
+
 /* Supplementary groups access
 *******************************************************************************
 */
 
-s48_value scsh_getgid()
+s48_ref_t scsh_getgid()
 {
   return s48_enter_integer(getgid());
 }
 
-s48_value scsh_getegid()
+s48_ref_t scsh_getegid()
 {
   return s48_enter_integer(getegid());
 }
 
-s48_value scsh_setgid(s48_value gid)
+s48_ref_t scsh_setgid(s48_ref_t gid)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(1);
@@ -783,10 +724,10 @@ s48_value scsh_setgid(s48_value gid)
 
   if (retval == -1)
     s48_raise_os_error_1(errno, gid);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_setegid(s48_value gid)
+s48_ref_t scsh_setegid(s48_ref_t gid)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(1);
@@ -795,26 +736,26 @@ s48_value scsh_setegid(s48_value gid)
 
 #ifdef HAVE_SETEGID
   retval = setegid (s48_extract_integer (gid));
-#else 
+#else
   retval = setregid (-1, s48_extract_integer (gid));
 #endif
-  
+
   S48_GC_UNPROTECT();
 
   if (retval == -1)
     s48_raise_os_error_1(errno, gid);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
 /* Load the supplementary groups into a list */
 
-s48_value get_groups()
+s48_ref_t get_groups()
 {
   int retval;
   gid_t gvec[NGROUPS_MAX + 1];
   int veclen = getgroups(NGROUPS_MAX + 1, gvec);
   int i = veclen;
-  s48_value l = S48_NULL;
+  s48_ref_t l = S48_NULL;
 
   if (veclen == -1)
     s48_raise_os_error(errno);
@@ -824,23 +765,23 @@ s48_value get_groups()
 
     while (i > 0)
       l = s48_cons(s48_enter_integer(gvec[--i]), l);
-    
+
     S48_GC_UNPROTECT();
 
     return l;
   }
 }
-s48_value scsh_getuid()
+s48_ref_t scsh_getuid()
 {
   return s48_enter_integer(getuid());
 }
 
-s48_value scsh_geteuid()
+s48_ref_t scsh_geteuid()
 {
   return s48_enter_integer(geteuid());
 }
 
-s48_value scsh_setuid(s48_value uid)
+s48_ref_t scsh_setuid(s48_ref_t uid)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(1);
@@ -853,10 +794,10 @@ s48_value scsh_setuid(s48_value uid)
 
   if (retval == -1)
     s48_raise_os_error_1(errno, uid);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_seteuid(s48_value uid)
+s48_ref_t scsh_seteuid(s48_ref_t uid)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(1);
@@ -868,30 +809,30 @@ s48_value scsh_seteuid(s48_value uid)
 #else
   retval = setreuid (-1, s48_extract_integer (uid));
 #endif
-  
+
   S48_GC_UNPROTECT();
 
   if (retval == -1)
     s48_raise_os_error_1(errno, uid);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_getpid()
+s48_ref_t scsh_getpid()
 {
   return s48_enter_integer(getpid());
 }
- 
-s48_value scsh_getppid()
+
+s48_ref_t scsh_getppid()
 {
   return s48_enter_integer(getppid());
 }
 
-s48_value scsh_getpgrp()
+s48_ref_t scsh_getpgrp()
 {
   return s48_enter_integer(getpgrp());
 }
 
-s48_value scsh_setpgid(s48_value sch_pid, s48_value sch_pgrp)
+s48_ref_t scsh_setpgid(s48_ref_t sch_pid, s48_ref_t sch_pgrp)
 {
   int retval;
   S48_DECLARE_GC_PROTECT(2);
@@ -905,10 +846,10 @@ s48_value scsh_setpgid(s48_value sch_pid, s48_value sch_pgrp)
 
   if (retval == -1)
     s48_raise_os_error_2(errno, sch_pid, sch_pgrp);
-  return S48_UNSPECIFIC;
+  return s48_unspecific_2(call);
 }
 
-s48_value scsh_setsid()
+s48_ref_t scsh_setsid()
 {
   pid_t retval = setsid();
    if (retval == -1)
@@ -916,7 +857,7 @@ s48_value scsh_setsid()
    return s48_enter_integer(retval);
 }
 
-s48_value scsh_umask(s48_value sch_mask)
+s48_ref_t scsh_umask(s48_ref_t sch_mask)
 {
   return s48_enter_integer(umask(s48_extract_integer(sch_mask)));
 }
@@ -924,8 +865,8 @@ s48_value scsh_umask(s48_value sch_mask)
 /* Environment hackery
 *******************************************************************************
 */
-static s48_value envvec_record_type_binding = S48_FALSE;
-static s48_value add_envvec_finalizerB_binding = S48_FALSE;
+static s48_ref_t envvec_record_type_binding = S48_FALSE;
+static s48_ref_t add_envvec_finalizerB_binding = S48_FALSE;
 
 #define ENVVEC_ENVIRON(envvec) \
   ((char**) s48_extract_integer(S48_RECORD_REF((envvec),0)))
@@ -936,18 +877,18 @@ static s48_value add_envvec_finalizerB_binding = S48_FALSE;
 ** startup time.) That is,
 **     !current_env || current_env->env == environ
 */
-s48_value current_env = S48_FALSE;
+s48_ref_t current_env = S48_FALSE;
 
-s48_value align_env(s48_value envvec)
-  { 
+s48_ref_t align_env(s48_ref_t envvec)
+  {
     environ = ENVVEC_ENVIRON(envvec);
-    current_env = envvec;     
+    current_env = envvec;
     return S48_TRUE;
 }
 
 char** original_environ = 0;
 
-s48_value free_envvec (s48_value envvec)
+s48_ref_t free_envvec (s48_ref_t envvec)
 {
   char** env = ENVVEC_ENVIRON(envvec);
   int i=0;
@@ -963,11 +904,11 @@ s48_value free_envvec (s48_value envvec)
   return S48_TRUE;
 }
 
-s48_value make_envvec(char** newenv){
-  s48_value thread_env;
+s48_ref_t make_envvec(char** newenv){
+  s48_ref_t thread_env;
 
   thread_env = s48_make_record(envvec_record_type_binding);
-  
+
   S48_RECORD_SET(thread_env, 0, s48_enter_integer((long)newenv));
   s48_call_scheme(S48_SHARED_BINDING_REF(add_envvec_finalizerB_binding),
 		  1,
@@ -975,8 +916,8 @@ s48_value make_envvec(char** newenv){
   return thread_env;
 }
 
-s48_value scm_envvec(){
-  s48_value thread_env;
+s48_ref_t scm_envvec(){
+  s48_ref_t thread_env;
   if (current_env == 0){
     thread_env = make_envvec(environ);
     current_env = thread_env;
@@ -986,28 +927,28 @@ s48_value scm_envvec(){
   if (original_environ == 0)
     original_environ = environ;
 
-  return s48_cons (char_pp_2_string_list(environ), 
+  return s48_cons (char_pp_2_string_list(environ),
 		   thread_env);
 }
 
-    
+
 /* Load the (Scheme) strings in the (Scheme) vector VEC into environ.
 */
 
-s48_value create_env(s48_value vec)
+s48_ref_t create_env(s48_ref_t vec)
 {
   int i, envsize;
   char **newenv;
-  s48_value thread_env;
+  s48_ref_t thread_env;
   S48_DECLARE_GC_PROTECT(1);
   S48_GC_PROTECT_1(vec);
- 
+
   envsize = S48_VECTOR_LENGTH(vec);
-    
+
   newenv = Malloc(char*, envsize+1);
   if( !newenv ) s48_raise_out_of_memory_error();
-  
-  
+
+
   for( i=0; i<envsize; i++ ) {
     char *s = scheme2c_strcpy(S48_VECTOR_REF(vec,i));
     if (!s) {
@@ -1028,18 +969,18 @@ s48_value create_env(s48_value vec)
 
   S48_GC_UNPROTECT();
   return thread_env;
-  
+
 }
-  
+
 /*****************************************************************************/
 
 /* N.B.: May be unaligned. */
 
-s48_value scm_gethostname(void)
+s48_ref_t scm_gethostname(void)
 {
-   char hostname[MAXHOSTNAMELEN+1]; 
+   char hostname[MAXHOSTNAMELEN+1];
     /* different OS's declare differently, so punt the prototype. */
-    int gethostname(); 
+    int gethostname();
     int retval = gethostname(hostname, MAXHOSTNAMELEN);
     if (retval == -1) s48_raise_os_error(errno);
     return s48_enter_string(hostname);
@@ -1047,7 +988,7 @@ s48_value scm_gethostname(void)
 
 #include <errno.h>
 
-s48_value errno_msg(s48_value sch_i)
+s48_ref_t errno_msg(s48_ref_t sch_i)
 {
   int i = s48_extract_fixnum (sch_i);
 #ifdef HAVE_STRERROR
@@ -1058,7 +999,7 @@ s48_value errno_msg(s48_value sch_i)
 #ifdef HAVE_CONST_SYS_ERRLIST
     const
 #endif
-    char *sys_errlist[]; 
+    char *sys_errlist[];
   extern int sys_nerr;
   return ( i < 0 || i > sys_nerr ) ? s48_raise_argument_type_error(sch_i)
 	: s48_enter_string (sys_errlist[i]);
@@ -1069,49 +1010,49 @@ s48_value errno_msg(s48_value sch_i)
 ******************
 */
 
-s48_value fcntl_read(s48_value fd, s48_value command)
-{ 
+s48_ref_t fcntl_read(s48_ref_t fd, s48_ref_t command)
+{
   int ret;
   S48_DECLARE_GC_PROTECT(2);
 
   S48_GC_PROTECT_2(fd, command);
 
-  ret = fcntl(s48_extract_fixnum (fd), 
-	      s48_extract_integer (command)); 
+  ret = fcntl(s48_extract_fixnum (fd),
+	      s48_extract_integer (command));
 
   S48_GC_UNPROTECT();
 
   if (ret == -1)
     s48_raise_os_error_2(errno, fd, command);
-  else return s48_enter_fixnum (ret); 
+  else return s48_enter_fixnum (ret);
 }
 
 
-s48_value fcntl_write(s48_value fd, s48_value command, s48_value value)
-{ 
+s48_ref_t fcntl_write(s48_ref_t fd, s48_ref_t command, s48_ref_t value)
+{
   int ret;
 
   S48_DECLARE_GC_PROTECT(3);
 
   S48_GC_PROTECT_3(fd, command, value);
 
-  ret = fcntl(s48_extract_fixnum (fd), 
-	      s48_extract_integer (command), 
+  ret = fcntl(s48_extract_fixnum (fd),
+	      s48_extract_integer (command),
 	      s48_extract_integer (value));
 
   S48_GC_UNPROTECT();
-  
+
   if (ret == -1)
     s48_raise_os_error_3(errno, fd, command, value);
-  else return s48_enter_fixnum (ret); 
+  else return s48_enter_fixnum (ret);
 }
 
 /* crypt()
 ******************
 */
-s48_value scm_crypt(s48_value key, s48_value salt)
+s48_ref_t scm_crypt(s48_ref_t key, s48_ref_t salt)
 {
-  char * ret = crypt (s48_extract_string (key), 
+  char * ret = crypt (s48_extract_string (key),
 		      s48_extract_string(salt));
 
   /* FreeBSD does this on error:*/
@@ -1120,18 +1061,18 @@ s48_value scm_crypt(s48_value key, s48_value salt)
   return s48_enter_string (ret);
 }
 
-static s48_value uname_record_type_binding = S48_FALSE;
+static s48_ref_t uname_record_type_binding = S48_FALSE;
 
-s48_value scm_uname(void)
+s48_ref_t scm_uname(void)
 {
-  s48_value uname_record = S48_UNSPECIFIC;
+  s48_ref_t uname_record = s48_unspecific_2(call);
   struct utsname uname_struct;
   S48_DECLARE_GC_PROTECT(1);
-  
+
   S48_GC_PROTECT_1(uname_record);
   if (uname(&uname_struct) == -1)
     s48_raise_os_error(errno);
-  
+
   uname_record = s48_make_record(uname_record_type_binding);
   S48_RECORD_SET(uname_record, 0, s48_enter_string (uname_struct.sysname));
   S48_RECORD_SET(uname_record, 1, s48_enter_string (uname_struct.nodename));
@@ -1214,6 +1155,6 @@ void s48_init_syscalls (){
   S48_GC_PROTECT_GLOBAL(uname_record_type_binding);
   envvec_record_type_binding = s48_get_imported_binding("envvec-record-type");
   uname_record_type_binding = s48_get_imported_binding("uname-record-type");
-  add_envvec_finalizerB_binding = 
+  add_envvec_finalizerB_binding =
     s48_get_imported_binding("add-envvec-finalizer!");
 }

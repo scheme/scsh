@@ -33,42 +33,47 @@
   (syntax-rules ()
     ((import-os-error-syscall syscall (%arg ...) c-name)
      (begin
-       (import-lambda-definition syscall/eintr (%arg ...) c-name)
+       (import-lambda-definition-2 syscall/eintr (%arg ...) c-name)
        (define (syscall %arg ...)
-	 (let ((arg %arg) ...)
-	   (continuation-capture
-	    (lambda (cont)
-	      (let loop ()
-		(with-handler
-		 (lambda (condition more)
-		   (if (and (vm-exception? condition) (eq? (vm-exception-reason condition)
-							'os-error))
-		       (let ((stuff (condition-irritants condition)))
-			 (if (= (cadr stuff) errno/intr)
-			     (loop)
-			     (continuation-graft
-			      cont
-			      (lambda ()
-				(apply errno-error-with-message
-				       (cadr stuff)   ; errno
-				       (caddr stuff)  ;msg
-				       syscall
-				       (cdddr stuff)))))) ;packet
-		       (more)))
-		 (lambda ()
-		   (syscall/eintr %arg ...))))))))))))
+         (let ((arg %arg) ...)
+           (continuation-capture
+            (lambda (cont)
+              (let loop ()
+                (with-handler
+                 (lambda (condition more)
+                   ;; This block can't be used until the conditions system
+                   ;; is fixed to return some sort of indicator of what went
+                   ;; wrong when a syscall fails.
+                   ;;
+                   ;; (if (and (vm-exception? condition)
+                   ;;          (case (vm-exception-reason condition)
+                   ;;            (('os-error 'external-os-error) #t)
+                   ;;            (else #f)))
+                   ;;     (let ((stuff (condition-irritants condition)))
+                   ;;       (if (= (cadr stuff) errno/intr)
+                   ;;           (loop)
+                   ;;           (continuation-graft
+                   ;;            cont
+                   ;;            (lambda ()
+                   ;;           (apply errno-error-with-message
+                   ;;                  (cadr stuff)   ; errno
+                   ;;                  (caddr stuff)  ;msg
+                   ;;                  syscall
+                   ;;                  (cdddr stuff)))))) ;packet
+                       (more))
+                 (lambda ()
+                   (syscall/eintr %arg ...))))))))))))
 
 ;;; Process
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; we can't algin env here, because exec-path/env calls
 ;; %%exec/errno directly  F*&% *P
-(import-os-error-syscall %%exec (prog argv env) "scheme_exec")
 
 (define (%exec prog arg-list env)
-  (let ((argv (mapv! stringify (list->vector arg-list)))
-	(prog (stringify prog))
-	(env (if (eq? env #t) #t (alist->env-vec env))))
-    (%%exec prog argv env)))
+  (let ((args (map stringify arg-list))
+        (prog (stringify prog))
+        (env (if env (alist->env-list env))))
+    (exec-with-alias prog #f env args)))
 
 
 (import-os-error-syscall exit/errno ; errno -- misnomer.
@@ -147,9 +152,9 @@
 
 (define (set-process-group arg1 . maybe-arg2)
   (receive (pid pgrp) (if (null? maybe-arg2)
-			  (values (pid) arg1)
-			  (values arg1 (car maybe-arg2)))
-	   (%set-process-group pid pgrp)))
+                          (values (pid) arg1)
+                          (values arg1 (car maybe-arg2)))
+           (%set-process-group pid pgrp)))
 
 
 (import-os-error-syscall become-session-leader () "scsh_setsid")
@@ -185,7 +190,7 @@
 (define (generic-file-op thing fd-op fname-op)
   (if (string? thing)
       (with-resources-aligned (list cwd-resource euid-resource egid-resource)
-			      (lambda () (fname-op thing)))
+                              (lambda () (fname-op thing)))
       (call/fdes thing fd-op)))
 
 
@@ -195,8 +200,8 @@
 
 (define (set-file-mode thing mode)
   (generic-file-op thing
-		   (lambda (fd)    (%set-fdes-mode fd    mode))
-		   (lambda (fname) (%set-file-mode fname mode))))
+                   (lambda (fd)    (%set-fdes-mode fd    mode))
+                   (lambda (fname) (%set-file-mode fname mode))))
 
 
 (import-os-error-syscall set-file-uid&gid (path uid gid) "scsh_chown")
@@ -205,13 +210,13 @@
 
 (define (set-file-owner thing uid)
   (generic-file-op thing
-		   (lambda (fd)    (set-fdes-uid&gid fd    uid -1))
-		   (lambda (fname) (set-file-uid&gid fname uid -1))))
+                   (lambda (fd)    (set-fdes-uid&gid fd    uid -1))
+                   (lambda (fname) (set-file-uid&gid fname uid -1))))
 
 (define (set-file-group thing gid)
   (generic-file-op thing
-		   (lambda (fd)    (set-fdes-uid&gid fd    -1 gid))
-		   (lambda (fname) (set-file-uid&gid fname -1 gid))))
+                   (lambda (fd)    (set-fdes-uid&gid fd    -1 gid))
+                   (lambda (fname) (set-file-uid&gid fname -1 gid))))
 
 
 ;;; Uses real uid and gid, not effective. I don't use this anywhere.
@@ -240,7 +245,7 @@
 
 (define (%create-directory path . maybe-mode)
   (let ((mode (:optional maybe-mode #o777))
-	(fname (ensure-file-name-is-nondirectory path)))
+        (fname (ensure-file-name-is-nondirectory path)))
     (%%create-directory fname mode)))
 
 (import-os-error-syscall %read-symlink (path) "scsh_readlink")
@@ -260,14 +265,14 @@
    (list cwd-resource euid-resource egid-resource)
    (lambda ()
      (if (pair? maybe-times)
-	 (let* ((access-time (real->exact-integer (car maybe-times)))
-		(mod-time (if (pair? (cddr maybe-times))
-			      (error "Too many arguments to set-file-times/errno"
-				     (cons path maybe-times))
-			      (real->exact-integer (cadr maybe-times)))))
-	   (%utime path access-time
-		   mod-time ))
-	 (%utime-now path)))))
+         (let* ((access-time (real->exact-integer (car maybe-times)))
+                (mod-time (if (pair? (cddr maybe-times))
+                              (error "Too many arguments to set-file-times/errno"
+                                     (cons path maybe-times))
+                              (real->exact-integer (cadr maybe-times)))))
+           (%utime path access-time
+                   mod-time ))
+         (%utime-now path)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; STAT
@@ -294,26 +299,26 @@
 ;;; Should be redone to return multiple-values.
 (define (%file-info fd/port/fname chase?)
   (let ((ans-vec (make-vector 11))
-	(file-type (lambda (type-code)
-		     (vector-ref '#(block-special char-special directory fifo
-						  regular socket symlink)
-				 type-code))))
+        (file-type (lambda (type-code)
+                     (vector-ref '#(block-special char-special directory fifo
+                                                  regular socket symlink)
+                                 type-code))))
     (generic-file-op fd/port/fname
-		     (lambda (fd)
-		       (stat-fdes fd ans-vec))
-		     (lambda (fname)
-		       (stat-file fname ans-vec chase?)))
+                     (lambda (fd)
+                       (stat-fdes fd ans-vec))
+                     (lambda (fname)
+                       (stat-file fname ans-vec chase?)))
     (make-file-info (file-type (vector-ref ans-vec 0))
-		    (vector-ref ans-vec 1)
-		    (vector-ref ans-vec 2)
-		    (vector-ref ans-vec 3)
-		    (vector-ref ans-vec 4)
-		    (vector-ref ans-vec 5)
-		    (vector-ref ans-vec 6)
-		    (vector-ref ans-vec 7)
-		    (vector-ref ans-vec 8)
-		    (vector-ref ans-vec 9)
-		    (vector-ref ans-vec 10))))
+                    (vector-ref ans-vec 1)
+                    (vector-ref ans-vec 2)
+                    (vector-ref ans-vec 3)
+                    (vector-ref ans-vec 4)
+                    (vector-ref ans-vec 5)
+                    (vector-ref ans-vec 6)
+                    (vector-ref ans-vec 7)
+                    (vector-ref ans-vec 8)
+                    (vector-ref ans-vec 9)
+                    (vector-ref ans-vec 10))))
 
 
 (define (file-info fd/port/fname . maybe-chase?)
@@ -339,14 +344,14 @@
 
 (define (truncate-file thing length)
   (generic-file-op thing
-		   (lambda (fd)    (%truncate-fdes fd    length))
-		   (lambda (fname) (%truncate-file fname length))))
+                   (lambda (fd)    (%truncate-fdes fd    length))
+                   (lambda (fname) (%truncate-file fname length))))
 
 (import-os-error-syscall %delete-file (path) "scsh_unlink")
 
 (define (delete-file path)
   (with-resources-aligned (list cwd-resource euid-resource egid-resource)
-			  (lambda () (%delete-file path))))
+                          (lambda () (%delete-file path))))
 
 (import-os-error-syscall %sync-file (fd) "scsh_fsync")
 
@@ -370,7 +375,7 @@
 (import-os-error-syscall %fd-seek (fd offset whence) "scsh_lseek")
 
 
-(define seek/set 0)			;Unix codes for "whence"
+(define seek/set 0)                     ;Unix codes for "whence"
 (define seek/delta 1)
 (define seek/end 2)
 
@@ -382,7 +387,7 @@
            (> (byte-vector-length (port-buffer fd/port)) 0))
       (error "Seek does currently not work on buffered ports" fd/port))
   (let ((whence (:optional maybe-whence seek/set))
-	(fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
+        (fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
     (%fd-seek fd offset whence)))
 
 (define (tell fd/port)
@@ -404,12 +409,12 @@
 
 (define (pipe)
   (apply (lambda (r-fd w-fd)
-	   (let ((r (fdes->inport  r-fd))
-		 (w (fdes->outport w-fd)))
-	     (release-port-handle r)
-	     (release-port-handle w)
-	     (values r w)))
-	 (pipe-fdes)))
+           (let ((r (fdes->inport  r-fd))
+                 (w (fdes->outport w-fd)))
+             (release-port-handle r)
+             (release-port-handle w)
+             (values r w)))
+         (pipe-fdes)))
 
 ;;; Signals (rather incomplete)
 ;;; ---------------------------
@@ -418,14 +423,14 @@
 
 (define (signal-process proc signal)
   (signal-pid (cond ((proc? proc)    (proc:pid proc))
-		    ((integer? proc) proc)
-		    (else (error "Illegal proc passed to signal-process" proc)))
-	      signal))
+                    ((integer? proc) proc)
+                    (else (error "Illegal proc passed to signal-process" proc)))
+              signal))
 
 (define (signal-process-group proc-group signal)
   (signal-pid (- (cond ((proc? proc-group)    (proc:pid proc-group))
-		       ((integer? proc-group) proc-group)
-		       (else (error "Illegal proc passed to signal-process-group"
+                       ((integer? proc-group) proc-group)
+                       (else (error "Illegal proc passed to signal-process-group"
                                     proc-group))))
               signal))
 (define (itimer sec)
@@ -463,20 +468,20 @@
 (define (uid->user-info uid)
   (let ((empty-user-info (make-user-info #f uid #f #f #f)))
     (if (%uid->user-info uid empty-user-info)
-	empty-user-info
-	(error "Cannot get user's information" uid->user-info uid))))
+        empty-user-info
+        (error "Cannot get user's information" uid->user-info uid))))
 
 
 (define (name->user-info name)
   (let ((empty-user-info (make-user-info name #f #f #f #f)))
     (if (%name->user-info name empty-user-info)
-	empty-user-info
-	(error "Cannot get user's information" name->user-info name))))
+        empty-user-info
+        (error "Cannot get user's information" name->user-info name))))
 
 (define (user-info uid/name)
   ((cond ((string?  uid/name) name->user-info)
-	 ((integer? uid/name) uid->user-info)
-	 (else (error "user-info arg must be string or integer" uid/name)))
+         ((integer? uid/name) uid->user-info)
+         (else (error "user-info arg must be string or integer" uid/name)))
    uid/name))
 
 ;;; Derived functions
@@ -513,19 +518,19 @@
 (define (gid->group-info  gid)
   (let ((empty-group-info (make-group-info #f gid #f)))
     (if (%gid->group-info gid empty-group-info)
-	empty-group-info
-	(error "Cannot get group's information for gid" gid))))
+        empty-group-info
+        (error "Cannot get group's information for gid" gid))))
 
 (define (name->group-info name)
   (let ((empty-group-info (make-group-info name #f #f)))
     (if (%name->group-info name empty-group-info)
-	empty-group-info
-	(error "Cannot get group's information for name" name))))
+        empty-group-info
+        (error "Cannot get group's information for name" name))))
 
 (define (group-info gid/name)
   ((cond ((string?  gid/name) name->group-info)
-	 ((integer? gid/name) gid->group-info)
-	 (else (error "group-info arg must be string or integer" gid/name)))
+         ((integer? gid/name) gid->group-info)
+         (else (error "group-info arg must be string or integer" gid/name)))
    gid/name))
 
 ;;; Derived functions
@@ -546,13 +551,13 @@
    (list cwd-resource euid-resource egid-resource)
    (lambda ()
      (let-optionals args ((dir       ".")
-			  (dotfiles? #f))
+                          (dotfiles? #f))
        (check-arg string? dir directory-files)
        (let* ((files (%open-dir (ensure-file-name-is-nondirectory dir)))
-	      (files-sorted ((structure-ref sort sort-list!) files filename<=)))
-	 (if dotfiles? files-sorted
-	     (filter (lambda (f) (not (dotfile? f)))
-		     files-sorted)))))))
+              (files-sorted ((structure-ref sort sort-list!) files filename<=)))
+         (if dotfiles? files-sorted
+             (filter (lambda (f) (not (dotfile? f)))
+                     files-sorted)))))))
 
 (define (dotfile? f)
   (char=? (string-ref f 0) #\.))
@@ -560,11 +565,11 @@
 (define (filename<= f1 f2)
   (if (dotfile? f1)
       (if (dotfile? f2)
-	  (string<= f1 f2)
-	  #t)
+          (string<= f1 f2)
+          #t)
       (if (dotfile? f2)
-	  #f
-	  (string<= f1 f2))))
+          #f
+          (string<= f1 f2))))
 
 ; A record for directory streams.  It just has the name and a byte vector
 ; containing the C directory object.  The name is used only for printing.
@@ -582,11 +587,11 @@
 
 (define (open-directory-stream name)
   (let ((dir (make-directory-stream
-	      name
-	      (with-resources-aligned
-	       (list cwd-resource euid-resource egid-resource)
-	       (lambda ()
-		 (open-dir name))))))
+              name
+              (with-resources-aligned
+               (list cwd-resource euid-resource egid-resource)
+               (lambda ()
+                 (open-dir name))))))
     (add-finalizer! dir close-directory-stream)
     dir))
 
@@ -596,9 +601,9 @@
 (define (close-directory-stream dir-stream)
   (let ((c-dir (directory-stream:c-dir dir-stream)))
     (if c-dir
-	(begin
-	  (close-dir c-dir)
-	  (set-directory-stream:c-dir dir-stream #f)))))
+        (begin
+          (close-dir c-dir)
+          (set-directory-stream:c-dir dir-stream #f)))))
 
 (import-os-error-syscall open-dir (name) "scm_opendir")
 (import-os-error-syscall close-dir (dir-stream) "scm_closedir")
@@ -614,21 +619,21 @@
 
 ;(define-foreign %filter-C-strings!
 ;  (filter_stringvec (string pattern) ((C "char const ** ~a") cvec))
-;  static-string	; error message -- #f if no error.
-;  integer)	; number of files that pass the filter.
+;  static-string        ; error message -- #f if no error.
+;  integer)     ; number of files that pass the filter.
 
 
 ;(define (match-files regexp . maybe-dir)
 ;  (let ((dir (:optional maybe-dir ".")))
 ;    (check-arg string? dir match-files)
 ;    (receive (err cvec numfiles)
-;	     (%open-dir (ensure-file-name-is-nondirectory dir))
+;            (%open-dir (ensure-file-name-is-nondirectory dir))
 ;      (if err (errno-error err match-files regexp dir))
 ;      (receive (err numfiles) (%filter-C-strings! regexp cvec)
-;	(if err (error err match-files))
-;	(%sort-file-vector cvec numfiles)
-;	(let ((files (C-string-vec->Scheme&free cvec numfiles)))
-;	  (vector->list files))))))
+;       (if err (error err match-files))
+;       (%sort-file-vector cvec numfiles)
+;       (let ((files (C-string-vec->Scheme&free cvec numfiles)))
+;         (vector->list files))))))
 
 
 ;;; Environment manipulation
@@ -641,22 +646,26 @@
 (define (split-env-string var=val)
   (let ((i (string-index var=val #\=)))
     (if i (values (substring var=val 0 i)
-		  (substring var=val (+ i 1) (string-length var=val)))
-	(error "No \"=\" in environment string" var=val))))
+                  (substring var=val (+ i 1) (string-length var=val)))
+        (error "No \"=\" in environment string" var=val))))
 
 (define (env-list->alist env-list)
   (map (lambda (var=val)
-	 (call-with-values (lambda () (split-env-string var=val))
-			   cons))
+         (call-with-values (lambda () (split-env-string var=val))
+                           cons))
        env-list))
 
+(define (alist->env-list alist)
+  (map (lambda (var.val)
+         (string-append (car var.val) "="
+                        (let ((val (cdr var.val)))
+                          (if (string? val) val
+                              (string-join val ":")))))
+       alist))
+
 (define (alist->env-vec alist)
-  (list->vector (map (lambda (var.val)
-		       (string-append (car var.val) "="
-				      (let ((val (cdr var.val)))
-					(if (string? val) val
-					    (string-join val ":")))))
-		     alist)))
+  (list->vector (alist->env-list alist)))
+
 
 ;;; ENV->ALIST
 
@@ -665,7 +674,7 @@
 (define (environ-env->alist)
   (let ((env-list.envvec (%load-env)))
     (cons (env-list->alist (car env-list.envvec))
-	  (cdr env-list.envvec))))
+          (cdr env-list.envvec))))
 
 
 ;;; ALIST->ENV
@@ -731,8 +740,8 @@
 (define (process-sleep secs) (process-sleep-until (+ secs (time))))
 
 (define (process-sleep-until when)
-  (let* ((when (floor when))	; Painful to do real->int in Scheme.
-	 (when (if (exact? when) when (inexact->exact when))))
+  (let* ((when (floor when))    ; Painful to do real->int in Scheme.
+         (when (if (exact? when) when (inexact->exact when))))
     (let lp ()
       (or (%sleep-until when) (lp)))))
 
@@ -748,10 +757,10 @@
 
 (define (crypt key salt)
   (let* ((allowed-char-set  (rx (| alpha digit "." "/")))
-	 (salt-regexp  (rx (: ,allowed-char-set ,allowed-char-set))))
+         (salt-regexp  (rx (: ,allowed-char-set ,allowed-char-set))))
     (if (not (= (string-length salt) 2)) (error "salt must have length 2"))
     (if (not (regexp-search? salt-regexp salt))
-	(error "illegal char in salt " salt))
+        (error "illegal char in salt " salt))
     (if (> (string-length key) 8) (error "key too long "  (string-length key)))
     (%crypt key salt)))
 
