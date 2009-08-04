@@ -13,21 +13,7 @@
 /* Make sure our exports match up w/the implementation: */
 #include "sighandlers1.h"
 
-/* Import the OS-dependent set of signals and their translations
-** to S48 vm interrupts.
-*/
-#include "signals1.h"
-
 extern int errno;
-
-/* Translate Unix signal numbers to S48 interrupt numbers. */
-
-s48_ref_t sig2interrupt(s48_call_t call, s48_ref_t _signal)
-{
-  int signal = s48_extract_long_2(call, _signal);
-  return s48_enter_long_2 (call, (signal < 0 || signal > max_sig) ? -1 :
-                           sig2int[signal]);
-}
 
 /* This guy is responsible for making the default action for a
 ** Unix signal happen. Because S48's signal handler system is
@@ -69,27 +55,8 @@ s48_ref_t do_default_sigaction(s48_call_t call, s48_ref_t _signal)
   return s48_unspecific_2(call);
 }
 
-s48_ref_t ignore_signal(s48_call_t call, s48_ref_t _signal)
-{
-  void (*res)(int) = signal(s48_extract_long_2(call, _signal), SIG_IGN);
-  if (res == SIG_ERR)
-    s48_os_error_2(call, "ignore_signal", errno, 1, _signal);
-  return s48_unspecific_2(call);
-}
-
-s48_ref_t handle_signal_default(s48_call_t call, s48_ref_t _signal)
-{
-  void(*res)(int) = signal(s48_extract_long_2(call, _signal), SIG_DFL);
-  if (res == SIG_ERR)
-    s48_os_error_2(call, "handle_signal_default", errno, 1, _signal);
-  return s48_unspecific_2(call);
-}
-
 void s48_on_load(void)
 {
-  S48_EXPORT_FUNCTION(sig2interrupt);
   S48_EXPORT_FUNCTION(do_default_sigaction);
-  S48_EXPORT_FUNCTION(ignore_signal);
-  S48_EXPORT_FUNCTION(handle_signal_default);
 }
 

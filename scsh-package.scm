@@ -166,6 +166,7 @@
   (for-syntax (open scsh-syntax-helpers scheme))
   (access sigevents threads)
   (open enumerated
+        posix-processes
         defenum-package
         external-calls           ;JMG new FFI
         load-dynamic-externals
@@ -187,12 +188,11 @@
         bitwise
         signals
         conditions
-        (subset srfi-1 (filter reverse! fold delete any))
         scsh-utilities
         handle
         fluids thread-fluids
         weak-tables
-        (subset srfi-1 (last drop-right))
+        srfi-1
 
         srfi-14
 ;       scsh-regexp-package

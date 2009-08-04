@@ -1062,47 +1062,13 @@
           )))
 
 (define-interface signal-handler-interface
-  (export signal->interrupt
-          interrupt-set
-
-          interrupt-handlers-vector  ; JMG: replaces vm vector
-          with-scsh-sighandlers
-
-          (with-enabled-interrupts :syntax)
-          with-enabled-interrupts*
-          enabled-interrupts
-          set-enabled-interrupts
-
-          set-interrupt-handler
-          interrupt-handler
-
-          ignore-signal
-          handle-signal-default
-
-          ;; reexported from low-interrupt
-          interrupt/alrm interrupt/alarm
-          interrupt/int  interrupt/keyboard
-;         interrupt/memory-shortage
-          interrupt/post-gc
-          interrupt/i/o-completion
-          interrupt/chld
-          interrupt/cont
-          interrupt/hup
-          interrupt/quit
-          interrupt/term
-          interrupt/tstp
-          interrupt/usr1
-          interrupt/usr2
-          interrupt/info
-          interrupt/io
-          interrupt/poll
-          interrupt/prof
-          interrupt/pwr
-          interrupt/urg
-          interrupt/vtalrm
-          interrupt/winch
-          interrupt/xcpu
-          interrupt/xfsz))
+  (export with-scsh-sighandlers
+          (with-enabled-signals :syntax)
+          with-enabled-signals*
+          enabled-signals
+          set-enabled-signals
+          set-signal-handler!
+          signal-handler))
 
 (define-interface sigevents-interface
   (export most-recent-sigevent
