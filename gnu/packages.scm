@@ -82,22 +82,6 @@
 	  errno/canceled
 	  errno/notsup))
 
-(define-interface gnu-signals-extras-interface
-  (export signal/trap
-	  signal/emt
-	  signal/bus
-	  signal/sys
-	  signal/urg
-	  signal/cld
-	  signal/io
-	  signal/xcpu
-	  signal/xfsz
-	  signal/vtalrm
-	  signal/prof
-	  signal/winch
-	  signal/info
-	  signal/lost))
-
 (define-interface gnu-network-extras-interface
   (export socket/debug
 	  socket/accept-connect
@@ -123,16 +107,16 @@
 	  ip/options
 	  ip/header-included
 	  ip/type-of-service
-	  ip/time-to-live		
-	  ip/receive-options	
-	  ip/response-options	
-	  ip/destination-address	
-	  ip/ret-options		
-	  ip/multicast-if		
-	  ip/multicast-ttl	
-	  ip/multicast-loop	
-	  ip/add-membership	
-	  ip/drop-membership	
+	  ip/time-to-live
+	  ip/receive-options
+	  ip/response-options
+	  ip/destination-address
+	  ip/ret-options
+	  ip/multicast-if
+	  ip/multicast-ttl
+	  ip/multicast-loop
+	  ip/add-membership
+	  ip/drop-membership
 	  tcp/no-delay
 	  tcp/max-segment
 	  message/eor
@@ -144,20 +128,17 @@
 (define-interface gnu-extras-interface
   (compound-interface gnu-errno-extras-interface
 		      gnu-fdflags-extras-interface
-		      gnu-network-extras-interface
-		      gnu-signals-extras-interface))
+		      gnu-network-extras-interface))
 
 (define-interface gnu-defs-interface
   (compound-interface gnu-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure gnu-defs gnu-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface gnu-extras-interface)
 (define os-dependent gnu-defs)

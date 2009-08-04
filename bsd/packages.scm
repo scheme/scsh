@@ -11,7 +11,7 @@
 	  fcntl/set-owner))
 
 (define-interface bsd44lite-errno-extras-interface
-  (export errno/notblk	  
+  (export errno/notblk
 	  errno/txtbsy
 	  errno/wouldblock
 	  errno/inprogress
@@ -52,25 +52,10 @@
 	  errno/rpcmismatch
 	  errno/progunavail
 	  errno/progmismatch
-	  errno/ftype 
+	  errno/ftype
 	  errno/auth
 	  errno/needauth
 	  errno/last))
-
-(define-interface bsd44lite-signals-extras-interface
-  (export signal/trap
-	  signal/emt
-	  signal/bus
-	  signal/sys
-	  signal/urg
-	  signal/cld
-	  signal/io
-	  signal/xcpu
-	  signal/xfsz
-	  signal/vtalrm
-	  signal/prof
-	  signal/winch
-	  signal/info))
 
 (define-interface bsd44lite-network-extras-interface
   (export socket/debug
@@ -97,16 +82,16 @@
 	  ip/options
 	  ip/header-included
 	  ip/type-of-service
-	  ip/time-to-live		
-	  ip/receive-options	
-	  ip/response-options	
-	  ip/destination-address	
-	  ip/ret-options		
-	  ip/multicast-if		
-	  ip/multicast-ttl	
-	  ip/multicast-loop	
-	  ip/add-membership	
-	  ip/drop-membership	
+	  ip/time-to-live
+	  ip/receive-options
+	  ip/response-options
+	  ip/destination-address
+	  ip/ret-options
+	  ip/multicast-if
+	  ip/multicast-ttl
+	  ip/multicast-loop
+	  ip/add-membership
+	  ip/drop-membership
 	  tcp/no-delay
 	  tcp/max-segment
 	  message/eor
@@ -118,20 +103,17 @@
 (define-interface bsd44lite-extras-interface
   (compound-interface bsd44lite-errno-extras-interface
 		      bsd44lite-fdflags-extras-interface
-		      bsd44lite-network-extras-interface
-		      bsd44lite-signals-extras-interface))
+		      bsd44lite-network-extras-interface))
 
 (define-interface bsd44lite-defs-interface
   (compound-interface bsd44lite-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure bsd44lite-defs bsd44lite-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface bsd44lite-extras-interface)
 (define os-dependent bsd44lite-defs)

@@ -53,22 +53,6 @@
 	  errno/wouldblock
 	  errno/txtbsy))
 
-(define-interface next-signals-extras-interface
-  (export signal/bus
-	  signal/cld
-	  signal/emt
-	  signal/io
-	  signal/iot
-	  signal/lost
-	  signal/prof
-	  signal/sys
-	  signal/trap
-	  signal/urg
-	  signal/vtalrm
-	  signal/winch
-	  signal/xcpu
-	  signal/xfsz))
-
 (define-interface next-network-extras-interface
   (export socket/debug
 	  socket/accept-connect
@@ -97,20 +81,17 @@
 (define-interface next-extras-interface
   (compound-interface next-errno-extras-interface
 		      next-fdflags-extras-interface
-		      next-network-extras-interface
-		      next-signals-extras-interface))
+		      next-network-extras-interface))
 
 (define-interface next-defs-interface
   (compound-interface next-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure next-defs next-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface next-extras-interface)
 (define os-dependent next-defs)

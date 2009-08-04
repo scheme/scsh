@@ -61,10 +61,6 @@
 	  errno/wouldblock
 	  errno/xtbsy))
 
-(define-interface sunos-signals-extras-interface
-  (export signal/cld
-	  signal/iot))
-
 (define-interface sunos-network-extras-interface
   (export socket/debug
 	  socket/accept-connect
@@ -93,20 +89,17 @@
 (define-interface sunos-extras-interface
   (compound-interface sunos-errno-extras-interface
 		      sunos-fdflags-extras-interface
-		      sunos-network-extras-interface
-		      sunos-signals-extras-interface))
+		      sunos-network-extras-interface))
 
 (define-interface sunos-defs-interface
   (compound-interface sunos-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure sunos-defs sunos-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface sunos-extras-interface)
 (define os-dependent sunos-defs)

@@ -123,7 +123,6 @@
   ((scsh-level-0
     (compound-interface posix-fdflags-interface
                         posix-errno-interface
-                        posix-signals-interface
                         sockets-network-interface ; Standard Network Interface
                         os-extras-interface ; Extra stuff from OS.
                         scsh-delimited-readers-interface

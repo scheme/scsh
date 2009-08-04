@@ -61,10 +61,6 @@
 	  errno/wouldblock
 	  errno/xtbsy))
 
-(define-interface generic-signals-extras-interface
-  (export signal/cld
-	  signal/iot))
-
 (define-interface generic-network-extras-interface
   (export socket/debug
 	  socket/accept-connect
@@ -93,20 +89,17 @@
 (define-interface generic-extras-interface
   (compound-interface generic-errno-extras-interface
 		      generic-fdflags-extras-interface
-		      generic-network-extras-interface
-		      generic-signals-extras-interface))
+		      generic-network-extras-interface))
 
 (define-interface generic-defs-interface
   (compound-interface generic-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure generic-defs generic-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface generic-extras-interface)
 (define os-dependent generic-defs)

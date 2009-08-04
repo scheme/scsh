@@ -11,7 +11,7 @@
 	  fcntl/set-owner))
 
 (define-interface linux-errno-extras-interface
-  (export errno/notblk	  
+  (export errno/notblk
 	  errno/txtbsy
 	  errno/wouldblock
 	  errno/inprogress
@@ -52,27 +52,11 @@
 ;	  errno/rpcmismatch
 ;	  errno/progunavail
 ;	  errno/progmismatch
-;	  errno/ftype 
+;	  errno/ftype
 ;	  errno/auth
 ;	  errno/needauth
 ;	  errno/last
 	  ))
-
-(define-interface linux-signals-extras-interface
-  (export signal/trap
-;	  signal/emt
-	  signal/bus
-;	  signal/sys
-	  signal/urg
-	  signal/cld
-	  signal/io
-	  signal/xcpu
-	  signal/xfsz
-	  signal/vtalrm
-	  signal/prof
-	  signal/winch
-	  ))
-
 
 (define-interface linux-network-extras-interface
   (export socket/debug
@@ -106,20 +90,17 @@
 (define-interface linux-extras-interface
   (compound-interface linux-errno-extras-interface
 		      linux-fdflags-extras-interface
-		      linux-network-extras-interface
-		      linux-signals-extras-interface))
+		      linux-network-extras-interface))
 
 (define-interface linux-defs-interface
   (compound-interface linux-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure linux-defs linux-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface linux-extras-interface)
 (define os-dependent linux-defs)

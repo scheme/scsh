@@ -62,45 +62,30 @@
 	   errno/wouldblock
 	   errno/xtbsy
 
-	   errno/chrng	
-	   errno/l2nsync 	
-	   errno/l3hlt	
-	   errno/l3rst	
-	   errno/lnrng	
+	   errno/chrng
+	   errno/l2nsync
+	   errno/l3hlt
+	   errno/l3rst
+	   errno/lnrng
 	   errno/unatch
 	   errno/nocsi
 	   errno/l2hlt
 
-	   errno/bade	
-	   errno/badr	
-	   errno/xfull	
-	   errno/noano	
-	   errno/badrqc	
-	   errno/badslt	
-	   errno/deadlock 	
-	   errno/bfont	
+	   errno/bade
+	   errno/badr
+	   errno/xfull
+	   errno/noano
+	   errno/badrqc
+	   errno/badslt
+	   errno/deadlock
+	   errno/bfont
 
-	   errno/libacc	
-	   errno/libbad	
-	   errno/libscn	
-	   errno/libmax	
-	   errno/libexec 	
+	   errno/libacc
+	   errno/libbad
+	   errno/libscn
+	   errno/libmax
+	   errno/libexec
 	   ))
-
-
-(define-interface irix-signals-extras-interface
-  (export signal/cld
-	  signal/iot
-	  signal/pwr 
-	  signal/poll
-	  signal/io	
-	  signal/urg	
-	  signal/winch 
-	  signal/vtalrm
-	  signal/prof	
-	  signal/xcpu	
-	  signal/xfsz
-	  ))
 
 (define-interface irix-network-extras-interface
   (export socket/debug
@@ -133,20 +118,17 @@
 (define-interface irix-extras-interface
   (compound-interface irix-errno-extras-interface
 		      irix-fdflags-extras-interface
-		      irix-network-extras-interface
-		      irix-signals-extras-interface))
+		      irix-network-extras-interface))
 
 (define-interface irix-defs-interface
   (compound-interface irix-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure irix-defs irix-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface irix-extras-interface)
 (define os-dependent irix-defs)

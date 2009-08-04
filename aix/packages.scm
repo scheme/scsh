@@ -1,7 +1,7 @@
 ;;; Interfaces and packages for the machine specific parts of scsh.
 ;;; Copyright (c) 1994 by Olin Shivers. See file COPYING.
 ;;; Copyright (c) 1994 by Brian D. Carlstrom.
-;;; AIX version by Chipsy Sperber 
+;;; AIX version by Chipsy Sperber
 
 (define-interface aix-fdflags-extras-interface
   (export open/no-delay
@@ -71,20 +71,6 @@
 	  errno/nostr
 	  errno/cloneme))
 
-(define-interface aix-signals-extras-interface
-  (export signal/io
-	  signal/xcpu
-	  signal/xfsz
-	  signal/msg
-	  signal/winch
-	  signal/pwr
-	  signal/prof
-	  signal/danger
-	  signal/vtalrm
-	  signal/migrate
-	  signal/pre
-	  signal/virt))
-
 (define-interface aix-network-extras-interface
   (export socket/debug
 	  socket/accept-connect
@@ -108,36 +94,33 @@
 	  ip/options
 	  ip/include-header
 	  ip/type-of-service
-	  ip/time-to-live 
-	  ip/recvopt      
-	  ip/recvret      
-	  ip/recvdst      
-	  ip/retopts      
+	  ip/time-to-live
+	  ip/recvopt
+	  ip/recvret
+	  ip/recvdst
+	  ip/retopts
 	  tcp/no-delay
 	  tcp/max-segment
-	  message/eor   	
-	  message/trunc  
-	  message/ctrunc 
+	  message/eor
+	  message/trunc
+	  message/ctrunc
 	  message/waitall
 	  ))
 
 (define-interface aix-extras-interface
   (compound-interface aix-errno-extras-interface
 		      aix-fdflags-extras-interface
-		      aix-network-extras-interface
-		      aix-signals-extras-interface))
+		      aix-network-extras-interface))
 
 (define-interface aix-defs-interface
   (compound-interface aix-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure aix-defs aix-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface aix-extras-interface)
 (define os-dependent aix-defs)

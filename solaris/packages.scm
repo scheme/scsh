@@ -91,28 +91,6 @@
 	  errno/xfull
 	  ))
 
-(define-interface solaris-signals-extras-interface
-  (export signal/bus	
-	  signal/cld	
-	  signal/emt	
-	  signal/freeze
-	  signal/io	
-	  signal/iot	
-	  signal/lwp	
-	  signal/poll
-	  signal/prof 
-	  signal/pwr	
-	  signal/sys	
-	  signal/thaw 
-	  signal/trap
-	  signal/urg	
-	  signal/vtalrm
-	  signal/waiting
-	  signal/winch 
-	  signal/xcpu 
-	  signal/xfsz 
-	  ))
-
 (define-interface solaris-network-extras-interface
   (export socket/debug
 	  socket/accept-connect
@@ -138,20 +116,17 @@
 (define-interface solaris-extras-interface
   (compound-interface solaris-errno-extras-interface
 		      solaris-fdflags-extras-interface
-		      solaris-network-extras-interface
-		      solaris-signals-extras-interface))
+		      solaris-network-extras-interface))
 
 (define-interface solaris-defs-interface
   (compound-interface solaris-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure solaris-defs solaris-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface solaris-extras-interface)
 (define os-dependent solaris-defs)

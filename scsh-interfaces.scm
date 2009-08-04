@@ -68,31 +68,6 @@
             errno/srch
             errno/xdev) :number)))
 
-
-(define-interface posix-signals-interface
-  (export ((signal/abrt
-            signal/alrm
-            signal/chld
-            signal/cont
-            signal/fpe
-            signal/hup
-            signal/ill
-            signal/int
-            signal/kill
-            signal/pipe
-            signal/quit
-            signal/segv
-            signal/stop
-            signal/term
-            signal/tstp
-            signal/ttin
-            signal/ttou
-            signal/usr1
-            signal/usr2) :number)))
-
-(define-interface signals-internals-interface
-  (export signals-ignored-by-default))  ; (:list-of :number)
-
 (define-interface scsh-errors-interface
   (export errno-error
           error

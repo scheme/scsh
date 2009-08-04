@@ -8,9 +8,6 @@
   (export errno/wouldblock
 	  errno/connaborted))
 
-(define-interface hpux-signals-extras-interface
-  (export))
-
 (define-interface hpux-network-extras-interface
   (export socket/debug
 	  socket/accept-connect
@@ -35,32 +32,29 @@
 	  socket/receive-avoid-copy	;hpux
 	  ;; all options except ip/options & ip/time-to-live hpux specific
 	  ip/options
-	  ip/multicast-if	
-	  ip/multicast-ttl	
-	  ip/multicast-loop	
-	  ip/add-membership	
-	  ip/drop-membership	
-	  ip/time-to-live 
+	  ip/multicast-if
+	  ip/multicast-ttl
+	  ip/multicast-loop
+	  ip/add-membership
+	  ip/drop-membership
+	  ip/time-to-live
 	  tcp/no-delay
 	  tcp/max-segment))
 
 (define-interface hpux-extras-interface
   (compound-interface hpux-errno-extras-interface
 		      hpux-fdflags-extras-interface
-		      hpux-network-extras-interface
-		      hpux-signals-extras-interface))
+		      hpux-network-extras-interface))
 
 (define-interface hpux-defs-interface
   (compound-interface hpux-extras-interface
 		      sockets-network-interface
 		      posix-errno-interface
-		      posix-fdflags-interface
-		      posix-signals-interface
-		      signals-internals-interface))
+		      posix-fdflags-interface))
 
 (define-structure hpux-defs hpux-defs-interface
   (open scheme bitwise defenum-package)
-  (files fdflags errno signals netconst))
+  (files fdflags errno netconst))
 
 (define-interface os-extras-interface hpux-extras-interface)
 (define os-dependent hpux-defs)
