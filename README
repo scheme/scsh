@@ -2,9 +2,10 @@
 
 * Dependencies
 
-This code depends on the latest version of scheme48 in the development
-repository <http://www.s48.org/cgi-bin/hgwebdir.cgi/s48>, which currently has
-1.9T as the version string.
+This code depends on the latest revision of scheme48 here
+<http://ccs.neu.edu/home/roderic/arbeit/>. It follows the scheme48 development
+repository <http://www.s48.org/cgi-bin/hgwebdir.cgi/s48> as closely as possible
+while adding bug fixes and additions needed for scsh to run.
 
 * To get started
 
