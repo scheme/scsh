@@ -139,7 +139,7 @@
 
 (define (with-scsh-sighandlers interactive? thunk)
   (install-fresh-signal-handlers!)
-  (let ((scsh-initial-thread  ((structure-ref threads current-thread))))
+  (let ((scsh-initial-thread  (current-thread)))
     (if (not (eq? (thread-name scsh-initial-thread)
                   'scsh-initial-thread))
         (error "with-scsh-sighandlers"
@@ -151,21 +151,19 @@
     (if interactive?
         (set-signal-handler! (signal int)
                              (lambda (signal)
-                               ((structure-ref threads-internal schedule-event)
+                               (schedule-event
                                 scsh-initial-thread
-                                (enum
-                                 (structure-ref threads-internal event-type)
-                                 interrupt)
+                                (enum event-type interrupt)
                                 (enum interrupt keyboard))))))
   (run-as-long-as
    deliver-interrupts
    thunk
-   (structure-ref threads-internal spawn-on-root)
+   spawn-on-root
    'deliver-interrupts))
 
 (define (deliver-interrupts)
   (let loop ((signal (dequeue-signal! *signal-queue*)))
     (if (signal-enabled signal *enabled-signals*)
-        (call-signal-handler interrupt)
-        (make-signal-pending interrupt))
+        (call-signal-handler signal)
+        (make-signal-pending signal))
     (loop (dequeue-signal! *signal-queue*))))

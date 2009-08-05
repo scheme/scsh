@@ -1041,9 +1041,8 @@
           (with-enabled-signals :syntax)
           with-enabled-signals*
           enabled-signals
-          set-enabled-signals
-          set-signal-handler!
-          signal-handler))
+          set-enabled-signals!
+          set-signal-handler!))
 
 (define-interface sigevents-interface
   (export most-recent-sigevent

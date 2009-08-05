@@ -73,7 +73,18 @@
         i/o-internal ports)
   (files rdelim))
 
-
+(define-structure signal-handler signal-handler-interface
+  (open scheme
+        scsh-utilities
+        srfi-1
+        architecture
+        exceptions
+        external-calls
+        load-dynamic-externals
+        posix-processes
+        threads
+        threads-internal)
+  (files sighandlers))
 
 (define list-lib srfi-1)
 (define string-lib srfi-13)
@@ -147,7 +158,6 @@
                         scsh-version-interface
                         (interface-of srfi-14) ;; export this here for
                         (export ->char-set)    ;; this kludge
-                        signal-handler-interface
                         ;; This stuff would probably be better off kept
                         ;; in separate modules, but we'll toss it in for now.
                         (interface-of ascii) ; char<->ascii
@@ -165,7 +175,7 @@
   (for-syntax (open scsh-syntax-helpers scheme))
   (access sigevents threads)
   (open enumerated
-        posix-processes
+        signal-handler
         defenum-package
         external-calls           ;JMG new FFI
         load-dynamic-externals
@@ -268,7 +278,6 @@
          flock                  ; New in release 0.4.
          tty                    ; New in release 0.4.
          pty                    ; New in release 0.4.
-         sighandlers            ; New in release 0.5.
          scsh
 ;        re
          )
