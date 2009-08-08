@@ -175,6 +175,8 @@
   (for-syntax (open scsh-syntax-helpers scheme))
   (access sigevents threads)
   (open enumerated
+        posix
+        os-strings
         signal-handler
         defenum-package
         external-calls           ;JMG new FFI

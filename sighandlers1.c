@@ -1,8 +1,3 @@
-/* Need to define sig2interrupt vector.
-** Interrupt-system mutators should probably hold interrupts while they
-**   operate.
-*/
-
 #include <unistd.h>
 #include <sys/types.h>
 #include <signal.h>

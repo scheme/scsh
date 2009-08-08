@@ -64,6 +64,13 @@
                  (lambda ()
                    (syscall/eintr %arg ...))))))))))))
 
+(define-syntax define/vector-args
+  (syntax-rules ()
+    ((define/vector-args new raw (string-arg ...) arg ...)
+     (define (new string-arg ... arg ...)
+       (raw (os-string->byte-vector (x->os-string string-arg)) ...
+            arg ...)))))
+
 ;;; Process
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; we can't algin env here, because exec-path/env calls
@@ -98,51 +105,61 @@
 ;;; Miscellaneous process state
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; Working directory
-
-(import-os-error-syscall %chdir (directory) "scsh_chdir")
-
 ;;; These calls change/reveal the process working directory
 ;;;
 
 (define (process-chdir . maybe-dir)
   (let ((dir (:optional maybe-dir (home-dir))))
-    (%chdir (ensure-file-name-is-nondirectory dir))))
+    (set-working-directory! (ensure-file-name-is-nondirectory dir))))
 
-;; TODO: we get an error if cwd does not exist on startup
-(import-os-error-syscall process-cwd () "scheme_cwd")
+(define (process-cwd)
+  (os-string->string (working-directory)))
 
 ;;; GID
 
-(import-os-error-syscall user-gid  () "scsh_getgid")
+(define (user-gid)
+  (group-id->integer (get-group-id)))
 
-(import-os-error-syscall process-user-effective-gid () "scsh_getegid")
+(define (process-user-effective-gid)
+  (group-id->integer (get-effective-group-id)))
 
-(import-os-error-syscall process-set-gid (gid) "scsh_setgid")
+(define (process-set-gid gid)
+  (set-group-id! (integer->group-id gid)))
 
-(import-os-error-syscall set-process-user-effective-gid (gid) "scsh_setegid")
+;;; Until the posix library gets a setegid equivalent.
+(define set-process-user-effective-gid process-set-gid)
 
-(import-os-error-syscall user-supplementary-gids () "get_groups")
+(define (user-supplementary-gids)
+  (map group-id->integer (get-groups)))
 
 ;;; UID
-(import-os-error-syscall user-uid  () "scsh_getuid")
+(define (user-uid)
+  (user-id->integer (get-user-id)))
 
-(import-os-error-syscall process-user-effective-uid () "scsh_geteuid")
+(define (process-user-effective-uid)
+  (user-id->integer (get-effective-user-id)))
 
-(import-os-error-syscall process-set-uid (uid) "scsh_setuid")
+(define (process-set-uid uid)
+  (set-user-id! (integer->user-id uid)))
 
-(import-os-error-syscall set-process-user-effective-uid (uid) "scsh_seteuid")
-
-(import-os-error-syscall %user-login-name () "my_username")
+;;; Until the posix library gets a seteuid equivalent.
+(define set-process-user-effective-uid process-set-uid)
 
 (define (user-login-name)
-  (or (%user-login-name)
-      (error "Cannot get your name")))
+  (let ((name (get-login-name)))
+    (if name
+        (os-string->string name)
+        (error "user-login-name"
+               "Cannot get the current user's name"))))
 
 ;;; PID
 
-(import-os-error-syscall pid () "scsh_getpid")
-(import-os-error-syscall parent-pid () "scsh_getppid")
+(define (pid)
+  (process-id->integer (get-process-id)))
+
+(define (parent-pid)
+  (process-id->integer (get-parent-process-id)))
+
 ;;; Process groups and session ids
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -161,13 +178,14 @@
 
 ;;; UMASK
 
-(import-os-error-syscall set-process-umask (mask) "scsh_umask")
+(define (set-process-umask mask)
+  (let ((old-mask (set-file-creation-mask! (integer->file-mode mask))))
+    (file-mode->integer old-mask)))
 
 (define (process-umask)
-  (let ((m (set-process-umask 0)))
-    (set-process-umask m)
-    m))
-
+  (let ((mask (set-process-umask 0)))
+    (set-process-umask mask)
+    mask))
 
 ;;; PROCESS TIMES
 
@@ -194,7 +212,9 @@
       (call/fdes thing fd-op)))
 
 
-(import-os-error-syscall %set-file-mode (path mode) "scsh_chmod")
+(import-os-error-syscall %set-file-mode-raw (path mode) "scsh_chmod")
+
+(define/vector-args %set-file-mode %set-file-mode-raw (path) mode)
 
 (import-os-error-syscall %set-fdes-mode (path mode) "scsh_fchmod")
 
@@ -204,7 +224,9 @@
                    (lambda (fname) (%set-file-mode fname mode))))
 
 
-(import-os-error-syscall set-file-uid&gid (path uid gid) "scsh_chown")
+(import-os-error-syscall set-file-uid&gid-raw (path uid gid) "scsh_chown")
+
+(define/vector-args set-file-uid&gid set-file-uid&gid-raw (path) uid gid)
 
 (import-os-error-syscall set-fdes-uid&gid (fd uid gid) "scsh_fchown")
 
@@ -221,7 +243,9 @@
 
 ;;; Uses real uid and gid, not effective. I don't use this anywhere.
 
-(import-os-error-syscall %file-ruid-access-not? (path perms) "scsh_access")
+(import-os-error-syscall %file-ruid-access-not-raw? (path perms) "scsh_access")
+
+(define/vector-args %file-ruid-access-not? %file-ruid-access-not-raw? (path) perms)
 
 ;(define (file-access? path perms)
 ;  (not (%file-access-not? path perms)))
@@ -235,28 +259,37 @@
 ;(define (file-readable? fname)
 ;  (file-access? fname 4))
 
+(define %create-hard-link link)
 
-(import-os-error-syscall %create-hard-link (original-name new-name)
-  "scsh_link")
+(define (%create-fifo path mode)
+  (make-fifo path (integer->file-mode mode)))
 
-(import-os-error-syscall %create-fifo (path mode) "scsh_mkfifo")
-
-(import-os-error-syscall %%create-directory (path mode) "scsh_mkdir")
+(define (%%create-directory path mode)
+  (make-directory path (integer->file-mode mode)))
 
 (define (%create-directory path . maybe-mode)
   (let ((mode (:optional maybe-mode #o777))
         (fname (ensure-file-name-is-nondirectory path)))
     (%%create-directory fname mode)))
 
-(import-os-error-syscall %read-symlink (path) "scsh_readlink")
+(define %rename-file rename)
 
-(import-os-error-syscall %rename-file (old-name new-name) "scsh_rename")
+(define %delete-directory remove-directory)
 
-(import-os-error-syscall %delete-directory (path) "scsh_rmdir")
+(import-os-error-syscall %read-symlink-raw (path) "scsh_readlink")
 
-(import-os-error-syscall %utime (path ac m) "scm_utime")
+(define (%read-symlink path)
+  (os-string->string
+   (byte-vector->os-string
+    (%read-symlink-raw (os-string->byte-vector (x->os-string path))))))
 
-(import-os-error-syscall %utime-now (path) "scm_utime_now")
+(import-os-error-syscall %utime-raw (path ac m) "scm_utime")
+
+(define/vector-args %utime %utime-raw (path) ac m)
+
+(import-os-error-syscall %utime-now-raw (path) "scm_utime_now")
+
+(define/vector-args %utime-now %utime-now-raw (path))
 
 ;;; (SET-FILE-TIMES path [access-time mod-time])
 
@@ -277,7 +310,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; STAT
 
-(import-os-error-syscall stat-file (path data chase?) "scheme_stat")
+(import-os-error-syscall stat-file-raw (path data chase?) "scheme_stat")
+
+(define/vector-args stat-file stat-file-raw (path) data chase?)
 
 (import-os-error-syscall stat-fdes (fd data) "scheme_fstat")
 
@@ -333,12 +368,16 @@
 ;;; "no-declare" as there is no agreement among the OS's as to whether or not
 ;;; the OLD-NAME arg is "const". It *should* be const.
 
-(import-os-error-syscall %create-symlink (old-name new-name) "scsh_symlink")
+(import-os-error-syscall %create-symlink-raw (old-name new-name) "scsh_symlink")
+
+(define/vector-args %create-symlink %create-symlink-raw (old-name new-name))
 
 ;;; "no-declare" as there is no agreement among the OS's as to whether or not
 ;;; the PATH arg is "const". It *should* be const.
 
-(import-os-error-syscall %truncate-file (path length) "scsh_truncate")
+(import-os-error-syscall %truncate-file-raw (path length) "scsh_truncate")
+
+(define/vector-args %truncate-file %truncate-file-raw (path) length)
 
 (import-os-error-syscall %truncate-fdes (path length) "scsh_ftruncate")
 
@@ -347,11 +386,9 @@
                    (lambda (fd)    (%truncate-fdes fd    length))
                    (lambda (fname) (%truncate-file fname length))))
 
-(import-os-error-syscall %delete-file (path) "scsh_unlink")
-
 (define (delete-file path)
   (with-resources-aligned (list cwd-resource euid-resource egid-resource)
-                          (lambda () (%delete-file path))))
+                          (lambda () (unlink path))))
 
 (import-os-error-syscall %sync-file (fd) "scsh_fsync")
 
@@ -396,14 +433,15 @@
 
 (import-os-error-syscall %char-ready-fdes? (fd) "char_ready_fdes")
 
-(import-os-error-syscall %open (path flags mode) "scsh_open")
+(import-os-error-syscall %open-raw (path flags mode) "scsh_open")
+
+(define/vector-args %open %open-raw (path) flags mode)
 
 (define (open-fdes path flags . maybe-mode) ; mode defaults to 0666
     (with-resources-aligned
      (list cwd-resource umask-resource euid-resource egid-resource)
      (lambda ()
       (%open path flags (:optional maybe-mode #o666)))))
-
 
 (import-os-error-syscall pipe-fdes () "scheme_pipe")
 
@@ -433,6 +471,7 @@
                        (else (error "Illegal proc passed to signal-process-group"
                                     proc-group))))
               signal))
+
 (define (itimer sec)
   ((structure-ref sigevents schedule-timer-interrupt!) (* sec 1000)))
 ;;; SunOS, not POSIX:

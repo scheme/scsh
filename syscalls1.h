@@ -149,3 +149,18 @@ s48_ref_t scm_syslog (s48_call_t call, s48_ref_t _facility,
 s48_ref_t scm_closelog(s48_call_t call);
 
 s48_ref_t sleep_until(s48_call_t call);
+
+s48_ref_t scm_uname(s48_call_t call);
+
+s48_ref_t user_info_uid(s48_call_t call, s48_ref_t scheme_uid,
+                        s48_ref_t user_info_record);
+
+s48_ref_t user_info_name(s48_call_t call, s48_ref_t scheme_name,
+                         s48_ref_t user_info_record);
+
+s48_ref_t group_info_gid(s48_call_t call, s48_ref_t gid,
+                         s48_ref_t group_info_record);
+
+s48_ref_t group_info_name(s48_call_t call, s48_ref_t name,
+                          s48_ref_t group_info_record);
+
