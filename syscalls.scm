@@ -126,8 +126,8 @@
 (define (process-set-gid gid)
   (set-group-id! (integer->group-id gid)))
 
-;;; Until the posix library gets a setegid equivalent.
-(define set-process-user-effective-gid process-set-gid)
+(define (set-process-user-effective-gid gid)
+  (set-effective-user-id! (integer->group-id gid)))
 
 (define (user-supplementary-gids)
   (map group-id->integer (get-groups)))
@@ -142,8 +142,8 @@
 (define (process-set-uid uid)
   (set-user-id! (integer->user-id uid)))
 
-;;; Until the posix library gets a seteuid equivalent.
-(define set-process-user-effective-uid process-set-uid)
+(define (set-process-user-effective-uid uid)
+  (set-effective-user-id! (integer->user-id uid)))
 
 (define (user-login-name)
   (let ((name (get-login-name)))

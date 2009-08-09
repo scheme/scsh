@@ -569,38 +569,6 @@ s48_ref_t char_ready_fdes(s48_call_t call, s48_ref_t sch_fd)
 *******************************************************************************
 */
 
-s48_ref_t scsh_setegid(s48_call_t call, s48_ref_t gid)
-{
-  int retval;
-
-#ifdef HAVE_SETEGID
-  retval = setegid (s48_extract_long_2(call, gid));
-#else
-  retval = setregid (-1, s48_extract_long_2(call, gid));
-#endif
-
-  if (retval == -1)
-    s48_os_error_2(call, "scsh_setegid", errno, 1, gid);
-
-  return s48_unspecific_2(call);
-}
-
-s48_ref_t scsh_seteuid(s48_call_t call, s48_ref_t uid)
-{
-  int retval;
-
-#ifdef HAVE_SETEUID
-  retval = seteuid (s48_extract_long_2(call, uid));
-#else
-  retval = setreuid (-1, s48_extract_long_2(call, uid));
-#endif
-
-  if (retval == -1)
-    s48_os_error_2(call, "scsh_seteuid", errno, 1, uid);
-
-  return s48_unspecific_2(call);
-}
-
 s48_ref_t scsh_getpgrp(s48_call_t call)
 {
   return s48_enter_long_2(call, getpgrp());
@@ -926,28 +894,13 @@ s48_ref_t group_info_name(s48_call_t call, s48_ref_t scheme_name,
 }
 
 void s48_init_syscalls (){
-  S48_EXPORT_FUNCTION(scheme_exec);
   S48_EXPORT_FUNCTION(scsh_exit);
   S48_EXPORT_FUNCTION(scsh__exit);
   S48_EXPORT_FUNCTION(scsh_fork);
   S48_EXPORT_FUNCTION(wait_pid);
-  S48_EXPORT_FUNCTION(scsh_chdir);
-  S48_EXPORT_FUNCTION(scheme_cwd);
-  S48_EXPORT_FUNCTION(scsh_getgid);
-  S48_EXPORT_FUNCTION(scsh_getegid);
-  S48_EXPORT_FUNCTION(scsh_setgid);
-  S48_EXPORT_FUNCTION(scsh_setegid);
-  S48_EXPORT_FUNCTION(get_groups);
-  S48_EXPORT_FUNCTION(scsh_getuid);
-  S48_EXPORT_FUNCTION(scsh_geteuid);
-  S48_EXPORT_FUNCTION(scsh_setuid);
-  S48_EXPORT_FUNCTION(scsh_seteuid);
-  S48_EXPORT_FUNCTION(scsh_getpid);
-  S48_EXPORT_FUNCTION(scsh_getppid);
   S48_EXPORT_FUNCTION(scsh_getpgrp);
   S48_EXPORT_FUNCTION(scsh_setpgid);
   S48_EXPORT_FUNCTION(scsh_setsid);
-  S48_EXPORT_FUNCTION(scsh_umask);
   S48_EXPORT_FUNCTION(process_times);
   S48_EXPORT_FUNCTION(cpu_clock_ticks_per_sec);
   S48_EXPORT_FUNCTION(scsh_chmod);
@@ -955,12 +908,7 @@ void s48_init_syscalls (){
   S48_EXPORT_FUNCTION(scsh_chown);
   S48_EXPORT_FUNCTION(scsh_fchown);
   S48_EXPORT_FUNCTION(scsh_access);
-  S48_EXPORT_FUNCTION(scsh_link);
-  S48_EXPORT_FUNCTION(scsh_mkfifo);
-  S48_EXPORT_FUNCTION(scsh_mkdir);
   S48_EXPORT_FUNCTION(scsh_readlink);
-  S48_EXPORT_FUNCTION(scsh_rename);
-  S48_EXPORT_FUNCTION(scsh_rmdir);
   S48_EXPORT_FUNCTION(scm_utime);
   S48_EXPORT_FUNCTION(scm_utime_now);
   S48_EXPORT_FUNCTION(scheme_stat);
@@ -968,7 +916,6 @@ void s48_init_syscalls (){
   S48_EXPORT_FUNCTION(scsh_symlink);
   S48_EXPORT_FUNCTION(scsh_truncate);
   S48_EXPORT_FUNCTION(scsh_ftruncate);
-  S48_EXPORT_FUNCTION(scsh_unlink);
   S48_EXPORT_FUNCTION(scsh_fsync);
   S48_EXPORT_FUNCTION(scsh_sync);
   S48_EXPORT_FUNCTION(scsh_close);
