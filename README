@@ -3,9 +3,10 @@
 * Dependencies
 
 This code depends on the latest revision of scheme48 here
-<http://ccs.neu.edu/home/roderic/arbeit/>. It follows the scheme48 development
-repository <http://www.s48.org/cgi-bin/hgwebdir.cgi/s48> as closely as possible
-while adding bug fixes and additions needed for scsh to run.
+<http://s48.org/cgi-bin/hgwebdir.cgi/s48> with the patches here
+<http://ccs.neu.edu/home/roderic/arbeit/s48> applied in the order specified
+by the series file. The patches can be managed easily using mercurial queues
+<http://mercurial.selenic.com/wiki/MqExtension>.
 
 * To get started
 
@@ -17,5 +18,5 @@ with either "little" or "big", depending on your machine.
 
 In the user package (the default for scheme48) run the command:
 ,exec ,load load.scm
-This will leave the scsh package in the environment. Opening it will probably
-give errors and warnings about missing symbols and similar things for now.
+At this point, you can try to open the scsh structure. However, doing so will
+probably give errors and warnings about missing symbols and similar things for now.

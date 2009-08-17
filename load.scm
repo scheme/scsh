@@ -2,15 +2,16 @@
 
 (config)
 
-(load "scsh-read.scm")
+(load "scsh/scsh-read.scm")
 (open 'scsh-reader)
 (set-reader 'scsh-read)
-(load "scsh-interfaces.scm"
-      "scsh-package.scm"
-      "machine/packages.scm"
-      "let-opt.scm"
+(load "rx/interfaces.scm"
       "rx/packages.scm"
-      "lib/char-package.scm"
-      "lib/ccp-pack.scm")
+      "scsh/scsh-interfaces.scm"
+      "scsh/scsh-package.scm"
+      "scsh/machine/packages.scm"
+      "scsh/let-opt.scm"
+      "scsh/lib/char-package.scm"
+      "scsh/lib/ccp-pack.scm")
 
 (user)
