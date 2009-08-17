@@ -8,6 +8,10 @@ This code depends on the latest revision of scheme48 here
 by the series file. The patches can be managed easily using mercurial queues
 <http://mercurial.selenic.com/wiki/MqExtension>.
 
+You'll need mercurial to check out these repositories, and the forest extension
+<http://mercurial.selenic.com/wiki/ForestExtension> to manage this repo's
+submodules.
+
 * To get started
 
 Make a symlink named machine to the folder with you're operating system's
@@ -15,6 +19,9 @@ name (e.g. (ln -s linux machine) for linux).
 
 Make a copy of endian.scm.in named endian.scm with instances of @ENDIAN@ replaced
 with either "little" or "big", depending on your machine.
+
+If you haven't already, clone the repository's submodules using the command:
+hg fseed .fsnap
 
 In the user package (the default for scheme48) run the command:
 ,exec ,load load.scm
