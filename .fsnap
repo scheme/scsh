@@ -4,6 +4,6 @@ revision = tip
 
 [tree2]
 root = rx
-revision = 2456ce55ad626c5b4ad9244d929f5a0bef524bac
+revision = tip
 path.default = http://ccs.neu.edu/home/roderic/arbeit/rx
 
