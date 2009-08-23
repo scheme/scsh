@@ -10,7 +10,6 @@
       "scsh/scsh-interfaces.scm"
       "scsh/scsh-package.scm"
       "scsh/machine/packages.scm"
-      "scsh/let-opt.scm"
       "scsh/lib/char-package.scm"
       "scsh/lib/ccp-pack.scm")
 

@@ -2,6 +2,15 @@
 ;;; Copyright (c) 1994 by Olin Shivers and David Albertz.
 ;;; Copyright (c) 1994 by Brian D. Carlstrom
 
+(define-interface let-opt-expanders-interface
+  (export expand-let-optionals
+          expand-let-optionals*))
+
+(define-interface let-opt-interface
+  (export (let-optionals  :syntax)
+          (let-optionals* :syntax)
+          (:optional      :syntax)))
+
 (define-interface posix-fdflags-interface
   (export ((open/read
             open/write

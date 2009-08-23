@@ -21,13 +21,17 @@
 ;;; This whole mechanism would be better solved with a functor.
 ;;;     -Olin
 
-
-;;; The LET-OPT package for optional argument parsing & defaulting
-;;; is found in the let-opt.scm file.
-
-
 (define-structure error-package (export error warn)
   (open signals))
+
+(define-structure let-opt-expanders let-opt-expanders-interface
+  (open scheme error-package srfi-8)
+  (files let-opt-expanders))
+
+(define-structure let-opt let-opt-interface
+  (open scheme error-package receiving)
+  (for-syntax (open scheme let-opt-expanders))
+  (files let-opt))
 
 (define-structure scsh-utilities scsh-utilities-interface
   (open bitwise error-package loopholes let-opt scheme define-record-types
