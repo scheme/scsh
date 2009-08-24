@@ -367,14 +367,6 @@
  process-set-gid set-gid
  align-egid! egid-resource
  user-effective-gid set-user-effective-gid with-user-effective-gid*)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; ensure S48 is aligned too
-
-(set-with-fs-context-aligned*!
- (lambda (thunk)
-   (with-resources-aligned
-    (list cwd-resource umask-resource euid-resource egid-resource)
-    thunk)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Environment per thread
