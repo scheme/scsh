@@ -22,7 +22,7 @@
 ;;;     -Olin
 
 (define-structure error-package (export error warn)
-  (open signals))
+  (open (subset signals (error warn))))
 
 (define-structure let-opt-expanders let-opt-expanders-interface
   (open scheme error-package srfi-8)
@@ -68,7 +68,7 @@
   (open scheme
         byte-vectors
         (subset primitives (immutable?))
-        signals ; ERROR
+        error-package
         let-opt
         receiving
         re-level-0 rx-syntax
@@ -201,7 +201,7 @@
         build
         bigbit
         bitwise
-        signals
+        error-package
         conditions
         scsh-utilities
         handle
@@ -596,7 +596,7 @@
         bitwise
         (subset i/o (read-block))
         (subset srfi-13 (string-fold-right))
-        signals
+        error-package
         external-calls)
   (files md5))
 
