@@ -10,7 +10,7 @@
   (with-continuation
    null-continuation
    (lambda ()
-     (with-handler 
+     (with-handler
       (lambda (c more)
         (display-condition c (current-error-port))
         (exit 1))
@@ -32,26 +32,26 @@
 
 (define (%fork/pipe . stuff)
   (really-fork/pipe %fork stuff))
-  
+
 ;;; Common code for FORK/PIPE and %FORK/PIPE.
 (define (really-fork/pipe forker rest)
   (let-optionals rest ((maybe-thunk #f)
-		       (no-new-command-level? #f))
+                       (no-new-command-level? #f))
     (receive (r w) (pipe)
       (let ((proc (forker #f no-new-command-level?)))
-	(cond (proc		; Parent
-	       (close w)
-	       (move->fdes r 0)
+        (cond (proc             ; Parent
+               (close w)
+               (move->fdes r 0)
                (set-current-input-port! r))
-	      (else		; Child
-	       (close r)
+              (else             ; Child
+               (close r)
                (move->fdes w 1)
                (if maybe-thunk
                    (with-current-output-port
                     w
                     (call-terminally maybe-thunk))
                    (set-current-output-port! w))))
-	proc))))
+        proc))))
 
 
 ;;; FORK/PIPE with a connection list.
@@ -66,34 +66,34 @@
 ;;; Common code.
 (define (really-fork/pipe+ forker conns rest)
   (let-optionals rest ((maybe-thunk #f)
-		       (no-new-command-level? #f))
+                       (no-new-command-level? #f))
     (let* ((pipes (map (lambda (conn) (call-with-values pipe cons))
-		       conns))
-	   (rev-conns (map reverse conns))
-	   (froms (map (lambda (conn) (reverse (cdr conn)))
-		       rev-conns))
-	   (tos (map car rev-conns)))
+                       conns))
+           (rev-conns (map reverse conns))
+           (froms (map (lambda (conn) (reverse (cdr conn)))
+                       rev-conns))
+           (tos (map car rev-conns)))
 
       (let ((proc (forker #f no-new-command-level?)))
-	(cond (proc			; Parent
-	       (for-each (lambda (to r/w)
-			   (let ((w (cdr r/w))
-				 (r (car r/w)))
-			     (close w)
-			     (move->fdes r to)))
-			 tos pipes))
+        (cond (proc                     ; Parent
+               (for-each (lambda (to r/w)
+                           (let ((w (cdr r/w))
+                                 (r (car r/w)))
+                             (close w)
+                             (move->fdes r to)))
+                         tos pipes))
 
-	      (else			; Child
-	       (for-each (lambda (from r/w)
-			   (let ((r (car r/w))
-				 (w (cdr r/w)))
-			     (close r)
-			     (for-each (lambda (fd) (dup w fd)) from)
-			     (close w))) ; Unrevealed ports win.
-			 froms pipes)
-	       (if maybe-thunk
-		   (call-terminally maybe-thunk))))
-	proc))))
+              (else                     ; Child
+               (for-each (lambda (from r/w)
+                           (let ((r (car r/w))
+                                 (w (cdr r/w)))
+                             (close r)
+                             (for-each (lambda (fd) (dup w fd)) from)
+                             (close w))) ; Unrevealed ports win.
+                         froms pipes)
+               (if maybe-thunk
+                   (call-terminally maybe-thunk))))
+        proc))))
 
 (define (tail-pipe a b)
   (fork/pipe a)
@@ -108,15 +108,15 @@
 
 (define (pipe* . thunks)
   (letrec ((lay-pipe (lambda (thunks)
-		       (let ((thunk (car thunks))
-			     (thunks (cdr thunks)))
-			 (if (pair? thunks)
-			     (begin (fork/pipe thunk)
-				    (lay-pipe thunks))
-			     (call-terminally thunk)))))) ; Last one.
+                       (let ((thunk (car thunks))
+                             (thunks (cdr thunks)))
+                         (if (pair? thunks)
+                             (begin (fork/pipe thunk)
+                                    (lay-pipe thunks))
+                             (call-terminally thunk)))))) ; Last one.
     (if (pair? thunks)
-	(lay-pipe thunks)
-	(error "No thunks passed to PIPE*"))))
+        (lay-pipe thunks)
+        (error "No thunks passed to PIPE*"))))
 
 ;;; Splice the processes into the i/o flow upstream from us.
 ;;; First thunk's process reads from our stdin; last thunk's process'
@@ -130,7 +130,7 @@
 
 ;;; Should be moved to somewhere else
 (define (with-lock lock thunk)
-  (dynamic-wind 
+  (dynamic-wind
    (lambda ()
      (obtain-lock lock))
    thunk
@@ -146,8 +146,8 @@
 (define (initialize-cwd)
   (set! *cwd-cache* (process-cwd))
   (set! $cwd ;;; TODO The old thread-fluid will remain
-	(make-preserved-thread-fluid
-	 (cwd-cache))))
+        (make-preserved-thread-fluid
+         (cwd-cache))))
 ;  (set! cwd-lock (make-lock)))
 
 (define (cwd-cache)
@@ -172,10 +172,10 @@
 
 (define (with-cwd* new-cwd thunk)
   (let ((changed-cwd
-	 (with-lock cwd-lock
-	   (lambda ()
-	     (change-and-cache-cwd new-cwd)
-	     (cwd-cache)))))
+         (with-lock cwd-lock
+           (lambda ()
+             (change-and-cache-cwd new-cwd)
+             (cwd-cache)))))
     (let-cwd changed-cwd thunk)))
 
 ;; Align the value of the Unix cwd with scsh's value.
@@ -186,14 +186,14 @@
 (define (align-cwd!)
   (let ((thread-cwd (cwd)))
     (if (not (string=? thread-cwd (cwd-cache)))
-	(change-and-cache-cwd thread-cwd))))
+        (change-and-cache-cwd thread-cwd))))
 
 (define (chdir . maybe-dir)
   (let ((dir (:optional maybe-dir (home-dir))))
     (with-lock cwd-lock
       (lambda ()
-	(change-and-cache-cwd dir)
-	(thread-set-cwd! (cwd-cache))))))
+        (change-and-cache-cwd dir)
+        (thread-set-cwd! (cwd-cache))))))
 
 (define-record-type resource :resource
   (make-resource align! lock)
@@ -208,10 +208,10 @@
       (lambda (align!) (align!))
       (map resource-align! resources))
      (let ((val (with-handler
-		 (lambda (cond more)
-		   (for-each release-lock locks)
-		   (more))
-		 thunk)))
+                 (lambda (cond more)
+                   (for-each release-lock locks)
+                   (more))
+                 thunk)))
        (for-each release-lock locks)
        val)))
 
@@ -235,8 +235,8 @@
 (define (initialize-umask)
   (set! *umask-cache* (process-umask))
   (set! $umask ;;; TODO The old thread-fluid will remain
-	(make-preserved-thread-fluid
-	 (umask-cache))))
+        (make-preserved-thread-fluid
+         (umask-cache))))
 ;  (set! umask-lock (make-lock)))
 
 (define (umask-cache)
@@ -259,16 +259,16 @@
 
 (define (with-umask* new-umask thunk)
   (let ((changed-umask
-	 (with-lock umask-lock
-	   (lambda ()
-	     (change-and-cache-umask new-umask)
-	     (umask-cache)))))
+         (with-lock umask-lock
+           (lambda ()
+             (change-and-cache-umask new-umask)
+             (umask-cache)))))
     (let-umask changed-umask thunk)))
 
 (define (align-umask!)
   (let ((thread-umask (umask)))
     (if (not (= thread-umask (umask-cache)))
-	(change-and-cache-umask thread-umask))))
+        (change-and-cache-umask thread-umask))))
 
 (define (set-umask new-umask)
   (with-lock umask-lock
@@ -286,9 +286,9 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; effective uid and gid per thread
 
-(define-syntax make-Xid-resource 
+(define-syntax make-Xid-resource
   (syntax-rules ()
-    ((make-Xid-resource 
+    ((make-Xid-resource
       process-user-effective-Xid set-process-user-effective-Xid
       process-set-Xid set-Xid
       align-eXid! eXid-resource
@@ -296,21 +296,21 @@
      (begin
        (define *eXid-cache* 'uninitialized)
        (define eXid-lock (make-lock))
-     
+
        (define (initialize-eXid)
-	 (set! *eXid-cache* (process-user-effective-Xid))
-	 (set! $eXid
-	       (make-preserved-thread-fluid
-		(eXid-cache))))
+         (set! *eXid-cache* (process-user-effective-Xid))
+         (set! $eXid
+               (make-preserved-thread-fluid
+                (eXid-cache))))
 
        (define (eXid-cache)
-	 *eXid-cache*)
+         *eXid-cache*)
 
 ;; Actually do the syscall and update the cache
 ;; assumes the resource lock obtained
        (define (change-and-cache-eXid new-eXid)
-	 (set-process-user-effective-Xid new-eXid)
-	 (set! *eXid-cache* (process-user-effective-Xid)))
+         (set-process-user-effective-Xid new-eXid)
+         (set! *eXid-cache* (process-user-effective-Xid)))
 
 ;; The thread-specific eXid: A thread fluid
 
@@ -319,50 +319,50 @@
        (define (user-effective-Xid) (thread-fluid $eXid))
        (define (thread-set-eXid! new-eXid) (set-thread-fluid! $eXid new-eXid))
        (define (let-eXid new-eXid thunk)
-	 (let-thread-fluid $eXid new-eXid thunk))
+         (let-thread-fluid $eXid new-eXid thunk))
 
 ;; set-Xid will affect the effective X id
        (define (set-Xid Xid)
-	 (with-lock eXid-lock
-	   (lambda ()
-	     (process-set-Xid Xid)
-	     (set! *eXid-cache* (process-user-effective-Xid))
-	     (thread-set-eXid! *eXid-cache*))))
+         (with-lock eXid-lock
+           (lambda ()
+             (process-set-Xid Xid)
+             (set! *eXid-cache* (process-user-effective-Xid))
+             (thread-set-eXid! *eXid-cache*))))
 
        (define (with-user-effective-Xid* new-eXid thunk)
-	 (let ((changed-eXid
-		(with-lock eXid-lock
-		  (lambda ()
-		    (change-and-cache-eXid new-eXid)
-		    (eXid-cache)))))
-	   (let-eXid changed-eXid thunk)))
+         (let ((changed-eXid
+                (with-lock eXid-lock
+                  (lambda ()
+                    (change-and-cache-eXid new-eXid)
+                    (eXid-cache)))))
+           (let-eXid changed-eXid thunk)))
 
        (define (align-eXid!)
-	 (let ((thread-eXid (user-effective-Xid)))
-	   (if (not (= thread-eXid (eXid-cache)))
-	       (change-and-cache-eXid thread-eXid))))
+         (let ((thread-eXid (user-effective-Xid)))
+           (if (not (= thread-eXid (eXid-cache)))
+               (change-and-cache-eXid thread-eXid))))
 
        (define (set-user-effective-Xid new-eXid)
-	 (with-lock eXid-lock
-	   (lambda ()
-	     (change-and-cache-eXid new-eXid)
-	     (thread-set-eXid! (eXid-cache)))))
+         (with-lock eXid-lock
+           (lambda ()
+             (change-and-cache-eXid new-eXid)
+             (thread-set-eXid! (eXid-cache)))))
 
        (define eXid-resource (make-resource align-eXid! eXid-lock))
 
        (define eXid-reinitializer
-	 (make-reinitializer (lambda () (initialize-eXid))))
+         (make-reinitializer (lambda () (initialize-eXid))))
 
        (initialize-eXid)
        ))))
 
-(make-Xid-resource 
+(make-Xid-resource
  process-user-effective-uid set-process-user-effective-uid
  process-set-uid set-uid
  align-euid! euid-resource
  user-effective-uid set-user-effective-uid with-user-effective-uid*)
 
-(make-Xid-resource 
+(make-Xid-resource
  process-user-effective-gid set-process-user-effective-gid
  process-set-gid set-gid
  align-egid! egid-resource
@@ -370,10 +370,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; ensure S48 is aligned too
 
-(set-with-fs-context-aligned*! 
+(set-with-fs-context-aligned*!
  (lambda (thunk)
-   (with-resources-aligned 
-    (list cwd-resource umask-resource euid-resource egid-resource) 
+   (with-resources-aligned
+    (list cwd-resource umask-resource euid-resource egid-resource)
     thunk)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -384,8 +384,8 @@
 (define (install-env)
   (set! *env-cache* (environ**-read))
   (set! $env ;;; TODO The old thread-fluid will remain
-	(make-preserved-thread-fluid
-	 (env-cache))))
+        (make-preserved-thread-fluid
+         (env-cache))))
 ;  (set! env-lock (make-lock)))
 
 (define (env-cache)
@@ -415,7 +415,7 @@
 (define (align-env!)
   (let ((res (thread-read-env)))
     (if (not (env=? res (env-cache)))
-	(change-and-cache-env res))))
+        (change-and-cache-env res))))
 
 (define (thread-change-env res)
   (with-lock env-lock
@@ -431,7 +431,7 @@
 
 (define-record env
       envvec
-      alist)	; Corresponding alist
+      alist)    ; Corresponding alist
 
 (define-record-resumer type/env
   (lambda (env)
@@ -439,10 +439,10 @@
 
 (define (env=? e1 e2)
   (and (env:envvec e1)
-       (eq? (env:envvec e1) 
-	    (env:envvec e2))))
+       (eq? (env:envvec e1)
+            (env:envvec e2))))
 
-(define-record envvec 
+(define-record envvec
   environ ;; char**
   )
 
@@ -466,7 +466,7 @@
 
 (define (getenv var)
   (let* ((env (thread-read-env))
-	 (res (assoc var (env:alist env))))
+         (res (assoc var (env:alist env))))
     (if res (cdr res) res)))
 
 (define (env->alist)
@@ -474,16 +474,16 @@
 
 (define (setenv var val)
   (let* ((env (thread-read-env))
-	 (alist (if val
-		    (alist-update 
-		     var 
-		     val 
-		    (env:alist env))
-		    (alist-delete
-		     var
-		     (env:alist env)))))
-    (thread-set-env! 
-     (make-env 
+         (alist (if val
+                    (alist-update
+                     var
+                     val
+                    (env:alist env))
+                    (alist-delete
+                     var
+                     (env:alist env)))))
+    (thread-set-env!
+     (make-env
       #f
       alist))))
 
@@ -495,9 +495,9 @@
 
 (define (with-env* alist-delta thunk)
   (let ((new-env (fold (lambda (key/val alist)
-			  (alist-update (car key/val) (cdr key/val) alist))
-			(env->alist)
-			alist-delta)))
+                          (alist-update (car key/val) (cdr key/val) alist))
+                        (env->alist)
+                        alist-delta)))
     (with-total-env* new-env thunk)))
 
 (define (with-total-env* alist thunk)
@@ -511,15 +511,15 @@
 
 (define (split-colon-list clist)
   (let ((len (string-length clist)))
-    (if (= 0 len) '()			; Special case "" -> ().
+    (if (= 0 len) '()                   ; Special case "" -> ().
 
-	;; Main loop.
-	(let split ((i 0))
-	  (cond ((string-index clist #\: i) =>
-		 (lambda (colon)
-		   (cons (substring clist i colon)
-			 (split (+ colon 1)))))
-		(else (list (substring clist i len))))))))
+        ;; Main loop.
+        (let split ((i 0))
+          (cond ((string-index clist #\: i) =>
+                 (lambda (colon)
+                   (cons (substring clist i colon)
+                         (split (+ colon 1)))))
+                (else (list (substring clist i len))))))))
 
 ;;; Unix colon lists typically use colons as separators, which
 ;;; is not as clean to deal with as terminators, but that's Unix.
@@ -528,13 +528,13 @@
 ; (define (string-list->colon-list slist)
 ;   (if (pair? slist)
 ;       (apply string-append
-; 	     (let colonise ((lis slist))	; LIS is always
-; 	       (let ((tail (cdr lis))) 		; a pair.
-; 		 (cons (car lis)
-; 		       (if (pair? tail)
-; 			   (cons ":" (colonise tail))
-; 			   '())))))
-;       ""))	; () case.
+;            (let colonise ((lis slist))        ; LIS is always
+;              (let ((tail (cdr lis)))          ; a pair.
+;                (cons (car lis)
+;                      (if (pair? tail)
+;                          (cons ":" (colonise tail))
+;                          '())))))
+;       ""))    ; () case.
 
 
 (define (alist-delete key alist)
@@ -542,45 +542,45 @@
 
 (define (alist-update key val alist)
   (cons (cons key val)
-	(alist-delete key alist)))
+        (alist-delete key alist)))
 
 ;;; Remove shadowed entries from ALIST. Preserves element order.
 ;;; (This version shares no structure.)
 
-(define (alist-compress alist) 
+(define (alist-compress alist)
   (reverse (let compress ((alist alist) (ans '()))
-	     (if (pair? alist)
-		 (let ((key/val (car alist))
-		       (alist (cdr alist)))
-		   (compress alist (if (assoc (car key/val) ans) ans
-				       (cons key/val ans))))
-		 ans))))
+             (if (pair? alist)
+                 (let ((key/val (car alist))
+                       (alist (cdr alist)))
+                   (compress alist (if (assoc (car key/val) ans) ans
+                                       (cons key/val ans))))
+                 ans))))
 
 (define (add-before elt before list)
   (let rec ((list list))
     (if (pair? list)
-	(let ((x (car list)))
-	  (if (equal? x before)
-	      (cons elt list)
-	      (cons x (rec (cdr list)))))
-	(cons elt list))))
+        (let ((x (car list)))
+          (if (equal? x before)
+              (cons elt list)
+              (cons x (rec (cdr list)))))
+        (cons elt list))))
 
 ;;; In ADD-AFTER, the labelled LET adds ELT after the last occurrence of AFTER
-;;; in LIST, and returns the list. However, if the LET finds no occurrence 
+;;; in LIST, and returns the list. However, if the LET finds no occurrence
 ;;; of AFTER in LIST, it returns #F instead.
 
 (define (add-after elt after list)
   (or (let rec ((list list))
-	(if (pair? list)
-	    (let* ((x (car list))
-		   (tail (cdr list))
-		   (ans (rec tail))) ; #f if AFTER wasn't encountered.
-	      (cond (ans (cons x ans))
-		    ((equal? x after)
-		     (cons x (cons elt tail)))
-		    (else #f)))		; AFTER doesn't appear in LIST.
-	    #f))			; AFTER doesn't appear in LIST.
-      (cons elt list))) 
+        (if (pair? list)
+            (let* ((x (car list))
+                   (tail (cdr list))
+                   (ans (rec tail))) ; #f if AFTER wasn't encountered.
+              (cond (ans (cons x ans))
+                    ((equal? x after)
+                     (cons x (cons elt tail)))
+                    (else #f)))         ; AFTER doesn't appear in LIST.
+            #f))                        ; AFTER doesn't appear in LIST.
+      (cons elt list)))
 
 ;;; Sugar:
 
@@ -606,45 +606,45 @@
   (let ((fname #f))
     (dynamic-wind
       (lambda () (if fname (error "Can't wind back into a CALL/TEMP-FILE")
-		     (set! fname (create-temp-file))))
+                     (set! fname (create-temp-file))))
       (lambda ()
-	(with-output-to-file fname writer)
-	(user fname))
+        (with-output-to-file fname writer)
+        (user fname))
       (lambda () (if fname (delete-file fname))))))
 
 ;;; Create a new temporary file and return its name.
 ;;; The optional argument specifies the filename prefix to use, and defaults
 ;;; to "/tmp/<pid>.", where <pid> is the current process' id. The procedure
 ;;; scans through the files named <prefix>0, <prefix>1, ... until it finds a
-;;; filename that doesn't exist in the filesystem. It creates the file with 
+;;; filename that doesn't exist in the filesystem. It creates the file with
 ;;; permission #o600, and returns the filename.
-;;; 
+;;;
 
 (define (create-temp-file . maybe-prefix)
   (let ((oflags (bitwise-ior open/write
-			     (bitwise-ior open/create open/exclusive))))
+                             (bitwise-ior open/create open/exclusive))))
     (apply temp-file-iterate
-	   (lambda (fname)
-	     (close-fdes (open-fdes fname oflags #o600))
-	     fname)
-	   (if (null? maybe-prefix) '()
-	       (list (string-append (constant-format-string (car maybe-prefix))
-				    ".~a"))))))
+           (lambda (fname)
+             (close-fdes (open-fdes fname oflags #o600))
+             fname)
+           (if (null? maybe-prefix) '()
+               (list (string-append (constant-format-string (car maybe-prefix))
+                                    ".~a"))))))
 
 (define (initial-temp-file)
   (let ((tmpdir (getenv "TMPDIR")))
     (string-append
      (if tmpdir
-	 tmpdir
-	 "/var/tmp")
+         tmpdir
+         "/var/tmp")
      "/"
      (number->string (pid))
      "~a")))
 
 (define *temp-file-template* (make-fluid 'not-initialized-temp-file-template))
 
-(define temp-file-reinitializer 
-  (make-reinitializer 
+(define temp-file-reinitializer
+  (make-reinitializer
    (lambda ()
      (set-fluid! *temp-file-template* (initial-temp-file)))))
 
@@ -652,30 +652,30 @@
   (let ((template (:optional maybe-template (fluid *temp-file-template*))))
     (let loop ((i 0))
       (if (> i 1000) (error "Can't create temp-file")
-	  (let ((fname (format #f template (number->string i))))
-	    (receive retvals (with-errno-handler
-			       ((errno data)
-				((errno/exist errno/acces) #f))
-			       (maker fname))
-	      (if (car retvals) (apply values retvals)
-		  (loop (+ i 1)))))))))
+          (let ((fname (format #f template (number->string i))))
+            (receive retvals (with-errno-handler
+                               ((errno data)
+                                ((errno/exist errno/acces) #f))
+                               (maker fname))
+              (if (car retvals) (apply values retvals)
+                  (loop (+ i 1)))))))))
 
 
-;; Double tildes in S. 
+;; Double tildes in S.
 ;; Using the return value as a format string will output exactly S.
-(define (constant-format-string s)	; Ugly code. Would be much clearer
-  (let* ((len (string-length s))	; if written with string SRFI.
-	 (tilde? (lambda (s i) (char=? #\~ (string-ref s i))))
-	 (newlen (do ((i (- len 1) (- i 1))
-		      (ans 0 (+ ans (if (tilde? s i) 2 1))))
-		     ((< i 0) ans)))
-	 (fs (make-string newlen)))
+(define (constant-format-string s)      ; Ugly code. Would be much clearer
+  (let* ((len (string-length s))        ; if written with string SRFI.
+         (tilde? (lambda (s i) (char=? #\~ (string-ref s i))))
+         (newlen (do ((i (- len 1) (- i 1))
+                      (ans 0 (+ ans (if (tilde? s i) 2 1))))
+                     ((< i 0) ans)))
+         (fs (make-string newlen)))
     (let lp ((i 0) (j 0))
       (cond ((< i len)
-	     (let ((j (cond ((tilde? s i) (string-set! fs j #\~) (+ j 1))
-			    (else j))))
-	       (string-set! fs j (string-ref s i))
-	       (lp (+ i 1) (+ j 1))))))
+             (let ((j (cond ((tilde? s i) (string-set! fs j #\~) (+ j 1))
+                            (else j))))
+               (string-set! fs j (string-ref s i))
+               (lp (+ i 1) (+ j 1))))))
     fs))
 
 
@@ -692,18 +692,18 @@
 
 (define (temp-file-channel)
   (let* ((fname (create-temp-file))
-	 (iport (open-input-file fname))
-	 (oport (open-output-file fname)))
+         (iport (open-input-file fname))
+         (oport (open-output-file fname)))
     (delete-file fname)
     (values iport oport)))
-    
+
 
 ;; Return a Unix port such that reads on it get the chars produced by
 ;; DISPLAYing OBJ. For example, if OBJ is a string, then reading from
 ;; the port produces the characters of OBJ.
-;; 
+;;
 ;; This implementation works by writing the string out to a temp file,
-;; but that isn't necessary. It could work, for example, by forking off a 
+;; but that isn't necessary. It could work, for example, by forking off a
 ;; writer process that outputs to a pipe, i.e.,
 ;;     (run/port (begin (display obj (fdes->outport 1))))
 
@@ -738,16 +738,16 @@
   ;; First, generate a pair of ports for each communications channel.
   ;; Each channel buffers through a temp file.
   (let* ((channels (map (lambda (ignore)
-			  (call-with-values temp-file-channel cons))
-		       fds))
-	 (read-ports (map car channels))
-	 (write-ports (map cdr channels))
+                          (call-with-values temp-file-channel cons))
+                       fds))
+         (read-ports (map car channels))
+         (write-ports (map cdr channels))
 
-	 ;; In a subprocess, close the read ports, redirect input from
-	 ;; the write ports, and run THUNK.
-	 (status (run (begin (for-each close-input-port read-ports)
-			     (for-each move->fdes write-ports fds)
-			     (thunk)))))
+         ;; In a subprocess, close the read ports, redirect input from
+         ;; the write ports, and run THUNK.
+         (status (run (begin (for-each close-input-port read-ports)
+                             (for-each move->fdes write-ports fds)
+                             (thunk)))))
 
     ;; In this process, close the write ports and return the exit status
     ;; and all the the read ports.
@@ -759,26 +759,26 @@
 ;;; Syntax: run/port, run/file, run/string, run/strings, run/sexp, run/sexps
 ;;; Procedures: run/port*, run/file*, run/string*, run/strings*, run/sexp*,
 ;;;             run/sexps*
-;;;             port->string, port->string-list, port->sexp-list, 
+;;;             port->string, port->string-list, port->sexp-list,
 ;;;             port->list
-;;; 
+;;;
 ;;; Syntax:
 ;;; (run/port . epf)
-;;; 	Fork off the process EPF and return a port on its stdout.
+;;;     Fork off the process EPF and return a port on its stdout.
 ;;; (run/file . epf)
-;;; 	Run process EPF with stdout redirected into a temp file.
+;;;     Run process EPF with stdout redirected into a temp file.
 ;;;     When the process exits, return the name of the file.
 ;;; (run/string . epf)
 ;;;     Read the process' stdout into a string and return it.
 ;;; (run/strings . epf)
-;;; 	Run process EPF, reading newline-terminated strings from its stdout
+;;;     Run process EPF, reading newline-terminated strings from its stdout
 ;;;     until EOF. After process exits, return list of strings read. Delimiting
-;;;	newlines are trimmed from the strings.
+;;;     newlines are trimmed from the strings.
 ;;; (run/sexp . epf)
 ;;;     Run process EPF, read and return one sexp from its stdout with READ.
 ;;; (run/sexps . epf)
 ;;;     Run process EPF, read sexps from its stdout with READ until EOF.
-;;;	After process exits, return list of items read.
+;;;     After process exits, return list of items read.
 ;;;
 ;;; Procedural abstractions:
 ;;; run/port*, run/file*, run/string*, run/strings*, run/sexp*, run/sexps*
@@ -788,9 +788,9 @@
 ;;; (RUN/PORT . epf) expands into (RUN/PORT* (LAMBDA () (EXEC-EPF . epf)))
 ;;;
 ;;; Other useful procedures:
-;;; 
-;;; (port->string port) 
-;;; 	Read characters from port until EOF; return string collected.
+;;;
+;;; (port->string port)
+;;;     Read characters from port until EOF; return string collected.
 ;;; (port->string-list port)
 ;;;     Read newline-terminated strings from port until EOF. Return
 ;;;     the list of strings collected.
@@ -809,9 +809,9 @@
 (define (run/port+proc* thunk)
   (receive (r w) (pipe)
     (let ((proc (fork (lambda ()
-			(close r)
-			(move->fdes w 1)
-			(with-current-output-port* w thunk)))))
+                        (close r)
+                        (move->fdes w 1)
+                        (with-current-output-port* w thunk)))))
       (close w)
       (values r proc))))
 
@@ -824,7 +824,7 @@
     (run (begin (thunk)) (> ,fname))
     fname))
 
-(define (run/string* thunk) 
+(define (run/string* thunk)
   (close-after (run/port* thunk) port->string))
 
 (define (run/sexp* thunk)
@@ -842,11 +842,11 @@
 (define (port->string port)
   (let ((sc (make-string-collector)))
     (letrec ((lp (lambda ()
-		   (cond ((read-string 1024 port) =>
-			  (lambda (s)
-			    (collect-string! sc s)
-			    (lp)))
-			 (else (string-collector->string sc))))))
+                   (cond ((read-string 1024 port) =>
+                          (lambda (s)
+                            (collect-string! sc s)
+                            (lp)))
+                         (else (string-collector->string sc))))))
       (lp))))
 
 ;;; (loop (initial (sc (make-string-collector)))
@@ -861,7 +861,7 @@
   (let lp ((ans '()))
     (let ((x (reader port)))
       (if (eof-object? x) (reverse! ans)
-	  (lp (cons x ans))))))
+          (lp (cons x ans))))))
 
 (define (port->sexp-list port)
   (port->list read port))
@@ -871,10 +871,10 @@
 
 (define (port-fold port reader op . seeds)
   (letrec ((fold (lambda seeds
-		     (let ((x (reader port)))
-		       (if (eof-object? x) (apply values seeds)
-			   (call-with-values (lambda () (apply op x seeds))
-					     fold))))))
+                     (let ((x (reader port)))
+                       (if (eof-object? x) (apply values seeds)
+                           (call-with-values (lambda () (apply op x seeds))
+                                             fold))))))
     (apply fold seeds)))
 
 (define reduce-port
@@ -886,8 +886,8 @@
 ;;; the string FIELD-DELIMS. These strings are collected in a list until
 ;;; eof or until 1 or more chars from RECORD-DELIMS are read. Then the
 ;;; accumulated list of strings is returned. For example, if we want
-;;; a procedure that reads one line of input, splitting it into 
-;;; whitespace-delimited strings, we can use 
+;;; a procedure that reads one line of input, splitting it into
+;;; whitespace-delimited strings, we can use
 ;;;     (field-reader " \t" "\n")
 ;;; for a reader.
 
@@ -900,20 +900,20 @@
   (lambda ()
     (let lp ()
       (let ((c (read-char)))
-	(if (not (eof-object? c))
-	    (begin (write-char (filter c))
-		   (lp)))))))
+        (if (not (eof-object? c))
+            (begin (write-char (filter c))
+                   (lp)))))))
 
 (define (make-string-port-filter filter . maybe-buflen)
   (let* ((buflen (:optional maybe-buflen 1024))
-	 (buf (make-string buflen)))
+         (buf (make-string buflen)))
     (lambda ()
       (let lp ()
-	(cond ((read-string! buf (current-input-port) 0 buflen) =>
-	       (lambda (nread)
-		 (display (filter (if (= nread buflen) buf
-				      (substring buf 0 nread)))) ; last one.
-		 (lp))))))))
+        (cond ((read-string! buf (current-input-port) 0 buflen) =>
+               (lambda (nread)
+                 (display (filter (if (= nread buflen) buf
+                                      (substring buf 0 nread)))) ; last one.
+                 (lp))))))))
 
 (define (y-or-n? question . maybe-eof-value)
   (let loop ((count *y-or-n-eof-count*))
@@ -921,18 +921,18 @@
     (display " (y/n)? ")
     (let ((line (read-line)))
       (cond ((eof-object? line)
-	     (newline)
-	     (if (= count 0)
-		 (:optional maybe-eof-value (error "EOF in y-or-n?"))
-		 (begin (display "I'll only ask another ")
-			(write count)
-			(display " times.")
-			(newline)
-			(loop (- count 1)))))
-	    ((< (string-length line) 1) (loop count))
-	    ((char=? (string-ref line 0) #\y) #t)
-	    ((char=? (string-ref line 0) #\n) #f)
-	    (else (loop count))))))
+             (newline)
+             (if (= count 0)
+                 (:optional maybe-eof-value (error "EOF in y-or-n?"))
+                 (begin (display "I'll only ask another ")
+                        (write count)
+                        (display " times.")
+                        (newline)
+                        (loop (- count 1)))))
+            ((< (string-length line) 1) (loop count))
+            ((char=? (string-ref line 0) #\y) #t)
+            ((char=? (string-ref line 0) #\n) #f)
+            (else (loop count))))))
 
 (define *y-or-n-eof-count* 100)
 
@@ -949,7 +949,7 @@
   (with-current-input-port (fdes->inport 0)
     (with-current-output-port (fdes->outport 1)
       (with-current-error-port (fdes->outport 2)
-	(thunk)))))
+        (thunk)))))
 
 (define-simple-syntax (with-stdio-ports body ...)
   (with-stdio-ports* (lambda () body ...)))
@@ -965,8 +965,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; Some globals.
-(define %command-line '())		; Includes program.
-(define command-line-arguments #f)	; Doesn't include program.
+(define %command-line '())              ; Includes program.
+(define command-line-arguments #f)      ; Doesn't include program.
 
 (define (set-command-line-args! args)
   (set! %command-line args)
@@ -975,14 +975,14 @@
 (define (arg* arglist n . maybe-default-thunk)
   (let ((oops (lambda () (error "argument out of bounds" arglist n))))
     (if (< n 1) (oops)
-	(let lp ((al arglist) (n n))
-	  (if (pair? al)
-	      (if (= n 1) (car al)
-		  (lp (cdr al) (- n 1)))
-	      (if (and (pair? maybe-default-thunk)
-		       (null? (cdr maybe-default-thunk)))
-		  ((car maybe-default-thunk))
-		  (oops)))))))
+        (let lp ((al arglist) (n n))
+          (if (pair? al)
+              (if (= n 1) (car al)
+                  (lp (cdr al) (- n 1)))
+              (if (and (pair? maybe-default-thunk)
+                       (null? (cdr maybe-default-thunk)))
+                  ((car maybe-default-thunk))
+                  (oops)))))))
 
 (define (arg arglist n . maybe-default)
   (if maybe-default (arg* arglist n (lambda () (car maybe-default)))
@@ -1003,42 +1003,42 @@
 
 (define (stringify thing)
   (cond ((string? thing) thing)
-	((symbol? thing)
-	 (symbol->string thing))
-;	((symbol? thing)
-;	 (list->string (map char-downcase
-;			    (string->list (symbol->string thing)))))
-	((integer? thing)
-	 (number->string thing))
-	(else (error "Can only stringify strings, symbols, and integers."
-		     thing))))
+        ((symbol? thing)
+         (symbol->string thing))
+;       ((symbol? thing)
+;        (list->string (map char-downcase
+;                           (string->list (symbol->string thing)))))
+        ((integer? thing)
+         (number->string thing))
+        (else (error "Can only stringify strings, symbols, and integers."
+                     thing))))
 
 (define (exec-path-search prog path-list)
   (cond
    ((not (file-name-absolute? prog))
     (let loop ((path-list path-list))
       (if (not (null? path-list))
-	  (let* ((dir (car path-list))
-		 (fname (string-append dir "/" prog)))
-	    (if (file-executable? fname)
-		fname
-		(loop (cdr path-list)))))))
+          (let* ((dir (car path-list))
+                 (fname (string-append dir "/" prog)))
+            (if (file-executable? fname)
+                fname
+                (loop (cdr path-list)))))))
    ((file-executable? prog)
     prog)
    (else #f)))
 
 (define (exec/env prog env . arglist)
   (flush-all-ports)
-  (with-resources-aligned 
+  (with-resources-aligned
    (list environ-resource cwd-resource umask-resource euid-resource egid-resource)
    (lambda ()
      (%exec prog (cons prog arglist) env))))
 
 ;(define (exec-path/env prog env . arglist)
 ;  (cond ((exec-path-search (stringify prog) (fluid exec-path-list)) =>
-;	 (lambda (binary)
-;	   (apply exec/env binary env arglist)))
-;	(else (error "No executable found." prog arglist))))
+;        (lambda (binary)
+;          (apply exec/env binary env arglist)))
+;       (else (error "No executable found." prog arglist))))
 
 ;;; This procedure is bummed by tying in directly to %%exec/errno
 ;;; and pulling some of %exec's code out of the inner loop so that
@@ -1046,24 +1046,24 @@
 
 (define (exec-path/env prog env . arglist)
   (flush-all-ports)
-  (with-resources-aligned 
+  (with-resources-aligned
    (list environ-resource cwd-resource umask-resource euid-resource egid-resource)
    (lambda ()
      (let ((prog (stringify prog)))
        (if (string-index prog #\/)
-		 
-	   ;; Contains a slash -- no path search.
-	   (%exec prog (cons prog arglist) env)
-		 
-	   ;; Try each directory in PATH-LIST.
-	   (let ((argv (list->vector (cons prog (map stringify arglist)))))
-	     (for-each (lambda (dir)
-			 (let ((binary (string-append dir "/" prog)))
-			   (%%exec binary argv env)))
-		       (thread-fluid exec-path-list)))))
-	   
+
+           ;; Contains a slash -- no path search.
+           (%exec prog (cons prog arglist) env)
+
+           ;; Try each directory in PATH-LIST.
+           (let ((argv (list->vector (cons prog (map stringify arglist)))))
+             (for-each (lambda (dir)
+                         (let ((binary (string-append dir "/" prog)))
+                           (%%exec binary argv env)))
+                       (thread-fluid exec-path-list)))))
+
      (error "No executable found." prog arglist))))
-   
+
 (define (exec-path prog . arglist)
   (apply exec-path/env prog #t arglist))
 
@@ -1081,40 +1081,40 @@
 
 (define (fork-1 clear-interactive? . rest)
   (let-optionals rest ((maybe-thunk #f)
-		       (dont-narrow? #f))
+                       (dont-narrow? #f))
     (really-fork clear-interactive?
-		 (not dont-narrow?)
-		 maybe-thunk)))
+                 (not dont-narrow?)
+                 maybe-thunk)))
 
 (define (preserve-ports thunk)
   (let ((current-input (current-input-port))
-	(current-output (current-output-port))
-	(current-error (current-error-port)))
+        (current-output (current-output-port))
+        (current-error (current-error-port)))
     (lambda ()
       (with-current-input-port*
        current-input
        (lambda ()
-	 (with-current-output-port*
-	  current-output
-	  (lambda ()
-	    (with-current-error-port*
-	     current-error
-	     thunk))))))))
+         (with-current-output-port*
+          current-output
+          (lambda ()
+            (with-current-error-port*
+             current-error
+             thunk))))))))
 
 (define (really-fork clear-interactive? narrow? maybe-thunk)
   (let ((proc #f)
-	(maybe-narrow
-	 (if narrow?
-	     (lambda (thunk)
-	       ;; narrow loses the thread fluids and the dynamic environment
-	       (narrow (preserve-ports (preserve-thread-fluids thunk))
-		       'forking))
-	     (lambda (thunk) (thunk)))))
+        (maybe-narrow
+         (if narrow?
+             (lambda (thunk)
+               ;; narrow loses the thread fluids and the dynamic environment
+               (narrow (preserve-ports (preserve-thread-fluids thunk))
+                       'forking))
+             (lambda (thunk) (thunk)))))
     (maybe-narrow
      (lambda ()
 
        (if clear-interactive?
-	   (flush-all-ports))
+           (flush-all-ports))
 
        ;; There was an atomicity problem/race condition -- if a child
        ;; process died after it was forked, but before the scsh fork
@@ -1125,16 +1125,16 @@
        ;; operations.
 
        (((structure-ref interrupts with-interrupts-inhibited)
-	 (lambda ()
-	   ;; with-env-aligned is not neccessary here but it will
-	   ;; create the environ object in the parent process which
-	   ;; could reuse it on further forks
-	   (let ((pid (with-resources-aligned 
-		       (list environ-resource)
-		       %%fork)))
-	     (if (zero? pid)				
-		 ;; Child
-		 (lambda ()		; Do all this outside the WITH-INTERRUPTS.
+         (lambda ()
+           ;; with-env-aligned is not neccessary here but it will
+           ;; create the environ object in the parent process which
+           ;; could reuse it on further forks
+           (let ((pid (with-resources-aligned
+                       (list environ-resource)
+                       %%fork)))
+             (if (zero? pid)
+                 ;; Child
+                 (lambda ()             ; Do all this outside the WITH-INTERRUPTS.
                    (if narrow?
                        (begin
                          ;; ugly kludge:
@@ -1143,16 +1143,16 @@
                          (release-port-lock (command-input))
                          (release-port-lock (command-output))
                          (release-port-lock (command-error-output))))
-		   ;; There is no session if parent was started in batch-mode
-		   (if (and (session-started?) clear-interactive?)
-		       (set-batch-mode?! #t)) ; Children are non-interactive.
-		   (if maybe-thunk
-		       (call-terminally maybe-thunk)))
-		 ;; Parent
-		 (begin
-		   (set! proc (new-child-proc pid))
-		   (lambda ()
-		     (values))))))))))
+                   ;; There is no session if parent was started in batch-mode
+                   (if (and (session-started?) clear-interactive?)
+                       (set-batch-mode?! #t)) ; Children are non-interactive.
+                   (if maybe-thunk
+                       (call-terminally maybe-thunk)))
+                 ;; Parent
+                 (begin
+                   (set! proc (new-child-proc pid))
+                   (lambda ()
+                     (values))))))))))
     proc))
 
 (define (exit . maybe-status)
@@ -1187,26 +1187,26 @@
 
 (define (init-scsh-vars quietly?)
   (set! home-directory
- 	(cond ((getenv "HOME") => ensure-file-name-is-nondirectory)
-	      ;; loosing at this point would be really bad, so some
-	      ;; paranoia comes in order
- 	      (else (call-with-current-continuation 
-		     (lambda (k)
-		       (with-handler
-			(lambda (condition more)
-			  (cond ((not quietly?)
-				 (display "Starting up with no home directory ($HOME).")
-				 (newline)))
-			  (k "/"))
-			(lambda ()
-			  (user-info:home-dir (user-info (user-uid))))))))))
-	      
+        (cond ((getenv "HOME") => ensure-file-name-is-nondirectory)
+              ;; loosing at this point would be really bad, so some
+              ;; paranoia comes in order
+              (else (call-with-current-continuation
+                     (lambda (k)
+                       (with-handler
+                        (lambda (condition more)
+                          (cond ((not quietly?)
+                                 (display "Starting up with no home directory ($HOME).")
+                                 (newline)))
+                          (k "/"))
+                        (lambda ()
+                          (user-info:home-dir (user-info (user-uid))))))))))
+
   (set! exec-path-list
-	(make-preserved-thread-fluid 
-	 (cond ((getenv "PATH") => split-colon-list)
-	       (else (if (not quietly?)
-			 (warn "Starting up with no path ($PATH)."))
-		     '())))))
+        (make-preserved-thread-fluid
+         (cond ((getenv "PATH") => split-colon-list)
+               (else (if (not quietly?)
+                         (warn "Starting up with no path ($PATH)."))
+                     '())))))
 
 
 ; SIGTSTP blows s48 away. ???
