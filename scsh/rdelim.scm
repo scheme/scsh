@@ -155,16 +155,13 @@
 
 
 (define (port-buffer-read-delimited delims buf gobble? port start end)
-  (obtain-port-lock port)
   (let ((the-port-limit (port-limit port)))
     (let lp ((i start) (lp-port-index (port-index port)))
       (cond ((port-pending-eof? port)
              (set-port-index! port lp-port-index)
-             (release-port-lock port)
              (values (eof-object) (- i start)))
             ((>= i end)
              (set-port-index! port lp-port-index)
-             (release-port-lock port)
              (values #f (- i start)))
             ((< lp-port-index the-port-limit)
              (let ((the-read-char
@@ -175,14 +172,12 @@
                      (if gobble?
                          (set-port-index! port (+ lp-port-index 1))
                          (set-port-index! port lp-port-index))
-                     (release-port-lock port)
                      (values the-read-char (- i start)))
                    (begin
                      (string-set! buf i the-read-char)
                      (lp (+ i 1) (+ lp-port-index 1))))))
             (else  (set-port-index! port 0)
                    (set-port-limit! port 0)
-                   (release-port-lock port)
                    (values 'port-buffer-exhausted (- i start)))))))
 
 
