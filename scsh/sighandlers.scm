@@ -32,7 +32,6 @@
 ;;; means the exit code given to our waiting parent proc correctly reflects
 ;;; how we died, and also makes the core dump happen if it should. Details, details.
 
-(import-dynamic-externals "/home/roderic/scsh/sighandlers1")
 (import-lambda-definition-2 %do-default-sigaction (signal) "do_default_sigaction")
 
 (define *s48-signals*
