@@ -69,7 +69,6 @@
                    (thread (make-thread (lambda ()
                                           (set! *result*
                                                 (start (command-line))))
-                                        dynamic-env
                                         'scsh-initial-thread))
                    (thread-count (make-counter)))
 
