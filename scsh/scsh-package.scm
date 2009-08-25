@@ -315,11 +315,10 @@
         scsh-level-0            ; error-output-port command-line-arguments
         scsh-top-package        ; parse-switches-and-execute
         handle                  ; with-handler
-        command-levels          ; user-context
+        command-state           ; user-context, command-output
         write-images            ; write-image
         condition-handler       ; simple-condition-handler
         low-level               ; flush-the-symbol-table!
-        command-processor       ; command-output
         package-commands-internal
         filenames               ; translate
         usual-resumer           ; usual-resumer
