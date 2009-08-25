@@ -7,7 +7,7 @@
            (halt 1))
           ((warning? c)
            (display-condition c port))          ;Proceed
-          ((interrupt? c)
+          ((interrupt-condition? c)
            ;; (and ... (= (cadr c) interrupt/keyboard)) ?
            (halt 2))
           (else
