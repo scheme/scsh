@@ -31,7 +31,7 @@
              (if (type-in-set? (sigevent-type sigevent) set)
                  sigevent
                  (lp sigevent))
-             (begin (block-on-queue sigevent-thread-queue)
+             (begin (maybe-commit-and-block-on-queue sigevent-thread-queue)
                     (lp pre-sigevent))))))))
 
 ; same as above, but don't block
@@ -57,7 +57,7 @@
                                             waiters)))
                         ((thread-queue-empty? sigevent-thread-queue)
                          waiters))))))
-    (for-each make-ready waiters)))
+    (for-each maybe-commit-and-make-ready waiters)))
 
 
 ;;; Records whether the sigevent system is running.
