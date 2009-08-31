@@ -59,7 +59,7 @@
 (define (channel-port->input-fdport channel-port)
   (let ((p (make-buffered-input-port input-fdport-handler
                             (make-fdport-data
-                             (channel-cell-ref (port-data channel-port)) 1)
+                             (port->channel channel-port) 1)
                             (make-byte-vector buffer-size 0) 0 0)))
     (set-port-lock! p (port-lock channel-port))
     (install-fdport p)
@@ -68,7 +68,7 @@
 (define (channel-port->output-fdport channel-port)
   (let ((p (make-buffered-output-port
             output-fdport-handler
-            (make-fdport-data  (channel-cell-ref(port-data channel-port)) 1)
+            (make-fdport-data  (port->channel channel-port) 1)
             (make-byte-vector buffer-size 0) 0 buffer-size)))
     (set-port-lock! p (port-lock channel-port))
     (install-fdport p)
@@ -78,7 +78,7 @@
 (define (channel-port->unbuffered-output-fdport channel-port)
   (let ((p (make-unbuffered-output-port unbuffered-output-fdport-handler
                              (make-fdport-data
-                              (channel-cell-ref (port-data channel-port)) 1))))
+                              (port->channel channel-port) 1))))
     (set-port-lock! p (port-lock channel-port))
     (install-fdport p)
     (periodically-force-output! p)
