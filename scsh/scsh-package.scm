@@ -183,7 +183,7 @@
         os-strings
         signal-handler
         defenum-package
-        external-calls           ;JMG new FFI
+        external-calls
         load-dynamic-externals
         structure-refs
         receiving
@@ -202,6 +202,7 @@
         bigbit
         bitwise
         error-package
+        exceptions
         conditions
         scsh-utilities
         handle
