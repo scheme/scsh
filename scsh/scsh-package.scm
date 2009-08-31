@@ -261,7 +261,6 @@
           command-processor
           escapes
           i/o           ; S48's force-output
-          exceptions    ; signal-exception
           formats
           threads-internal
           records       ; I don't think this is necessary. !!!
