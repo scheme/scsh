@@ -464,7 +464,6 @@
                       (interface-of scsh-startup-package)
 ;                     scsh-regexp-interface
                       re-exports-interface
-                      re-old-funs-interface
                       scsh-field-reader-interface       ; new in 0.3
 ;                     scsh-dbm-interface
                       awk-interface
@@ -479,7 +478,6 @@
         scsh-level-0
         scsh-level-0-internals
         re-exports
-        re-old-funs
 ;       scsh-regexp-package
         scsh-startup-package
 ;       dbm
