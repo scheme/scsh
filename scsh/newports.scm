@@ -198,7 +198,7 @@
                    (new-buffer (make-byte-vector size 0)))
                (if (< size old-size)
                    (begin
-                     (really-force-output port)
+                     ((port-handler-force (port-handler port)) port #t) ;really-force-output
                      (set-port-index! port 0))
                    (begin
                      (copy-bytes! (port-buffer port) 0 new-buffer 0 old-size)))
@@ -209,7 +209,7 @@
         (else (error "policy not supported " policy))))
 
 (define (install-nullbuffer port handler)
- (really-force-output port)
+ ((port-handler-force (port-handler port)) port #t) ;really-force-output
  (set-port-limit! port 0)
  (set-port-index! port 0)
  (set-port-buffer! port (make-byte-vector 0 0))
