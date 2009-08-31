@@ -61,11 +61,8 @@
                             (make-fdport-data
                              (channel-cell-ref (port-data channel-port)) 1)
                             (make-byte-vector buffer-size 0) 0 0)))
-    (obtain-port-lock channel-port)
     (set-port-lock! p (port-lock channel-port))
-    (set-port-locked?! p (port-locked? channel-port))
     (install-fdport p)
-    (release-port-lock channel-port)
     p))
 
 (define (channel-port->output-fdport channel-port)
@@ -73,24 +70,18 @@
             output-fdport-handler
             (make-fdport-data  (channel-cell-ref(port-data channel-port)) 1)
             (make-byte-vector buffer-size 0) 0 buffer-size)))
-    (obtain-port-lock channel-port)
     (set-port-lock! p (port-lock channel-port))
-    (set-port-locked?! p (port-locked? channel-port))
     (install-fdport p)
     (periodically-force-output! p)
-    (release-port-lock channel-port)
     p))
 
 (define (channel-port->unbuffered-output-fdport channel-port)
   (let ((p (make-unbuffered-output-port unbuffered-output-fdport-handler
                              (make-fdport-data
                               (channel-cell-ref (port-data channel-port)) 1))))
-    (obtain-port-lock channel-port)
     (set-port-lock! p (port-lock channel-port))
-    (set-port-locked?! p (port-locked? channel-port))
     (install-fdport p)
     (periodically-force-output! p)
-    (release-port-lock channel-port)
     p))
 
 (define (alloc-input-fdport fd revealed)
@@ -208,13 +199,10 @@
                (if (< size old-size)
                    (begin
                      (really-force-output port)
-                     (obtain-port-lock port)
                      (set-port-index! port 0))
                    (begin
-                     (obtain-port-lock port)
                      (copy-bytes! (port-buffer port) 0 new-buffer 0 old-size)))
-               (install-buffer port new-buffer size)
-               (release-port-lock port))))
+               (install-buffer port new-buffer size))))
          ((eq? policy bufpol/line)
          ;(install-nullbuffer port (make-line-output-proc size)))
          (error "bufpol/line is currently not supported"))
@@ -222,12 +210,10 @@
 
 (define (install-nullbuffer port handler)
  (really-force-output port)
- (obtain-port-lock port)
  (set-port-limit! port 0)
  (set-port-index! port 0)
  (set-port-buffer! port (make-byte-vector 0 0))
- (set-port-handler! port handler)
- (release-port-lock port))
+ (set-port-handler! port handler))
 
 (define (install-buffer port new-buffer size)
   (if (eq? bufpol/none (guess-output-policy port))
@@ -279,7 +265,6 @@
         (else (error "policy not supported " policy))))
 
 (define (install-input-handler port new-handler size gentle?)
-         (obtain-port-lock port)
          (let* ((old-limit (port-limit port))
                 (old-index (port-index port))
                 (old-buffer (port-buffer port))
@@ -302,7 +287,6 @@
                    (set-port-index! port 0)
                    (set-port-limit! port new-unread)
                    (set-port-handler! port new-handler)
-                   (release-port-lock port)
                  ret)
                 (begin
                   (install-drain-port-handler
@@ -310,7 +294,6 @@
                   (set-port-buffer! port new-buffer)
                   (set-port-index! port 0)
                   (set-port-limit! port 0)
-                  (release-port-lock port)
                   #t))))
 
 (define (install-drain-port-handler
@@ -382,7 +365,6 @@
 ;;; (what else has atomicity problems? -df)
 
 (define (increment-revealed-count port delta)
-  (obtain-port-lock port)
   (let* ((data (fdport-data port))
          (count (fdport-data:revealed data))
          (newcount (+ count delta)))
@@ -390,12 +372,11 @@
     (if (and (zero? count) (> newcount 0))          ; We just became revealed,
         (begin
           (strengthen-weak-table-ref fdports (fdport-data:fd data))
-          (%set-cloexec (fdport-data:fd data) #f)))); so don't close on exec().
-  (release-port-lock port))
+          (%set-cloexec (fdport-data:fd data) #f))))) ; so don't close on exec().
+
 
 (define (release-port-handle port)
   (check-arg fdport? port port->fdes)
-  (obtain-port-lock port)
   (let* ((data (fdport-data port))
          (rev (fdport-data:revealed data)))
     (if (not (zero? rev))
@@ -406,8 +387,7 @@
           (if (zero? new-rev)                   ; We just became unrevealed, so
               (begin                            ; the fd can be closed on exec.
                 (weaken-weak-table-ref fdports (fdport-data:fd data))
-                (%set-cloexec (fdport-data:fd data) #t))))))
-  (release-port-lock port))
+                (%set-cloexec (fdport-data:fd data) #t)))))))
 
 (define (port-revealed port)
   (let ((count (fdport-data:revealed
@@ -529,7 +509,6 @@
         (else #f)))
 
 (define (%move-fdport fd port new-revealed)
-  (obtain-port-lock port)
   (let* ((fdport* (fdport-data port))
          (ch (fdport-data:channel fdport*))
          (old-fd (channel-os-index ch))
@@ -542,7 +521,6 @@
      (make-fd-channel port fd))
     (table-set! fdports fd old-vector-ref)
     (%set-cloexec fd (not new-revealed)))
-  (release-port-lock port)
   #f)  ; JMG: It used to return #f on succes in 0.5.1, so we do the same
 
 (define (make-fd-channel port fd)
@@ -788,7 +766,7 @@
              port/fdes->input-port
              port/fdes->output-port)))
     (lambda (port/fd)
-      (if (port-locked? (port/fdes->port port/fd))
+      (if #f                            ;I'll make this right later
           (begin
             ((structure-ref interrupts enable-interrupts!))
             (error "SELECT on port with pending operation"
