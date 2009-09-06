@@ -134,7 +134,13 @@
 (define input-fdport-handler
   (make-input-fdport-handler
    (lambda (fdport* buffer start needed)
-     (channel-read buffer start needed (fdport-data:channel fdport*)))))
+     ;; I'm not sure if this is correct
+     (let ((condvar (make-condvar)))
+       (with-new-proposal (lose)
+         (or (channel-maybe-commit-and-read
+              (fdport-data:channel fdport*) buffer start needed condvar #t)
+             (lose))
+         (condvar-value condvar))))))
 
 (define (make-output-fdport-handler bufferproc)
    (make-buffered-output-port-handler

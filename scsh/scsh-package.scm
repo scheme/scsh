@@ -243,6 +243,8 @@
         i/o
         i/o-internal
         channels channel-i/o
+        condvars
+        proposals
         byte-vectors
         threads locks placeholders
         primitives
