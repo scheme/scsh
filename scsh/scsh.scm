@@ -1197,5 +1197,4 @@
 
 
 ; SIGTSTP blows s48 away. ???
-(define (suspend) (signal-process 0 signal/stop))
-
+(define (suspend) (signal-process 0 (signal stop)))

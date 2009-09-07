@@ -463,14 +463,14 @@
   (signal-pid (cond ((proc? proc)    (proc:pid proc))
                     ((integer? proc) proc)
                     (else (error "Illegal proc passed to signal-process" proc)))
-              signal))
+              (signal-os-number signal)))
 
 (define (signal-process-group proc-group signal)
   (signal-pid (- (cond ((proc? proc-group)    (proc:pid proc-group))
                        ((integer? proc-group) proc-group)
                        (else (error "Illegal proc passed to signal-process-group"
                                     proc-group))))
-              signal))
+              (signal-os-number signal)))
 
 (define (itimer sec)
   ((structure-ref sigevents schedule-timer-interrupt!) (* sec 1000)))
