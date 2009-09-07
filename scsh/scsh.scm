@@ -1032,10 +1032,6 @@
 ;          (apply exec/env binary env arglist)))
 ;       (else (error "No executable found." prog arglist))))
 
-;;; This procedure is bummed by tying in directly to %%exec/errno
-;;; and pulling some of %exec's code out of the inner loop so that
-;;; the inner loop will be fast. Folks don't like waiting...
-
 (define (exec-path/env prog env . arglist)
   (flush-all-ports)
   (with-resources-aligned
@@ -1048,11 +1044,10 @@
            (%exec prog (cons prog arglist) env)
 
            ;; Try each directory in PATH-LIST.
-           (let ((argv (list->vector (cons prog (map stringify arglist)))))
-             (for-each (lambda (dir)
-                         (let ((binary (string-append dir "/" prog)))
-                           (%%exec binary argv env)))
-                       (thread-fluid exec-path-list)))))
+           (for-each (lambda (dir)
+                       (let ((binary (string-append dir "/" prog)))
+                         (exec-with-alias binary #f env (cons prog arglist))))
+                     (thread-fluid exec-path-list))))
 
      (error "No executable found." prog arglist))))
 
