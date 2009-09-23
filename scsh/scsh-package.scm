@@ -155,7 +155,7 @@
                         scsh-file-names-interface
                         scsh-misc-interface
                         scsh-high-level-process-interface
-                        scsh-time-interface ; new in 0.2
+                        ;; scsh-time-interface ; new in 0.2
                         scsh-sockets-interface ; new in 0.3
                         scsh-endian-interface
                         tty-interface ; new in 0.4
@@ -470,9 +470,9 @@
 ;                     scsh-dbm-interface
                       awk-interface
                       char-predicates-interface; Urk -- Some of this is R5RS!
-                      dot-locking-interface
+                      ;; dot-locking-interface
                       md5-interface
-                      configure-interface
+                      ;; configure-interface
                       lib-dirs-interface
                       )
 
@@ -486,9 +486,9 @@
         awk-package
         field-reader-package
         char-predicates-lib     ; Urk -- Some of this is R5RS!
-        dot-locking
+        ;; dot-locking
         md5
-        configure
+        ;; configure
         lib-dirs
         scheme)
 
@@ -557,13 +557,13 @@
           threads-internal)
   (files threads))
 
-(define-structure dot-locking dot-locking-interface
-  (open scsh-level-0
-        scheme
-        let-opt
-        threads  ; sleep
-        random)
-  (files dot-locking))
+;; (define-structure dot-locking dot-locking-interface
+;;   (open scsh-level-0
+;;         scheme
+;;         let-opt
+;;         threads  ; sleep
+;;         random)
+;;   (files dot-locking))
 
 (define-structures ((syslog syslog-interface)
                     (syslog-channels syslog-channels-interface))
@@ -599,11 +599,11 @@
         external-calls)
   (files md5))
 
-(define-structure configure configure-interface
-  (open scheme
-        re-level-0 rx-syntax
-        (subset srfi-13 (string-join)))
-  (files configure))
+;; (define-structure configure configure-interface
+;;   (open scheme
+;;         re-level-0 rx-syntax
+;;         (subset srfi-13 (string-join)))
+;;   (files configure))
 
 (define-structures ((lib-dirs lib-dirs-interface)
                     (lib-dirs-internal lib-dirs-internal-interface))

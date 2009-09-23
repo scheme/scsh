@@ -14,3 +14,4 @@
       "scsh/lib/ccp-pack.scm")
 
 (user)
+(open 'scsh)

@@ -494,52 +494,52 @@
           home-file))
 
 
-(define-interface scsh-time-interface
-  (export make-date
-          date?
+;; (define-interface scsh-time-interface
+;;   (export make-date
+;;           date?
 
-          date:seconds
-          date:minute
-          date:hour
-          date:month-day
-          date:month
-          date:year
-          date:tz-name
-          date:tz-secs
-          date:summer?
-          date:week-day
-          date:year-day
+;;           date:seconds
+;;           date:minute
+;;           date:hour
+;;           date:month-day
+;;           date:month
+;;           date:year
+;;           date:tz-name
+;;           date:tz-secs
+;;           date:summer?
+;;           date:week-day
+;;           date:year-day
 
-          set-date:seconds
-          set-date:minute
-          set-date:hour
-          set-date:month-day
-          set-date:month
-          set-date:year
-          set-date:tz-name
-          set-date:tz-secs
-          set-date:summer?
-          set-date:week-day
-          set-date:year-day
+;;           set-date:seconds
+;;           set-date:minute
+;;           set-date:hour
+;;           set-date:month-day
+;;           set-date:month
+;;           set-date:year
+;;           set-date:tz-name
+;;           set-date:tz-secs
+;;           set-date:summer?
+;;           set-date:week-day
+;;           set-date:year-day
 
-          modify-date:seconds
-          modify-date:minute
-          modify-date:hour
-          modify-date:month-day
-          modify-date:month
-          modify-date:year
-          modify-date:tz-name
-          modify-date:tz-secs
-          modify-date:summer?
-          modify-date:week-day
-          modify-date:year-day
+;;           modify-date:seconds
+;;           modify-date:minute
+;;           modify-date:hour
+;;           modify-date:month-day
+;;           modify-date:month
+;;           modify-date:year
+;;           modify-date:tz-name
+;;           modify-date:tz-secs
+;;           modify-date:summer?
+;;           modify-date:week-day
+;;           modify-date:year-day
 
-          time+ticks
-          ticks/sec
-          time
-          date
-          date->string
-          format-date))
+;;           time+ticks
+;;           ticks/sec
+;;           time
+;;           date
+;;           date->string
+;;           format-date))
 
 
 (define-interface scsh-misc-interface
@@ -1094,11 +1094,11 @@
           remove-interrupt
           full-interrupt-set))
 
-(define-interface dot-locking-interface
-  (export obtain-dot-lock release-dot-lock
-          break-dot-lock
-          (with-dot-lock :syntax)
-          with-dot-lock*))
+;; (define-interface dot-locking-interface
+;;   (export obtain-dot-lock release-dot-lock
+;;           break-dot-lock
+;;           (with-dot-lock :syntax)
+;;           with-dot-lock*))
 
 (define-interface syslog-interface
   (export (syslog-option :syntax)
@@ -1157,25 +1157,25 @@
           md5-digest-for-string
           md5-digest-for-port))
 
-(define-interface configure-interface
-  (export host
-          machine
-          vendor
-          os
-          prefix
-          exec-prefix
-          bin-dir
-          lib-dir
-          include-dir
-          man-dir
-          lib-dirs-list
-          libs
-          defs
-          cflags
-          cppflags
-          ldflags
-          linker-flags
-          compiler-flags))
+;; (define-interface configure-interface
+;;   (export host
+;;           machine
+;;           vendor
+;;           os
+;;           prefix
+;;           exec-prefix
+;;           bin-dir
+;;           lib-dir
+;;           include-dir
+;;           man-dir
+;;           lib-dirs-list
+;;           libs
+;;           defs
+;;           cflags
+;;           cppflags
+;;           ldflags
+;;           linker-flags
+;;           compiler-flags))
 
 (define-interface lib-dirs-interface
   (export lib-dirs
