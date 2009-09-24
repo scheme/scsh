@@ -202,18 +202,19 @@
   (lock resource-lock))
 
 (define (with-resources-aligned resources thunk)
-   (let ((locks (map resource-lock resources)))
-     (apply obtain-all-or-none locks)
-     (for-each
-      (lambda (align!) (align!))
-      (map resource-align! resources))
-     (let ((val (with-handler
-                 (lambda (cond more)
-                   (for-each release-lock locks)
-                   (more))
-                 thunk)))
-       (for-each release-lock locks)
-       val)))
+   ;; (let ((locks (map resource-lock resources)))
+   ;;   (apply obtain-all-or-none locks)
+   ;;   (for-each
+   ;;    (lambda (align!) (align!))
+   ;;    (map resource-align! resources))
+   ;;   (let ((val (with-handler
+   ;;               (lambda (cond more)
+   ;;                 (for-each release-lock locks)
+   ;;                 (more))
+   ;;               thunk)))
+   ;;     (for-each release-lock locks)
+   ;;     val))
+   (thunk))
 
 (define cwd-resource (make-resource align-cwd! cwd-lock))
 
@@ -1070,7 +1071,6 @@
   (let-optionals rest ((maybe-thunk #f)
                        (dont-narrow? #f))
     (really-fork clear-interactive?
-                 (not dont-narrow?)
                  maybe-thunk)))
 
 (define (preserve-ports thunk)
@@ -1088,65 +1088,47 @@
              current-error
              thunk))))))))
 
-(define (really-fork clear-interactive? narrow? maybe-thunk)
-  (let ((proc #f)
-        (maybe-narrow
-         (if narrow?
-             (lambda (thunk)
-               ;; narrow loses the thread fluids and the dynamic environment
-               (narrow (preserve-ports (preserve-thread-fluids thunk))
-                       'forking))
-             (lambda (thunk) (thunk)))))
-    (maybe-narrow
-     (lambda ()
+(define (really-fork clear-interactive? maybe-thunk)
+  (let ((proc #f))
+    (if clear-interactive?
+        (flush-all-ports))
 
-       (if clear-interactive?
-           (flush-all-ports))
+    ;; There was an atomicity problem/race condition -- if a child
+    ;; process died after it was forked, but before the scsh fork
+    ;; procedure could register the child's procobj in the
+    ;; pid/procobj table, then when the SIGCHLD signal-handler reaped
+    ;; the process, there would be no procobj for it.  We now lock
+    ;; out interrupts across the %%FORK and NEW-CHILD-PROC
+    ;; operations.
 
-       ;; There was an atomicity problem/race condition -- if a child
-       ;; process died after it was forked, but before the scsh fork
-       ;; procedure could register the child's procobj in the
-       ;; pid/procobj table, then when the SIGCHLD signal-handler reaped
-       ;; the process, there would be no procobj for it.  We now lock
-       ;; out interrupts across the %%FORK and NEW-CHILD-PROC
-       ;; operations.
-
-       (((structure-ref interrupts with-interrupts-inhibited)
-         (lambda ()
-           ;; with-env-aligned is not neccessary here but it will
-           ;; create the environ object in the parent process which
-           ;; could reuse it on further forks
-           (let ((pid (with-resources-aligned
-                       (list environ-resource)
-                       %%fork)))
-             (if (zero? pid)
-                 ;; Child
-                 (lambda ()             ; Do all this outside the WITH-INTERRUPTS.
-                   (if narrow?
-                       (begin
-                         ;; ugly kludge:
-                         ;; the REPL thread is not running any more,
-                         ;; hence unlock its command ports
-                         (release-port-lock (command-input))
-                         (release-port-lock (command-output))
-                         (release-port-lock (command-error-output))))
-                   ;; There is no session if parent was started in batch-mode
-                   (if (and (session-started?) clear-interactive?)
-                       (set-batch-mode?! #t)) ; Children are non-interactive.
-                   (if maybe-thunk
-                       (call-terminally maybe-thunk)))
-                 ;; Parent
-                 (begin
-                   (set! proc (new-child-proc pid))
-                   (lambda ()
-                     (values))))))))))
+    (((structure-ref interrupts with-interrupts-inhibited)
+      (lambda ()
+        ;; with-env-aligned is not neccessary here but it will
+        ;; create the environ object in the parent process which
+        ;; could reuse it on further forks
+        (let ((pid (with-resources-aligned
+                    (list environ-resource)
+                    %%fork)))
+          (if (zero? pid)
+              ;; Child
+              (lambda ()    ; Do all this outside the WITH-INTERRUPTS.
+                ;; There is no session if parent was started in batch-mode
+                (if (and (session-started?) clear-interactive?)
+                    (set-batch-mode?! #t)) ; Children are non-interactive.
+                (if maybe-thunk
+                    (call-terminally maybe-thunk)))
+              ;; Parent
+              (begin
+                (set! proc (new-child-proc pid))
+                (lambda ()
+                  (values))))))))
     proc))
 
 (define (exit . maybe-status)
   (let ((status (:optional  maybe-status 0)))
     (if (not (integer? status))
         (error "non-integer argument to exit"))
-    (call-exit-hooks-and-narrow
+    (call-exit-hooks-and-run
      (lambda ()
        (exit/errno status)
        (display "The evil undead walk the earth." 2)

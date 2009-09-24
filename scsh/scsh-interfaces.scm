@@ -594,8 +594,7 @@
           scsh-release-name))
 
 (define-interface exit-hooks-interface
-  (export call-exit-hooks-and-narrow
-          add-narrowed-exit-hook!
+  (export call-exit-hooks-and-run
           add-exit-hook!))
 
 ;;; This is probably bogus.

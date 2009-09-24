@@ -391,19 +391,9 @@
       (set! *exit-hooks* (cons thunk *exit-hooks*)))
     (define (call-exit-hooks!)
       (for-each (lambda (thunk) (thunk)) *exit-hooks*))
-
-    (define *narrowed-exit-hooks* '())
-    (define (add-narrowed-exit-hook! thunk)
-      (set! *narrowed-exit-hooks* (cons thunk *narrowed-exit-hooks*)))
-    (define (call-narrowed-exit-hooks!)
-      (for-each (lambda (thunk) (thunk)) *narrowed-exit-hooks*))
-
-    (define (call-exit-hooks-and-narrow thunk)
+    (define (call-exit-hooks-and-run thunk)
       (call-exit-hooks!)
-      (narrow
-       (lambda ()
-         (call-narrowed-exit-hooks!)
-         (thunk))))))
+      (thunk))))
 
 
 (define-structure field-reader-package scsh-field-reader-interface

@@ -11,10 +11,10 @@
 ;;; 	EXTENDED-PORTS: make-string-input-port
 ;;;	INTERFACES: make-simple-interface
 ;;;     INTERRUPTS: interrupt-before-heap-overflow!
-;;; 	PACKAGE-COMMANDS-INTERNAL: user-environment config-package 
+;;; 	PACKAGE-COMMANDS-INTERNAL: user-environment config-package
 ;;;		get-reflective-tower
 ;;; 	PACKAGE-MUTATION: package-open!
-;;;	PACKAGES: structure-package structure? make-structure 
+;;;	PACKAGES: structure-package structure? make-structure
 ;;;		make-simple-package
 ;;;	RECEIVING: mv return stuff
 ;;;	SCSH-LEVEL-0-INTERNALS: set-command-line-args!
@@ -39,7 +39,7 @@
 (define (load-port-quietly port p)
   (let-fluid $current-noise-port (make-null-output-port)
     (lambda () (load-port port p))))
-  
+
 (define (really-ensure-loaded noise . structs)
   (let-fluid $current-noise-port (make-null-output-port)
 	     (lambda ()
@@ -61,7 +61,7 @@
 ;;; 	-o <struct>		Open the structure in current package.
 ;;; 	-n <package>		Create new package, make it current package.
 ;;; 	-m <struct>		<struct>'s package becomes current package.
-;;; 	
+;;;
 ;;; 	-l  <file>		Load <file> into current package.
 ;;;	-lm <file>		Load <file> into config package.
 ;;;     -le <file>              Load <file> into exec package.
@@ -81,9 +81,9 @@
 ;;; 	-ds			Load terminating script into current package.
 ;;; 	-dm			Load terminating script into config package.
 ;;;     -de                     Load terminating script into exec package.
-;;; 	
+;;;
 ;;; 	-e <entry>		Call (<entry>) to start program.
-;;; 	
+;;;
 ;;;				Terminating switches:
 ;;; 	-c <exp>		Eval <exp>, then exit.
 ;;; 	-s <script>		Specify <script> to be loaded by a -ds, -dm, or -de.
@@ -91,14 +91,14 @@
 ;;; 	--  			Interactive scsh.
 
 
-;;; Return switch list, terminating switch, with arg, top-entry, 
-;;; and command-line args. 
+;;; Return switch list, terminating switch, with arg, top-entry,
+;;; and command-line args.
 ;;; - We first expand out any initial \ <filename> meta-arg.
 ;;; - A switch-list elt is either "-ds", "-dm", "-de", or a (switch . arg) pair
 ;;;   for a -o, -n, -m, -l, or -lm switch.
-;;; - Terminating switch is one of {s, c, #f} for -s or -sfd, -c, 
+;;; - Terminating switch is one of {s, c, #f} for -s or -sfd, -c,
 ;;;   and -- respectively.
-;;; - Terminating arg is the <exp> arg to -c, the <script> arg to -s, 
+;;; - Terminating arg is the <exp> arg to -c, the <script> arg to -s,
 ;;;   the input port for -sfd, otw #f.
 ;;; - top-entry is the <entry> arg to a -e; #f if none.
 ;;; - command-line args are what's left over after picking off the scsh
@@ -149,7 +149,7 @@
 		     (string=? arg "-lp-default")
 		     (string=? arg "-lp-clear"))
 		 (lp args (cons arg switches) top-entry #t))
-	    
+
 		((or (string=? arg "-l")
 		     (string=? arg "-lm")
 		     (string=? arg "-le")
@@ -253,13 +253,13 @@
                (lp switches script-loaded?)))
 
 	    ((string=? (car switch) "-ll")
-	     (load-library-file (cdr switch) (lib-dirs) script-file 
+	     (load-library-file (cdr switch) (lib-dirs) script-file
                                 (config-package))
 	     (lp switches script-loaded?))
 
 	    ((string=? (car switch) "-lel")
              (let ((current-package (interaction-environment)))
-               (load-library-file (cdr switch) (lib-dirs) script-file 
+               (load-library-file (cdr switch) (lib-dirs) script-file
                                   (user-command-environment))
                (set-interaction-environment! current-package)
                (lp switches script-loaded?)))
@@ -271,7 +271,7 @@
 	    ((string=? (car switch) "lp+")
              (lib-dirs-append! (cdr switch))
 	     (lp switches script-loaded?))
-	     
+
 	    ((string=? (car switch) "+lpe")
              (lib-dirs-prepend! (expand-lib-dir (cdr switch)))
 	     (lp switches script-loaded?))
@@ -313,7 +313,7 @@
 
 	    (else (error "Impossible error in do-switches. Report to developers."))))
 	script-loaded?)))
-	    
+
 
 ;;; (user-environment) probably isn't right. What is this g-r-t stuff?
 ;;; Check w/jar.
@@ -332,20 +332,20 @@
 	;; environment,umask and cwd are already installed by resumers
 	;; c.f. {env,umask,env}-reinitializer in scsh.scm
 	(init-scsh-vars interactive?)
-	(start-new-session context    
+	(start-new-session context
 			   (current-input-port)
 			   (current-output-port)
 			   (current-error-port)
 			   args
 			   (not interactive?))
-	(with-interaction-environment     
+	(with-interaction-environment
 	 (user-environment)
 	 thunk))))))
 
 (define (parse-switches-and-execute all-args context)
   (receive (switches term-switch term-val top-entry args)
       (parse-scsh-args (cdr all-args))
-    (with-handler 
+    (with-handler
      (lambda (cond more)
        (if (error? cond)
            (with-handler
@@ -368,7 +368,7 @@
 			 "file-descriptor-script" ; -sfd <num>
                          (car all-args)))
 		 args))
-	 
+
 	  (let* ((script-loaded?  (do-switches switches term-val)))
 	    (if (not script-loaded?) ; There wasn't a -ds, -dm, or -de,
                 (if (eq? term-switch 's) ; but there is a script,
@@ -376,14 +376,14 @@
                                   (interaction-environment))
                     (if (eq? term-switch 'sfd)
                         (load-port-quietly term-val (interaction-environment)))))
-	   
+
 	    (cond ((not term-switch)	; -- interactive
 		   (scsh-exit-now       ;; TODO: ,exit will bypass this
-		    (restart-command-processor 
-		     args 
-		     context 
+		    (restart-command-processor
+		     args
+		     context
 		     (lambda ()
-		       (display (string-append 
+		       (display (string-append
 				 "Welcome to scsh "
 				 scsh-version-string
 				 " (" scsh-release-name ")")
@@ -398,12 +398,12 @@
 		   (let ((result (eval (read-exactly-one-sexp-from-string term-val)
 				       (interaction-environment))))
 		     (scsh-exit-now 0)))
-		 
+
 		  (top-entry		; There was a -e <entry>.
 		   ((eval top-entry (interaction-environment))
 		    (command-line))
 		   (scsh-exit-now 0))
-		 
+
 		  ;; Otherwise, the script executed as it loaded,
 		  ;; so we're done.
 		  (else (scsh-exit-now 0))))))))))
@@ -416,11 +416,11 @@
 	  (error "More than one value read from string" s)))))
 
 (define (scsh-exit-now status)
-  (call-exit-hooks-and-narrow
+  (call-exit-hooks-and-run
    (lambda ()
      (scheme-exit-now status))))
 
-(add-narrowed-exit-hook! flush-all-ports-no-threads)
+(add-exit-hook! flush-all-ports-no-threads)
 
 (define (bad-arg . msg)
   (with-current-output-port (current-error-port)
