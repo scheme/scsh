@@ -323,90 +323,12 @@
 		       (get-reflective-tower (user-environment)) ; ???
 		       name))
 
-(define (with-scsh-initialized interactive? context args thunk)
-  (with-scsh-sighandlers
-   interactive?
-   (lambda ()
-     (with-autoreaping
-      (lambda ()
-	;; environment,umask and cwd are already installed by resumers
-	;; c.f. {env,umask,env}-reinitializer in scsh.scm
-	(init-scsh-vars interactive?)
-	(start-new-session context
-			   (current-input-port)
-			   (current-output-port)
-			   (current-error-port)
-			   args
-			   (not interactive?))
-	(with-interaction-environment
-	 (user-environment)
-	 thunk))))))
+(define (with-scsh-initialized thunk)
+  (init-scsh-vars)
+  (thunk))
 
 (define (parse-switches-and-execute all-args context)
-  (receive (switches term-switch term-val top-entry args)
-      (parse-scsh-args (cdr all-args))
-    (with-handler
-     (lambda (cond more)
-       (if (error? cond)
-           (with-handler
-            (lambda (c m)
-              (scheme-exit-now 1))
-            (lambda ()
-              (display-condition cond (current-error-port))
-              (scsh-exit-now 1)))
-             (more)))
-     (lambda ()
-       (with-scsh-initialized
-	(not term-switch) context args
-	(lambda ()
-	  ;; Have to do these before calling DO-SWITCHES, because actions
-	  ;; performed while processing the switches may use these guys.
-	  (set-command-line-args!
-	   (cons (if (eq? term-switch 's)
-                     term-val	; Script file.
-                     (if (eq? term-val 'sfd)
-			 "file-descriptor-script" ; -sfd <num>
-                         (car all-args)))
-		 args))
-
-	  (let* ((script-loaded?  (do-switches switches term-val)))
-	    (if (not script-loaded?) ; There wasn't a -ds, -dm, or -de,
-                (if (eq? term-switch 's) ; but there is a script,
-                    (load-quietly term-val; so load it now.
-                                  (interaction-environment))
-                    (if (eq? term-switch 'sfd)
-                        (load-port-quietly term-val (interaction-environment)))))
-
-	    (cond ((not term-switch)	; -- interactive
-		   (scsh-exit-now       ;; TODO: ,exit will bypass this
-		    (restart-command-processor
-		     args
-		     context
-		     (lambda ()
-		       (display (string-append
-				 "Welcome to scsh "
-				 scsh-version-string
-				 " (" scsh-release-name ")")
-				(current-output-port))
-		       (newline (current-output-port))
-		       (display "Type ,? for help."
-				(current-output-port))
-		       (newline (current-output-port))
-		       (in-package (user-environment) '())))))
-
-		  ((eq? term-switch 'c)
-		   (let ((result (eval (read-exactly-one-sexp-from-string term-val)
-				       (interaction-environment))))
-		     (scsh-exit-now 0)))
-
-		  (top-entry		; There was a -e <entry>.
-		   ((eval top-entry (interaction-environment))
-		    (command-line))
-		   (scsh-exit-now 0))
-
-		  ;; Otherwise, the script executed as it loaded,
-		  ;; so we're done.
-		  (else (scsh-exit-now 0))))))))))
+  #f)
 
 
 (define (read-exactly-one-sexp-from-string s)

@@ -1151,7 +1151,7 @@
 (define home-directory "")
 (define exec-path-list)
 
-(define (init-scsh-vars quietly?)
+(define (init-scsh-vars)
   (set! home-directory
         (cond ((getenv "HOME") => ensure-file-name-is-nondirectory)
               ;; loosing at this point would be really bad, so some
@@ -1160,19 +1160,14 @@
                      (lambda (k)
                        (with-handler
                         (lambda (condition more)
-                          (cond ((not quietly?)
-                                 (display "Starting up with no home directory ($HOME).")
-                                 (newline)))
+                          (warn "Starting up with no home directory ($HOME).")
                           (k "/"))
                         (lambda ()
                           (user-info:home-dir (user-info (user-uid))))))))))
-
   (set! exec-path-list
         (make-preserved-thread-fluid
          (cond ((getenv "PATH") => split-colon-list)
-               (else (if (not quietly?)
-                         (warn "Starting up with no path ($PATH)."))
-                     '())))))
+               (else (warn "Starting up with no path ($PATH).") '())))))
 
 
 ; SIGTSTP blows s48 away. ???

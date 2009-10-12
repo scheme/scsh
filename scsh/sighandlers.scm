@@ -136,29 +136,9 @@
           ;; the default.
           #t))))
 
-(define (with-scsh-sighandlers interactive? thunk)
+(define (with-scsh-sighandlers thunk)
   (install-fresh-signal-handlers!)
-  (let ((scsh-initial-thread  (current-thread)))
-    (if (not (eq? (thread-name scsh-initial-thread)
-                  'scsh-initial-thread))
-        (error "with-scsh-sighandlers"
-               "sighandler did not find scsh-initial-thread"
-               scsh-initial-thread))
-
-    ;; Note: this will prevent any other system to work, since it pushes
-    ;; a new command level !
-    (if interactive?
-        (set-signal-handler! (signal int)
-                             (lambda (signal)
-                               (schedule-event
-                                scsh-initial-thread
-                                (enum event-type interrupt)
-                                (enum interrupt keyboard))))))
-  (run-as-long-as
-   deliver-interrupts
-   thunk
-   spawn-on-root
-   'deliver-interrupts))
+  (run-as-long-as deliver-interrupts thunk spawn-on-root 'deliver-interrupts))
 
 (define (deliver-interrupts)
   (let loop ((signal (dequeue-signal! *signal-queue*)))
