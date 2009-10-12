@@ -37,7 +37,7 @@
 #include <limits.h>     /* NGROUPS_MAX on solaris */
 
 /* Make sure our exports match up w/the implementation: */
-#include "syscalls1.h"
+#include "syscalls.h"
 
 extern int errno;
 extern char **environ;
