@@ -202,19 +202,18 @@
   (lock resource-lock))
 
 (define (with-resources-aligned resources thunk)
-   ;; (let ((locks (map resource-lock resources)))
-   ;;   (apply obtain-all-or-none locks)
-   ;;   (for-each
-   ;;    (lambda (align!) (align!))
-   ;;    (map resource-align! resources))
-   ;;   (let ((val (with-handler
-   ;;               (lambda (cond more)
-   ;;                 (for-each release-lock locks)
-   ;;                 (more))
-   ;;               thunk)))
-   ;;     (for-each release-lock locks)
-   ;;     val))
-   (thunk))
+   (let ((locks (map resource-lock resources)))
+     (apply obtain-all-or-none locks)
+     (for-each
+      (lambda (align!) (align!))
+      (map resource-align! resources))
+     (let ((val (with-handler
+                 (lambda (cond more)
+                   (for-each release-lock locks)
+                   (more))
+                 thunk)))
+       (for-each release-lock locks)
+       val)))
 
 (define cwd-resource (make-resource align-cwd! cwd-lock))
 
@@ -496,6 +495,7 @@
 (define (with-total-env* alist thunk)
   (really-with-env* (make-env #f alist) thunk))
 
+(install-env)
 
 ;;; These two functions are obsoleted by the more general INFIX-SPLITTER and
 ;;; JOIN-STRINGS functions. However, we keep SPLIT-COLON-LIST defined
@@ -1112,9 +1112,6 @@
           (if (zero? pid)
               ;; Child
               (lambda ()    ; Do all this outside the WITH-INTERRUPTS.
-                ;; There is no session if parent was started in batch-mode
-                (if (and (session-started?) clear-interactive?)
-                    (set-batch-mode?! #t)) ; Children are non-interactive.
                 (if maybe-thunk
                     (call-terminally maybe-thunk)))
               ;; Parent
