@@ -4,9 +4,7 @@
 #include <stdio.h>
 #include "cstuff.h"
 #include <errno.h>
-
-/* Make sure our exports match up w/the implementation: */
-#include "sighandlers1.h"
+#include "sighandlers.h"
 
 extern int errno;
 
@@ -50,7 +48,7 @@ s48_ref_t do_default_sigaction(s48_call_t call, s48_ref_t _signal)
   return s48_unspecific_2(call);
 }
 
-void s48_on_load(void)
+void scsh_init_sighandlers(void)
 {
   S48_EXPORT_FUNCTION(do_default_sigaction);
 }

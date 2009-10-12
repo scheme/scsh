@@ -1,4 +1,4 @@
-/* Exports from syscalls1.c. */
+/* Exports from syscalls.c */
 
 s48_ref_t wait_pid(s48_call_t call, s48_ref_t pid, s48_ref_t flags);
 
