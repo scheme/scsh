@@ -1130,9 +1130,6 @@
           set-syslog-channel!
           with-syslog-channel))
 
-(define-interface crypt-interface
-  (export crypt))
-
 (define-interface uname-interface
   (export uname
           uname:os-name

@@ -167,7 +167,6 @@
                         (interface-of ascii) ; char<->ascii
                         string-ports-interface
                         syslog-interface
-                        crypt-interface
                         uname-interface
                         ))
    (scsh-level-0-internals (export set-command-line-args!
@@ -356,6 +355,7 @@
         fluids
         interfaces
         sigevents
+        signal-handler
         low-interrupt
         fluids-internal            ; JMG: get-dynamic-env
         handle                     ; JMG: with-handler

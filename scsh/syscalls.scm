@@ -696,10 +696,12 @@
 
 (define (alist->env-list alist)
   (map (lambda (var.val)
-         (string-append (car var.val) "="
-                        (let ((val (cdr var.val)))
-                          (if (string? val) val
-                              (string-join val ":")))))
+         (os-string->byte-vector
+          (x->os-string
+           (string-append (car var.val) "="
+                          (let ((val (cdr var.val)))
+                            (if (string? val) val
+                                (string-join val ":")))))))
        alist))
 
 (define (alist->env-vec alist)
@@ -791,17 +793,6 @@
 (define system-name %gethostname)
 
 (import-os-error-syscall errno-msg (i) "errno_msg")
-
-(import-os-error-syscall %crypt (key salt) "scm_crypt")
-
-(define (crypt key salt)
-  (let* ((allowed-char-set  (rx (| alpha digit "." "/")))
-         (salt-regexp  (rx (: ,allowed-char-set ,allowed-char-set))))
-    (if (not (= (string-length salt) 2)) (error "salt must have length 2"))
-    (if (not (regexp-search? salt-regexp salt))
-        (error "illegal char in salt " salt))
-    (if (> (string-length key) 8) (error "key too long "  (string-length key)))
-    (%crypt key salt)))
 
 (define-record uname
   os-name
