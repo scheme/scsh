@@ -155,7 +155,6 @@
                         scsh-file-names-interface
                         scsh-misc-interface
                         scsh-high-level-process-interface
-                        ;; scsh-time-interface ; new in 0.2
                         scsh-sockets-interface ; new in 0.3
                         scsh-endian-interface
                         tty-interface ; new in 0.4
@@ -279,7 +278,6 @@
          fileinfo
          glob
          filemtch
-         time                   ; New in release 0.2.
          (machine time_dep)
          network                ; New in release 0.3.
          flock                  ; New in release 0.4.
