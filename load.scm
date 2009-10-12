@@ -14,3 +14,6 @@
       "scsh/lib/ccp-pack.scm")
 
 (user)
+
+(open 'filenames)
+(load "setup.scm")

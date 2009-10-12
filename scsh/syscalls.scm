@@ -15,6 +15,8 @@
 ;;; You can't throw an error within a handler
 ;;;
 
+(import-dynamic-externals "=scshexternal/scsh")
+
 ;;; Move this to somewhere else as soon as Marc has published his SRFI
 (define (continuation-capture receiver)
   ((call-with-current-continuation

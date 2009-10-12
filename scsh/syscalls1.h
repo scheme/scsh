@@ -138,17 +138,7 @@ s48_ref_t fcntl_read(s48_call_t call, s48_ref_t fd, s48_ref_t command);
 s48_ref_t fcntl_write(s48_call_t call, s48_ref_t fd,
                       s48_ref_t command, s48_ref_t value);
 
-s48_ref_t scm_crypt(s48_call_t call, s48_ref_t key, s48_ref_t salt);
-
-s48_ref_t scm_openlog (s48_call_t call, s48_ref_t _ident,
-                       s48_ref_t _option, s48_ref_t _facility);
-
-s48_ref_t scm_syslog (s48_call_t call, s48_ref_t _facility,
-                      s48_ref_t _level, s48_ref_t _message);
-
-s48_ref_t scm_closelog(s48_call_t call);
-
-s48_ref_t sleep_until(s48_call_t call);
+s48_ref_t sleep_until(s48_call_t call, s48_ref_t scm_when);
 
 s48_ref_t scm_uname(s48_call_t call);
 
@@ -164,3 +154,4 @@ s48_ref_t group_info_gid(s48_call_t call, s48_ref_t gid,
 s48_ref_t group_info_name(s48_call_t call, s48_ref_t name,
                           s48_ref_t group_info_record);
 
+extern void scsh_init_syscalls(void);

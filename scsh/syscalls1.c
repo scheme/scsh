@@ -33,9 +33,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <utime.h>
-#ifdef HAVE_CRYPT_H
-#include <crypt.h>
-#endif
 #include "cstuff.h"
 #include <limits.h>     /* NGROUPS_MAX on solaris */
 
@@ -768,20 +765,6 @@ s48_ref_t fcntl_write(s48_call_t call, s48_ref_t fd,
   return s48_enter_long_2(call, ret);
 }
 
-/* crypt()
-******************
-*/
-s48_ref_t scm_crypt(s48_call_t call, s48_ref_t key, s48_ref_t salt)
-{
-  char * crypt_str = (char *) crypt(s48_extract_byte_vector_2(call, key),
-                                    s48_extract_byte_vector_2(call, salt));
-
-  /* FreeBSD does this on error:*/
-  if (crypt_str == NULL) return s48_enter_byte_string_2(call, "");
-
-  return s48_enter_byte_string_2(call, crypt_str);
-}
-
 static s48_ref_t uname_record_type_binding;
 
 s48_ref_t scm_uname(s48_call_t call)
@@ -893,7 +876,24 @@ s48_ref_t group_info_name(s48_call_t call, s48_ref_t scheme_name,
   return s48_true_2(call);
 }
 
-void s48_init_syscalls (){
+s48_ref_t sleep_until(s48_call_t call, s48_ref_t scm_when)
+{
+    time_t now = time(0);
+    int delta = s48_extract_long_2(call, scm_when) - now;
+    if( delta > 0 ) {
+        fd_set r, w, e;
+        struct timeval tv;
+        tv.tv_sec = delta;
+        tv.tv_usec = 0;
+        FD_ZERO(&r);
+        FD_ZERO(&w);
+        FD_ZERO(&e);
+        if( select(0, &r, &w, &e, &tv) ) return s48_false_2(call);	/* Lose */
+    }
+    return s48_true_2(call); /* Win */
+}
+
+void scsh_init_syscalls (){
   S48_EXPORT_FUNCTION(scsh_exit);
   S48_EXPORT_FUNCTION(scsh__exit);
   S48_EXPORT_FUNCTION(scsh_fork);
@@ -936,7 +936,6 @@ void s48_init_syscalls (){
   S48_EXPORT_FUNCTION(sleep_until);
   S48_EXPORT_FUNCTION(scm_gethostname);
   S48_EXPORT_FUNCTION(errno_msg);
-  S48_EXPORT_FUNCTION(scm_crypt);
   S48_EXPORT_FUNCTION(scm_uname);
   S48_EXPORT_FUNCTION(user_info_uid);
   S48_EXPORT_FUNCTION(user_info_name);
@@ -947,9 +946,4 @@ void s48_init_syscalls (){
   envvec_record_type_binding = s48_get_imported_binding_2("envvec-record-type");
   uname_record_type_binding = s48_get_imported_binding_2("uname-record-type");
   add_envvec_finalizerB_binding = s48_get_imported_binding_2("add-envvec-finalizer!");
-}
-
-void s48_on_load()
-{
-  s48_init_syscalls();
 }
