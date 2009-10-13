@@ -324,8 +324,10 @@
 		       name))
 
 (define (with-scsh-initialized thunk)
-  (init-scsh-vars)
-  (thunk))
+  (with-scsh-sighandlers
+   (lambda ()
+     (init-scsh-vars)
+     (thunk))))
 
 (define (parse-switches-and-execute all-args context)
   #f)

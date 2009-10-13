@@ -31,12 +31,14 @@
 ;;; isn't "ignore," it's always "terminate" of some kind. Doing it this way
 ;;; means the exit code given to our waiting parent proc correctly reflects
 ;;; how we died, and also makes the core dump happen if it should. Details, details.
+(import-dynamic-externals "=scshexternal/scsh")
 
 (import-lambda-definition-2 %do-default-sigaction (signal) "do_default_sigaction")
 
 (define *s48-signals*
   ;; kill and stop are omitted because they can't be caught.
-  (let ((potential (list 'abrt 'alrm 'fpe
+  ;; alrm seem to be used by scheme48
+  (let ((potential (list 'abrt 'fpe
                          'hup 'ill 'int
                          'pipe 'quit
                          'segv 'term 'usr1
@@ -110,19 +112,20 @@
 (define (call-signal-handler signal)
   (let ((handler-pair (assoc signal *signal-handlers*)))
     (if handler-pair
-        ((car handler-pair) signal)
+        ((case (cdr handler-pair)
+           ((#t) (lambda (signal)
+                   ;; %do-default-sigaction  (signal-os-number signal)
+                   (display signal)
+                   (newline)))
+           ((#f) (lambda (signal) #f))
+           (else (cdr handler-pair))) signal)
         (error "call-signal-handler"
                "no signal handler set for the given signal" signal))))
 
 (define (set-signal-handler! signal handler)
-  (let ((handler-pair (assoc signal *signal-handlers*))
-        (handler (case handler
-                   ((#t) (lambda (signal)
-                           (%do-default-sigaction (signal-os-number signal))))
-                   ((#f) (lambda (signal) #f))
-                   (else handler))))
+  (let ((handler-pair (assoc signal *signal-handlers*)))
     (if handler-pair
-        (let ((old-handler (car handler-pair)))
+        (let ((old-handler (cdr handler-pair)))
           (set-cdr! handler-pair handler)
           old-handler)
         ;; The original code threw an error in it's equivalent of this point,
@@ -141,8 +144,9 @@
   (run-as-long-as deliver-interrupts thunk spawn-on-root 'deliver-interrupts))
 
 (define (deliver-interrupts)
-  (let loop ((signal (dequeue-signal! *signal-queue*)))
-    (if (signal-enabled signal *enabled-signals*)
-        (call-signal-handler signal)
-        (make-signal-pending signal))
-    (loop (dequeue-signal! *signal-queue*))))
+  (let loop ()
+    (let ((signal (dequeue-signal! *signal-queue*)))
+      (if (signal-enabled signal *enabled-signals*)
+          (call-signal-handler signal)
+          (make-signal-pending signal))
+      (loop))))
