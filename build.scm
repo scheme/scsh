@@ -3,7 +3,7 @@
 
 (let ((cfiles (list "scsh/syscalls" "scsh/cstuff" "scsh/scsh"
                     "scsh/sighandlers"))
-      (cflags '(-c -g -O2 -Wall))
+      (cflags '(-c -g -O2))
       (ldflags '(-shared -rdynamic))
       (cc 'gcc)
       (ld 'gcc))

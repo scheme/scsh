@@ -691,7 +691,6 @@ s48_ref_t create_env(s48_call_t call, s48_ref_t vec)
       /* Return all the memory and bail out. */
       while(--i) Free(newenv[i]);
       Free(newenv);
-      Free(thread_env);
       s48_out_of_memory_error_2(call);
     }
     newenv[i] = s;
