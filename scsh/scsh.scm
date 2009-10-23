@@ -1042,18 +1042,21 @@
            (%exec prog (cons prog arglist) env)
 
            ;; Try each directory in PATH-LIST.
-           (for-each (lambda (dir)
-                       (let ((binary (string-append dir "/" prog)))
-                         (exec-with-alias binary #f env (cons prog arglist))))
-                     (thread-fluid exec-path-list))))
+           (for-each
+            (lambda (dir)
+              (let ((binary (string-append dir "/" prog)))
+                (with-handler (lambda (condition more) #f)
+                              (lambda ()
+                                (exec-with-alias binary #f env (cons prog arglist))))))
+            (thread-fluid exec-path-list))))
 
      (error "No executable found." prog arglist))))
 
 (define (exec-path prog . arglist)
-  (apply exec-path/env prog #t arglist))
+  (apply exec-path/env prog #f arglist))
 
 (define (exec prog . arglist)
-  (apply exec/env prog #t arglist))
+  (apply exec/env prog #f arglist))
 
 
 ;;; Assumes niladic primitive %%FORK.
