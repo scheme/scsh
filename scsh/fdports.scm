@@ -81,11 +81,11 @@
 
 ;;; Not exported.
 (define (shell-open path flags fdes)
-  (move->fdes (open-fdes (stringify path) flags #o666) fdes))
+  (move->fdes (open-fdes path flags #o666) fdes))
 
 (define open/create+trunc
   (bitwise-ior open/write (bitwise-ior open/create open/truncate)))
 
 (define open/write+append+create
-  (bitwise-ior open/write 
+  (bitwise-ior open/write
 	       (bitwise-ior  open/append open/create)))

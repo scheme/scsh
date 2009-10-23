@@ -998,9 +998,6 @@
   (cond ((string? thing) thing)
         ((symbol? thing)
          (symbol->string thing))
-;       ((symbol? thing)
-;        (list->string (map char-downcase
-;                           (string->list (symbol->string thing)))))
         ((integer? thing)
          (number->string thing))
         (else (error "Can only stringify strings, symbols, and integers."

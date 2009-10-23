@@ -79,10 +79,8 @@
 ;; %%exec/errno directly  F*&% *P
 
 (define (%exec prog arg-list env)
-  (let ((args (map stringify arg-list))
-        (prog (stringify prog))
-        (env (if env (alist->env-list env))))
-    (exec-with-alias prog #f env args)))
+  (let ((env (if env (alist->env-list env) env)))
+    (exec-with-alias prog #f env arg-list)))
 
 
 (import-os-error-syscall exit/errno ; errno -- misnomer.
