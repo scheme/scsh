@@ -506,7 +506,7 @@
 
 (define-structure sigevents sigevents-interface
   (open scsh-level-0 scheme define-record-types queues
-        structure-refs threads threads-internal
+        structure-refs threads threads-internal proposals
         low-interrupt wind interrupts architecture)
   (files event))
 

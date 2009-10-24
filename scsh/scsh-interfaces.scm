@@ -1010,6 +1010,7 @@
           next-sigevent-set
           next-sigevent/no-wait
           next-sigevent-set/no-wait
+          with-sigevents
           sigevent-type
           schedule-timer-interrupt!))
 

@@ -26,13 +26,15 @@
   (with-interrupts-inhibited
    (lambda ()
      (let lp ((pre-sigevent pre-sigevent))
-       (let ((sigevent (sigevent-next pre-sigevent)))
-         (if sigevent
-             (if (type-in-set? (sigevent-type sigevent) set)
-                 sigevent
-                 (lp sigevent))
-             (begin (maybe-commit-and-block-on-queue sigevent-thread-queue)
-                    (lp pre-sigevent))))))))
+       (with-new-proposal (lose)
+        (let ((sigevent (sigevent-next pre-sigevent)))
+          (if sigevent
+              (if (type-in-set? (sigevent-type sigevent) set)
+                  sigevent
+                  (lp sigevent))
+              (if (maybe-commit-and-block-on-queue sigevent-thread-queue)
+                  (lp pre-sigevent)
+                  (lose)))))))))
 
 ; same as above, but don't block
 (define (rts-next-sigevent/no-wait pre-sigevent set type-in-set?)
@@ -57,7 +59,11 @@
                                             waiters)))
                         ((thread-queue-empty? sigevent-thread-queue)
                          waiters))))))
-    (for-each maybe-commit-and-make-ready waiters)))
+    (for-each (lambda (x)
+                (with-new-proposal (lose)
+                 (if (not (maybe-commit-and-make-ready x))
+                     (lose))))
+              waiters)))
 
 
 ;;; Records whether the sigevent system is running.
