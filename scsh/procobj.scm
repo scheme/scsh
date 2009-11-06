@@ -32,10 +32,10 @@
 ;; Weak pointer tables.  Much more efficient than populations.
 ;; Maps pids to processes.  Unexited processes are strong pointers, exited
 ;; procs are weak pointers (to allow gc'ing).
-;; 
-;; JMG: why ever unexited processes were strong pointer, this won't work 
+;;
+;; JMG: why ever unexited processes were strong pointer, this won't work
 ;; with (autoreap-policy 'late), since then gc waits for the strong pointer
-;; until it wait(2)s and the strong pointer waits for wait(2) which is 
+;; until it wait(2)s and the strong pointer waits for wait(2) which is
 ;; nothing but a deadlock
 
 (define process-table (make-integer-table))
@@ -70,7 +70,7 @@
 	  ((#f)     (error "Pid has no corresponding process object" pid))
 	  ((create) (new-child-proc pid))
 	  (else     #f)))))
-	     
+
 ;;; Coerce pids and procs to procs.
 
 (define (->proc proc/pid)
@@ -93,12 +93,12 @@
 ;;; referenced multiple times.
 ;;;
 ;;; - Stopped processes are never reaped, only dead ones.  (May change -df)
-;;; 
-;;; - Stopped process status codes are never cached in proc objects, 
+;;;
+;;; - Stopped process status codes are never cached in proc objects,
 ;;;   only status codes for dead processes. So you can wait for a
 ;;;   dead process multiple times, but only once per process-stop.
 ;;;   (May change -df)
-;;; 
+;;;
 ;;; - Unfortunately, reaping a process loses the information specifying its
 ;;;   process group, so if a process is reaped into scsh, it cannot be
 ;;;   waited for by WAIT-PROCESS-GROUP. Notice that only dead processes are
@@ -106,7 +106,7 @@
 ;;;   to wait for dead processes, so this is not likely to be a problem. If
 ;;;   it is, turn autoreaping off with (autoreap-policy #f).
 ;;;   (This never worked right, and it might be wiped out completely -fd)
-;;; 
+;;;
 ;;; - Reaping can be encouraged by calling (REAP-ZOMBIES).
 
 ;;; (autoreap-policy [new-policy])
@@ -134,14 +134,14 @@
 		      (cond ((eq? new-policy 'early)
 			     (set-sigchld-handler! early-sigchld-handler)
 			     (set-post/gc-handler! reap-need-reaping))
-			    
+
 			    ((eq? new-policy 'late)
 			     (set-sigchld-handler! late-sigchld-handler)
 			     (set-post/gc-handler! reap-need-reaping))
 
-			    (else 
+			    (else
 			     (set-sigchld-handler! noauto-sigchld-handler)
-			     (set-post/gc-handler! 
+			     (set-post/gc-handler!
 			      (lambda ()
 				#f))))))))
     old-policy))
@@ -149,7 +149,7 @@
 
 ;;; we don't register the post/gc-handler until the first police change
 ;;; --- this made sense, but why?
-(define *post/gc-handler* 
+(define *post/gc-handler*
   (lambda () (error "*post/gc-handler* was not defined")))
 
 (define (really-set-post/gc-handler! handler)
@@ -206,16 +206,16 @@
   (release-lock need-reaping-lock))
 
 ;;; reap this special pid
-;;; return status or #f 
+;;; return status or #f
 (define (reap-pid pid)
-  (with-lock 
+  (with-lock
    wait-lock
    (lambda ()
      (let ((status (atomic-wait pid wait/poll)))
-       (if status 
+       (if status
 	   (waited-by-reap pid status))
        status))))
-	
+
 ;;; Handler for SIGCHLD according policy
 (define (late-sigchld-handler) #f)
 
@@ -226,7 +226,7 @@
 
 
 ;;; Finalizer for procobjs
-;;; 
+;;;
 (define (procobj-finalizer procobj)
   (process-table-delete-procobj! procobj)
   (if (not (proc:finished? procobj))
@@ -248,7 +248,7 @@
 ;		 (format (current-error-port)
 ;			 "Reaping ~d[~d]~%" pid status)
 		 (lp))
-	  (begin 
+	  (begin
 	    (release-lock wait-lock)
 	    status)))))
 
@@ -265,13 +265,13 @@
 ;;; (wait proc/pid [flags]) => status or #f
 ;;;
 ;;; FLAGS (default 0) is the exclusive or of the following:
-;;;     wait/poll	
-;;;		Return #f immediately if there are no 
-;;;		unwaited children available. 
+;;;     wait/poll
+;;;		Return #f immediately if there are no
+;;;		unwaited children available.
 ;;; 	wait/stopped-children
 ;;; 		Report on suspended children as well.
 ;;;
-;;;     If the process hasn't terminated (or suspended, if wait/stopped 
+;;;     If the process hasn't terminated (or suspended, if wait/stopped
 ;;; 	is set) and wait/poll is set, return #f.
 ;;; (I'm working on the flags -df)
 
@@ -293,15 +293,15 @@
 		status)))
     ;; save the event before we check for finished
     (let ((pre-event (most-recent-sigevent)))
-      (with-lock 
+      (with-lock
        wait-lock
-       (lambda () 
+       (lambda ()
 	 (cond ((atomic-wait proc (bitwise-ior flags wait/poll)) => win)
-	       
+
 	       ((zero? (bitwise-and flags wait/poll))
 		;; we have to block and hence use the event system
 		(let lp ((pre-event pre-event))
-		  (cond ((atomic-wait proc (bitwise-ior flags wait/poll)) 
+		  (cond ((atomic-wait proc (bitwise-ior flags wait/poll))
 			 => win)
 			(else
 			 (release-lock wait-lock)
@@ -309,18 +309,18 @@
 			   (obtain-lock wait-lock)
 			   (lp next-event))))))
 	       (else #f)))))))
-		
+
 
 ;;; -> process-object proc status/#f
 (define (atomic-wait proc flags)
   (cond ((proc:finished? proc)
 	 (placeholder-value (proc:status proc)))
 	(else (really-wait (proc:pid proc) (bitwise-ior flags wait/poll)))))
-	   
+
 ;;; This one is used, to wait on a positive pid
-;;; We NEVER do a blocking wait syscall 
+;;; We NEVER do a blocking wait syscall
 (define (really-wait pid flags)
-  (if (zero? (bitwise-and flags wait/poll))   
+  (if (zero? (bitwise-and flags wait/poll))
       (error "really-wait without wait/poll"))
   (if (< pid 1)
       (error "really-wait on nonpos pid" pid))
@@ -328,16 +328,16 @@
       (%wait-pid pid flags)
    (cond ((zero? return_pid) #f)      ; failed wait/poll
 	 ((= pid return_pid) status)  ; made it
-	 (else (error "mismatch in really-wait" 
+	 (else (error "mismatch in really-wait"
 		      return_pid pid)))))
-  
+
 
 
 ;;; All you have to do, if pid was reaped
 ;;; proc_obj is maybe no longer alive
 (define (waited-by-reap pid status)
   (cond ((maybe-pid->proc pid) =>
-	 (lambda (proc) 
+	 (lambda (proc)
 	   (obituary proc status)
 	   (push-reaped-proc proc)
 	   ))))
@@ -369,7 +369,7 @@
   (let ((flags (:optional maybe-flags 0)))
     (if (zero? (bitwise-and flags wait/poll))
 	(begin
-	  (receive (pid status) 
+	  (receive (pid status)
 	     ;; before we maybe block via placeholder-value
 	     ;; do a really-wait-any for the ones, missed by 'late
 	    (really-wait-any (bitwise-ior flags  wait/poll))
@@ -410,15 +410,15 @@
 	      (waited-by-wait proc status)
 	      (values proc status))
 	    (values #f #f))))))
-      
-	     
+
+
 ;;; (wait-process-group [proc-group flags]) => [proc status]
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;     [#f #f] => non-blocking, none ready.
 ;;;     [#f #t] => no more.
 ;;;
-;;; 
-;;; If you are doing process-group waits, you do *not* want to use 
+;;;
+;;; If you are doing process-group waits, you do *not* want to use
 ;;; early autoreaping, since the reaper loses process-group information.
 ;;; (I'm working on it -df)
 
@@ -434,19 +434,19 @@
 		   (values proc status)))))
       ;; save the event before we check for finished
       (let ((pre-event (most-recent-sigevent)))
-	(receive (pid status) 
+	(receive (pid status)
           (%wait-process-group proc-group (bitwise-ior flags wait/poll))
           (cond (pid
 		 (win pid status))
 		((zero? (bitwise-and flags wait/poll))
 		 ;; we have to block and hence use the event system
 		 (let lp ((pre-event pre-event))
-		   (receive (pid status) 
+		   (receive (pid status)
 		      (%wait-process-group proc-group (bitwise-ior flags wait/poll))
 		      (if pid
 			  (win pid status)
 			  (lp (next-sigevent pre-event interrupt/chld))))))
-		(else 
+		(else
 		 (values #f status))))))))
 
 
@@ -462,8 +462,8 @@
 ;;; [#f #t] means no waitable process on wait-any.
 
 (define (%wait-any flags)
-  (with-errno-handler 
-   ((errno packet) 
+  (with-errno-handler
+   ((errno packet)
     ((errno/child)
      (values #f #t)))
    (receive (pid status)
@@ -473,15 +473,15 @@
 	(values pid status)))))
 
 (define (%wait-process-group pgrp flags)
-  (if (zero? (bitwise-and flags wait/poll))   
+  (if (zero? (bitwise-and flags wait/poll))
       (error "really-wait without wait/poll"))
-  (with-errno-handler 
-   ((errno packet) 
+  (with-errno-handler
+   ((errno packet)
     ((errno/child)
      (values #f #t)))
-   (receive (pid status) 
+   (receive (pid status)
 	(%wait-pid (- pgrp) flags)
-     (if (zero? pid) 
+     (if (zero? pid)
 	 (values #f #f)			; None ready.
 	 (values pid status)))))
 
@@ -532,7 +532,7 @@
   (release-lock reaped-proc-push-lock))
 
 (define (make-reaped-proc-finalizer push-me)
-  (lambda ignore 
+  (lambda ignore
     (remove-reaped-proc push-me)))
 
 (define (remove-reaped-proc reaped-proc)
