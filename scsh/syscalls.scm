@@ -472,8 +472,6 @@
                                     proc-group))))
               (signal-os-number signal)))
 
-(define (itimer sec)
-  ((structure-ref sigevents schedule-timer-interrupt!) (* sec 1000)))
 ;;; SunOS, not POSIX:
 ;;; (define-foreign signal-process-group/errno
 ;;;   (killpg (integer proc-group) (integer signal))

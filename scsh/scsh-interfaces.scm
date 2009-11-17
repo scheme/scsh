@@ -420,11 +420,7 @@
 
 (define-interface scsh-signals-interface
   (export signal-process
-          signal-process-group
-          ;; JMG: this syscall doesn't cooperate with the thread-system
-          ;;      pause-until-interrupt
-          itimer  ;; now defined in low-interrupt as an artificial interrupt
-))
+          signal-process-group))
 
 
 (define-interface scsh-environment-interface
@@ -995,25 +991,13 @@
           control-tty-file-name
           )))
 
-(define-interface signal-handler-interface
-  (export with-scsh-sighandlers
-          (with-enabled-signals :syntax)
-          with-enabled-signals*
-          enabled-signals
-          set-enabled-signals!
-          set-signal-handler!))
-
 (define-interface sigevents-interface
   (export most-recent-sigevent
           sigevent?
           next-sigevent
-          next-sigevent-set
           next-sigevent/no-wait
-          next-sigevent-set/no-wait
           with-sigevents
-          sigevent-type
-          schedule-timer-interrupt!))
-
+          sigevent-type))
 
 (define-interface low-interrupt-interface
   (export number-of-interrupts

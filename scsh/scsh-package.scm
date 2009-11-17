@@ -77,19 +77,6 @@
         i/o-internal ports)
   (files rdelim))
 
-(define-structure signal-handler signal-handler-interface
-  (open scheme
-        scsh-utilities
-        srfi-1
-        architecture
-        exceptions
-        external-calls
-        load-dynamic-externals
-        posix-processes
-        threads
-        threads-internal)
-  (files sighandlers))
-
 (define list-lib srfi-1)
 (define string-lib srfi-13)
 (define char-set-lib srfi-14)
@@ -179,7 +166,6 @@
   (open enumerated
         posix
         os-strings
-        signal-handler
         defenum-package
         external-calls
         load-dynamic-externals
@@ -353,7 +339,6 @@
         fluids
         interfaces
         sigevents
-        signal-handler
         low-interrupt
         fluids-internal            ; JMG: get-dynamic-env
         handle                     ; JMG: with-handler
