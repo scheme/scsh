@@ -1,7 +1,8 @@
 (define-structure low-odbc low-odbc-interface
   (open
    scheme external-calls scsh-utilities
-   define-record-types
+   (subset define-record-types (define-record-discloser))
+   srfi-9
    conditions signals)
   (files odbc))
 

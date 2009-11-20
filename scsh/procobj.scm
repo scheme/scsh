@@ -12,22 +12,22 @@
 ;;; Process objects
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-record proc		; A process object
-  pid		; Proc's pid.
-  (finished? #f)                ; Running, stopped, done
-  (status (make-placeholder))	; The cached exit status of the process
-  (zombie #t)                   ; Misnomer.  Whether or not the process has
-                                ; (not) been waited on.
-  ;; Make proc objects print like #{proc 2318}.
-  ((disclose p) (list "proc" (proc:pid p) (proc:finished? p))))
+(define-record-type :proc
+  (really-make-proc pid finished? status zombie)
+  proc?
+  (pid proc:pid)
+  (finished?  proc:finished?)                ; Running, stopped, done #f
+  (status proc:status)	; The cached exit status of the process (make-placeholder)
+  (zombie proc:zombie)) ; Misnomer.  Whether or not the process has #t
+                        ; (not) been waited on.
 
-;; Unfortunately there is no way to specify the name of the constructor-
-;; function in Olins define-record macro, so I had to do this...
-(define (make-procobj pid)
-  (let ((procobj (make-proc pid)))
-    (add-finalizer! procobj procobj-finalizer)
-    procobj))
+(define-record-discloser :proc
+  (lambda (self) (list "proc" (proc:pid self) (proc:finished? self))))
 
+(define (make-proc pid)
+  (let ((proc (really-make-proc pid #f (make-placeholder) #t)))
+    (add-finalizer! proc proc-finalizer)
+    proc))
 
 ;; Weak pointer tables.  Much more efficient than populations.
 ;; Maps pids to processes.  Unexited processes are strong pointers, exited
@@ -225,12 +225,12 @@
 (define (noauto-sigchld-handler) #f)
 
 
-;;; Finalizer for procobjs
+;;; Finalizer for procs
 ;;;
-(define (procobj-finalizer procobj)
-  (process-table-delete-procobj! procobj)
-  (if (not (proc:finished? procobj))
-      (need-reaping-add! (proc:pid procobj))))
+(define (proc-finalizer proc)
+  (process-table-delete-procobj! proc)
+  (if (not (proc:finished? proc))
+      (need-reaping-add! (proc:pid proc))))
 
 
 ;;; (reap-zombies)  => bool
@@ -255,7 +255,7 @@
 
 
 (define (new-child-proc pid)
-  (let ((proc (make-procobj pid)))
+  (let ((proc (make-proc pid)))
     (process-table-set! pid proc)
     proc))
 

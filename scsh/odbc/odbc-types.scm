@@ -1,4 +1,4 @@
-(define-record-type sql-date :sql-date
+(define-record-type :sql-date
   (make-sql-date year month day)
   sql-date?
   (year sql-date-year)
@@ -13,7 +13,7 @@
 
 (define-exported-binding "sql-date-record-type" :sql-date)
 
-(define-record-type sql-time :sql-time
+(define-record-type :sql-time
   (make-sql-time hour minute second)
   sql-time?
   (hour sql-time-hour)
@@ -25,10 +25,10 @@
     `(sql-time hour ,(sql-time-hour rec)
 	       minute ,(sql-time-minute rec)
 	       second ,(sql-time-second rec))))
-      
+
 (define-exported-binding "sql-time-record-type" :sql-time)
 
-(define-record-type sql-timestamp :sql-timestamp
+(define-record-type :sql-timestamp
   (make-sql-timestamp year month day hour minute second fraction)
   sql-timestamp?
   (year sql-timestamp-year)
@@ -51,7 +51,7 @@
 
 (define-exported-binding "sql-timestamp-record-type" :sql-timestamp)
 
-(define-record-type sql-numeric :sql-numeric
+(define-record-type :sql-numeric
   (make-sql-numeric precision scale sign value)
   sql-numeric?
   (precision sql-numeric-precision)

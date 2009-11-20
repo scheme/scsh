@@ -1,12 +1,12 @@
 ;;; ODBC handle types
-(define-record-type environment-handle :environment-handle
+(define-record-type :environment-handle
   (really-make-environment-handle handle)
   environment-handle?
   (handle environment-handle-handle))
 
 (define-exported-binding "environment-handle" :environment-handle)
 
-(define-record-type connection-handle :connection-handle
+(define-record-type :connection-handle
   (really-make-connection-handle handle environment connected?)
   connection-handle?
   (handle connection-handle-handle)
@@ -15,7 +15,7 @@
 
 (define-exported-binding "connection-handle" :connection-handle)
 
-(define-record-type statement-handle :statement-handle
+(define-record-type :statement-handle
   (really-make-statement-handle handle connection)
   statement-handle?
   (handle statement-handle-handle)
@@ -23,7 +23,7 @@
 
 (define-exported-binding "statement-handle" :statement-handle)
 
-(define-record-type descriptor-handle :descriptor-handle
+(define-record-type :descriptor-handle
   (really-make-descriptor-handle handle)
   descriptor-handle?
   (handle descriptor-handle-handle))
@@ -31,7 +31,7 @@
 (define-exported-binding "descriptor-handle" :descriptor-handle)
 
 ; record type to store infos from SQLGetDiagRec()
-(define-record-type odbc-diag :odbc-diag
+(define-record-type :odbc-diag
   (really-make-odbc-diag-rec sql-state native-error message)
   odbc-diag?
   (sql-state odbc-diag-sql-state)
@@ -47,7 +47,7 @@
       (descriptor-handle? thing)))
 
 (define (odbc-handle handle)
-  (cond 
+  (cond
    ((environment-handle? handle) (environment-handle-handle handle))
    ((connection-handle? handle) (connection-handle-handle handle))
    ((statement-handle? handle) (statement-handle-handle handle))
@@ -58,7 +58,7 @@
 ;;; map a record to a handle type identifier (see sql.h)
 (define (handle-record-type->c-handle-identifier record)
   (cond ((environment-handle? record) 1) ; SQL_HANDLE_ENV
-	((connection-handle? record) 2) ; SQL_HANDLE_DBC 
+	((connection-handle? record) 2) ; SQL_HANDLE_DBC
 	((statement-handle? record) 3) ; SQL_HANDLE_STMT
 	(else
 	 (error "Unknown handle type: " record))))
@@ -66,7 +66,7 @@
 ;;; conditions
 (define-condition-type 'odbc-error '(error))
 
-(define odbc-error? 
+(define odbc-error?
   (condition-predicate 'odbc-error))
 
 (define-condition-type 'odbc-api-version-mismatch '(odbc-error))
@@ -74,15 +74,15 @@
 (define odbc-api-version-mismatch?
   (condition-predicate 'odbc-api-version-mismatch))
 
-(define (raise-odbc-api-version-mismatch-error function-name 
+(define (raise-odbc-api-version-mismatch-error function-name
 					       api-version
 					       api-version-needed)
   (apply signal 'odbc-api-version-mismatch
-	 'function-name function-name 
-	 'odbc-driver-manager-api-version api-version 
+	 'function-name function-name
+	 'odbc-driver-manager-api-version api-version
 	 'min-api-version-required api-version-needed))
 
-(define-exported-binding 
+(define-exported-binding
   "raise-odbc-api-version-mismatch-error"
   raise-odbc-api-version-mismatch-error)
 
@@ -93,7 +93,7 @@
   (condition-predicate 'odbc-unknown-integer-type))
 
 (define (raise-odbc-unknown-integer-type-error function-name type-id)
-  (apply signal 'odbc-unknown-integer-type 
+  (apply signal 'odbc-unknown-integer-type
 	 'function-name function-name 'type-id type-id))
 
 (define-exported-binding
@@ -118,11 +118,11 @@
   (condition-predicate 'odbc-unknown-c-type-identifier-error))
 
 (define (raise-odbc-unknown-c-type-identifier-error buffer ctypeid)
-  (apply signal 'odbc-unknown-c-type-identifier-error 
+  (apply signal 'odbc-unknown-c-type-identifier-error
 	 'buffer buffer 'ctypeid ctypeid))
 
 (define-exported-binding
-  "raise-odbc-unknown-c-type-identifier-error" 
+  "raise-odbc-unknown-c-type-identifier-error"
   raise-odbc-unknown-c-type-identifier-error)
 
 ;;;
@@ -135,7 +135,7 @@
   (apply signal 'odbc-bindcol-unbound-column
 	 'statement-handle stmt-handle 'column-no column-no))
 
-(define-exported-binding "raise-odbc-bindcol-unbound-column-error" 
+(define-exported-binding "raise-odbc-bindcol-unbound-column-error"
   raise-odbc-bindcol-unbound-column-error)
 
 ;;;
@@ -151,7 +151,7 @@
   raise-odbc-bindcol-rebinding-error)
 
 ;;;
-(define-record-type odbc-column :odbc-column
+(define-record-type :odbc-column
   (really-make-odbc-column name type size digits nullable?)
   odbc-column?
   (name odbc-column-name)
@@ -162,7 +162,7 @@
 
 (define-exported-binding "odbc-column" :odbc-column)
 
-(define-record-type odbc-parameter :odbc-parameter
+(define-record-type :odbc-parameter
   (really-make-odbc-parameter type size digits nullable)
   odbc-parameter?
   (type odbc-parameter-type)
@@ -241,7 +241,7 @@
 	 (error "Can't handle type SQL_UNKNOWN_TYPE"))
 	(else
 	 (error "unknown SQL type"))))
-	
+
 ;;; ODBC function ids for SQLGetFunctions
 (define sql-api-sqlallocconnect 1)
 (define sql-api-sqlallocenv 2)
@@ -327,12 +327,12 @@
 ;;; info keys for odbc-sql-get-info-arg-int/string
 ; ODBC 1.0, returns integer
 (define sql-get-info-arg-maxdriverconnections 0)
-; ODBC 1.0, returns integer 
+; ODBC 1.0, returns integer
 (define sql-get-info-arg-maxconcurrentactivities 1)
 ; ODBC 1.0, returns string
 (define sql-get-info-arg-datasourcename 2)
 ; deprecated in ODBC 3.x returns ?
-(define sql-get-info-arg-fetchdirection 8) 
+(define sql-get-info-arg-fetchdirection 8)
 ; ODBC 1.0, returns string
 (define sql-get-info-arg-servername 13)
 ; ODBC 1.0, returns string
@@ -361,7 +361,7 @@
 ; ODBC 1.0 returns integer
 (define sql-get-info-arg-maxcursornamelen 31)
 (define sql-get-info-arg-maximumcursornamelen 31)
-; ODBC 1.0 returns integer 
+; ODBC 1.0 returns integer
 (define sql-get-info-arg-maxschemanamelen 32)
 (define sql-get-info-arg-maximumschemenamelen 32)
 ; ODBC 1.0 returns integer
@@ -561,7 +561,7 @@
 			  "odbc_alloc_environment_handle")
 
 (define (odbc-alloc-connection-handle env-handle)
-  (let* ((status.value (odbc-alloc-connection-handle-internal 
+  (let* ((status.value (odbc-alloc-connection-handle-internal
 			(environment-handle-handle env-handle)))
 	 (status (car status.value))
 	 (value (cadr status.value)))
@@ -606,7 +606,7 @@
 
 ;;; returns odbc-return-value
 (define (odbc-sql-connect conn-handle server-name user-name auth)
-  (let ((return-value (odbc-sql-connect-internal 
+  (let ((return-value (odbc-sql-connect-internal
 		       (connection-handle-handle conn-handle)
 		       server-name user-name auth)))
     (if (odbc-call-successful? return-value)
@@ -619,9 +619,9 @@
 
 (define (odbc-sql-browse-connect conn-handle connection-string)
   (apply values
-	 (odbc-sql-browse-connect-internal 
+	 (odbc-sql-browse-connect-internal
 	  (connection-handle-handle conn-handle) connection-string)))
-	 
+
 (import-lambda-definition odbc-sql-browse-connect-internal
 			  (conn-handle connection-string)
 			  "odbc_sql_browse_connect")
@@ -630,16 +630,16 @@
 
 (define (odbc-sql-data-sources env-handle)
   (apply values
-	 (odbc-sql-data-sources-internal 
+	 (odbc-sql-data-sources-internal
 	  (environment-handle-handle env-handle))))
-  
+
 (import-lambda-definition odbc-sql-data-sources-internal
 			  (env-handle)
 			  "odbc_sql_data_sources")
 
 (define (odbc-sql-drivers env-handle)
   (apply values
-	 (odbc-sql-drivers-internal 
+	 (odbc-sql-drivers-internal
 	  (environment-handle-handle env-handle))))
 
 (import-lambda-definition odbc-sql-drivers-internal
@@ -648,16 +648,16 @@
 
 (define (odbc-sql-get-info-int conn-handle info-key)
   (apply values
-	 (odbc-sql-get-info-int-internal 
+	 (odbc-sql-get-info-int-internal
 	  (connection-handle-handle conn-handle) info-key)))
 
-(import-lambda-definition odbc-sql-get-info-int-internal 
+(import-lambda-definition odbc-sql-get-info-int-internal
 			  (conn-handle info-key)
 			  "odbc_sql_get_info_int")
 
 (define (odbc-sql-get-info-string conn-handle info-key)
   (apply values
-	 (odbc-sql-get-info-string-internal 
+	 (odbc-sql-get-info-string-internal
 	  (connection-handle-handle conn-handle) info-key)))
 
 (import-lambda-definition odbc-sql-get-info-string-internal
@@ -666,7 +666,7 @@
 
 (define (odbc-sql-get-func conn-handle fun-id)
   (apply values
-	 (odbc-sql-get-func-exists-internal 
+	 (odbc-sql-get-func-exists-internal
 	  (connection-handle-handle conn-handle) fun-id)))
 
 (import-lambda-definition odbc-sql-get-func-exists-internal
@@ -674,7 +674,7 @@
 			  "odbc_sql_get_func_exists")
 
 (define (odbc-sql-get-type-info stmt-handle data-type)
-  (odbc-sql-get-type-info-internal 
+  (odbc-sql-get-type-info-internal
    (statement-handle-handle stmt-handle) data-type))
 
 (import-lambda-definition odbc-sql-get-type-info-internal
@@ -684,7 +684,7 @@
 ;;; PART 3
 
 (define (odbc-sql-set-connect-attr-int conn-handle attribute value)
-  (odbc-sql-set-connect-attr-int-internal 
+  (odbc-sql-set-connect-attr-int-internal
    (connection-handle-handle conn-handle) attribute value))
 
 (import-lambda-definition odbc-sql-set-connect-attr-int-internal
@@ -692,7 +692,7 @@
 			  "odbc_sql_set_connect_attr_int")
 
 (define (odbc-sql-set-connect-attr-string conn-handle attribute value)
-  (odbc-sql-set-connect-attr-string-internal 
+  (odbc-sql-set-connect-attr-string-internal
    (connection-handle-handle conn-handle) attribute value))
 
 (import-lambda-definition odbc-sql-set-connect-attr-string-internal
@@ -701,16 +701,16 @@
 
 (define (odbc-sql-get-connect-attr-string conn-handle attribute)
   (apply values
-	 (odbc-sql-get-connect-attr-string-internal 
+	 (odbc-sql-get-connect-attr-string-internal
 	  (connection-handle-handle conn-handle) attribute)))
-  
+
 (import-lambda-definition odbc-sql-get-connect-attr-string-internal
 			  (conn-handle attribute)
 			  "odbc_sql_get_connect_attr_string")
 
 (define (odbc-sql-get-connect-attr-int conn-handle attribute)
   (apply values
-	 (odbc-sql-get-connect-attr-int-internal 
+	 (odbc-sql-get-connect-attr-int-internal
 	  (connection-handle-handle conn-handle) attribute)))
 
 (import-lambda-definition odbc-sql-get-connect-attr-int-internal
@@ -718,7 +718,7 @@
 			  "odbc_sql_get_connect_attr_int")
 
 (define (odbc-sql-set-env-attr-int env-handle attribute value)
-  (odbc-sql-set-env-attr-int-internal 
+  (odbc-sql-set-env-attr-int-internal
    (environment-handle-handle env-handle) attribute value))
 
 (import-lambda-definition odbc-sql-set-env-attr-int-internal
@@ -727,7 +727,7 @@
 
 (define (odbc-sql-get-env-attr-int env-handle attribute value)
   (apply values
-	 (odbc-sql-get-env-attr-int-internal 
+	 (odbc-sql-get-env-attr-int-internal
 	  (environment-handle-handle env-handle) attribute value)))
 
 (import-lambda-definition odbc-sql-get-env-attr-int-internal
@@ -735,7 +735,7 @@
 			  "odbc_sql_get_env_attr_int")
 
 (define (odbc-sql-set-stmt-attr-int stmt-handle attribute value)
-  (odbc-sql-set-stmt-attr-int-internal 
+  (odbc-sql-set-stmt-attr-int-internal
    (statement-handle-handle stmt-handle) attribute value))
 
 (import-lambda-definition odbc-sql-set-stmt-attr-int-internal
@@ -743,7 +743,7 @@
 			  "odbc_sql_set_stmt_attr_int")
 
 (define (odbc-sql-set-stmt-attr-string stmt-handle attribute value)
-  (odbc-sql-set-stmt-attr-string-internal 
+  (odbc-sql-set-stmt-attr-string-internal
    (statement-handle-handle stmt-handle) attribute value))
 
 (import-lambda-definition odbc-sql-set-stmt-attr-string-internal
@@ -752,7 +752,7 @@
 
 (define (odbc-sql-get-stmt-attr-int stmt-handle attribute)
   (apply values
-	 (odbc-sql-get-stmt-attr-int-internal 
+	 (odbc-sql-get-stmt-attr-int-internal
 	  (statement-handle-handle stmt-handle) attribute)))
 
 (import-lambda-definition odbc-sql-get-stmt-attr-int-internal
@@ -761,7 +761,7 @@
 
 (define (odbc-sql-get-stmt-attr-string stmt-handle attribute)
   (apply values
-	 (odbc-sql-get-stmt-attr-string-internal 
+	 (odbc-sql-get-stmt-attr-string-internal
 	  (statement-handle-handle stmt-handle) attribute)))
 
 (import-lambda-definition odbc-sql-get-stmt-attr-string-internal
@@ -772,7 +772,7 @@
 
 (define (odbc-sql-get-desc-field-int desc-handle record-number field-id)
   (apply values
-	 (odbc-sql-get-desc-field-int-internal 
+	 (odbc-sql-get-desc-field-int-internal
 	  (descriptor-handle-handle desc-handle) record-number field-id)))
 
 (import-lambda-definition odbc-sql-get-desc-field-int-internal
@@ -781,7 +781,7 @@
 
 (define (odbc-sql-get-desc-field-string desc-handle record-number field-id)
   (apply values
-	 (odbc-sql-get-desc-field-string-internal 
+	 (odbc-sql-get-desc-field-string-internal
 	  (descriptor-handle-handle desc-handle) record-number field-id)))
 
 (import-lambda-definition odbc-sql-get-desc-field-string-internal
@@ -791,7 +791,7 @@
 ;;; PART 5
 
 (define (odbc-sql-prepare stmt-handle stmt-txt)
-  (odbc-sql-prepare-internal 
+  (odbc-sql-prepare-internal
    (statement-handle-handle stmt-handle) stmt-txt))
 
 (import-lambda-definition odbc-sql-prepare-internal
@@ -799,8 +799,8 @@
 			  "odbc_sql_prepare")
 
 (define (odbc-sql-get-cursor-name stmt-handle)
-  (apply values 
-	 (odbc-sql-get-cursor-name-internal 
+  (apply values
+	 (odbc-sql-get-cursor-name-internal
 	  (statement-handle-handle stmt-handle))))
 
 (import-lambda-definition odbc-sql-get-cursor-name-internal
@@ -808,7 +808,7 @@
 			  "odbc_sql_get_cursor_name")
 
 (define (odbc-sql-set-cursor-name stmt-handle cursor-name)
-  (odbc-sql-set-cursor-name-internal 
+  (odbc-sql-set-cursor-name-internal
    (statement-handle-handle stmt-handle) cursor-name))
 
 (import-lambda-definition odbc-sql-set-cursor-name-internal
@@ -825,7 +825,7 @@
 			  "odbc_sql_execute")
 
 (define (odbc-sql-execute-direct stmt-handle stmt-txt)
-  (odbc-sql-execute-direct-internal 
+  (odbc-sql-execute-direct-internal
    (statement-handle-handle stmt-handle) stmt-txt))
 
 (import-lambda-definition odbc-sql-execute-direct-internal
@@ -834,7 +834,7 @@
 
 (define (odbc-sql-native-sql conn-handle stmt-txt)
   (apply values
-	 (odbc-sql-native-sql-internal 
+	 (odbc-sql-native-sql-internal
 	  (connection-handle-handle conn-handle) stmt-txt)))
 
 (import-lambda-definition odbc-sql-native-sql-internal
@@ -852,7 +852,7 @@
 
 (define (odbc-sql-num-params stmt-handle)
   (apply values
-	 (odbc-sql-num-params-internal 
+	 (odbc-sql-num-params-internal
 	  (statement-handle-handle stmt-handle))))
 
 (import-lambda-definition odbc-sql-num-params-internal
@@ -863,7 +863,7 @@
 
 (define (odbc-sql-row-count stmt-handle)
   (apply values
-	 (odbc-sql-row-count-internal 
+	 (odbc-sql-row-count-internal
 	  (statement-handle-handle stmt-handle))))
 
 (import-lambda-definition odbc-sql-row-count-internal
@@ -874,13 +874,13 @@
   (apply values
 	 (odbc-sql-get-data-internal (statement-handle-handle stmt-handle)
 				     column-number target-type)))
-			      
+
 (import-lambda-definition odbc-sql-get-data-internal
 			  (stmt-handle column-number target-type)
 			  "odbc_sql_get_data")
 
 (define (odbc-sql-set-pos stmt-handle row-number operation lock-type)
-  (odbc-sql-set-pos-internal 
+  (odbc-sql-set-pos-internal
    (statement-handle-handle stmt-handle) row-number operation lock-type))
 
 (import-lambda-definition odbc-sql-set-pos-internal
@@ -888,7 +888,7 @@
 			  "odbc_sql_set_pos")
 
 (define (odbc-sql-bulk-operations stmt-handle operation)
-  (odbc-sql-bulk-operations-internal 
+  (odbc-sql-bulk-operations-internal
    (statement-handle-handle stmt-handle) operation))
 
 (import-lambda-definition odbc-sql-bulk-operations-internal
@@ -896,7 +896,7 @@
 			  "odbc_sql_bulk_operations")
 
 (define (odbc-sql-more-results stmt-handle)
-  (odbc-sql-more-results-internal 
+  (odbc-sql-more-results-internal
    (statement-handle-handle stmt-handle)))
 
 (import-lambda-definition odbc-sql-more-results-internal
@@ -904,7 +904,7 @@
 			  "odbc_sql_more_results")
 
 (define (odbc-sql-fetch stmt-handle)
-  (odbc-sql-fetch-internal 
+  (odbc-sql-fetch-internal
    (statement-handle-handle stmt-handle)))
 
 (import-lambda-definition odbc-sql-fetch-internal
@@ -944,11 +944,11 @@
   (odbc-sql-columns-internal (statement-handle-handle stmt-handle)
 			     catalog-name schema-name table-name column-name))
 
-(import-lambda-definition odbc-sql-columns-internal 
+(import-lambda-definition odbc-sql-columns-internal
 			  (stmt-handle catalog-name schema-name table-name column-name)
 			  "odbc_sql_columns")
 
-(define (odbc-sql-foreign-keys stmt-handle 
+(define (odbc-sql-foreign-keys stmt-handle
 			       pk-catalog-name pk-schema-name pk-table-name
 			       fk-catalog-name fk-schema-name fk-table-name)
   (check-arg statement-handle? stmt-handle odbc-sql-foreign-keys)
@@ -957,7 +957,7 @@
 				  fk-catalog-name fk-schema-name fk-table-name))
 
 (import-lambda-definition odbc-sql-foreign-keys-internal
-			  (stmt-handle 
+			  (stmt-handle
 			   pk-catalog-name pk-schema-name pk-table-name
 			   fk-catalog-name fk-schema-name fk-table-name)
 			  "odbc_sql_foreign_keys")
@@ -998,7 +998,7 @@
 				     schema-name table-name schema-name nullable))
 
 (import-lambda-definition odbc-sql-special-columns-internal
-			  (stmt-handle identifier-type catalog-name 
+			  (stmt-handle identifier-type catalog-name
 				       schema-name table-name scope nullable?)
 			  "odbc_sql_special_columns")
 
@@ -1068,21 +1068,21 @@
 (define (odbc-sql-describe-col stmt-handle column-number)
   (check-arg statement-handle? stmt-handle odbc-sql-describe-col)
   (odbc-sql-describe-col-internal (statement-handle-handle stmt-handle) column-number))
-  
+
 (import-lambda-definition odbc-sql-describe-col-internal
 			  (stmt-handle column-number)
 			  "odbc_sql_describe_col")
 
 (define (odbc-sql-col-attribute stmt-handle column-number field-id)
   (check-arg statement-handle? stmt-handle odbc-sql-col-attribute)
-  (let ((pair (odbc-sql-col-attribute-internal 
+  (let ((pair (odbc-sql-col-attribute-internal
 	       (statement-handle-handle stmt-handle)
 	       column-number field-id)))
     (if (zero? (string-length (car pair)))
 	(cdr pair)
 	(car pair))))
 
-(import-lambda-definition odbc-sql-col-attribute-internal 
+(import-lambda-definition odbc-sql-col-attribute-internal
 			  (stmt-handle column-number field-id)
 			  "odbc_sql_col_attribute")
 
@@ -1102,7 +1102,7 @@
 
 (define (odbc-sql-free-handle handle)
   (check-arg odbc-handle? handle odbc-sql-free-handle)
-  (odbc-sql-free-handle-internal (handle-record-type->c-handle-identifier handle) 
+  (odbc-sql-free-handle-internal (handle-record-type->c-handle-identifier handle)
 				 (odbc-handle handle)))
 
 (import-lambda-definition odbc-sql-free-handle-internal
@@ -1111,7 +1111,7 @@
 
 (define (odbc-sql-get-diag-recs handle)
   (apply values
-	 (odbc-sql-get-diag-recs-internal 
+	 (odbc-sql-get-diag-recs-internal
 	  (handle-record-type->c-handle-identifier handle) (odbc-handle handle))))
 
 (import-lambda-definition odbc-sql-get-diag-recs-internal

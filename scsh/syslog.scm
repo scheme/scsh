@@ -18,7 +18,7 @@
 (define-enum-set-type syslog-options :syslog-options
   syslog-options?
   make-syslog-options
-  
+
   syslog-option
   syslog-option?
   the-syslog-options
@@ -57,13 +57,13 @@
   syslog-level-name
   syslog-level-index
   ;; The order of these is known to the C code.
-  (emergency	
-   alert	
-   critical	
-   error	
-   warning	
-   notice	
-   info	
+  (emergency
+   alert
+   critical
+   error
+   warning
+   notice
+   info
    debug))
 
 (define-exported-binding "syslog-level-type" :syslog-level)
@@ -102,7 +102,7 @@
 (import-lambda-definition closelog ()
 			  "sch_closelog")
 
-(define-record-type syslog-channel :syslog-channel
+(define-record-type :syslog-channel
   (make-syslog-channel ident options facility mask)
   syslog-channel?
   (ident syslog-channel-ident)
@@ -215,7 +215,7 @@
 ; A record type whose only purpose is to run some code when we start up an
 ; image.
 
-(define-record-type reinitializer :reinitializer
+(define-record-type :reinitializer
   (make-reinitializer thunk)
   reinitializer?
   (thunk reinitializer-thunk))

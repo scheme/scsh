@@ -4,7 +4,7 @@
 ;;; Functional event system.
 ;;; System by Olin Shivers, implementation by Martin Gasbichler
 
-(define-record-type sigevent :sigevent
+(define-record-type :sigevent
   (really-make-sigevent type next)
   sigevent?
   (type sigevent-type set-sigevent-type!)

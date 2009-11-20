@@ -34,7 +34,9 @@
   (files let-opt))
 
 (define-structure scsh-utilities scsh-utilities-interface
-  (open bitwise error-package loopholes let-opt scheme define-record-types
+  (open bitwise error-package loopholes let-opt scheme
+        (subset define-record-types (define-record-discloser))
+        srfi-9
         records record-types
         threads threads-internal placeholders locks srfi-1)
   (files utilities))
@@ -56,7 +58,8 @@
   (files stringcoll))
 
 (define-structure thread-fluids thread-fluids-interface
-  (open scheme define-record-types weak
+  (open scheme srfi-9 weak
+        (subset define-record-types (define-record-discloser))
         threads primitives)
   (files thread-fluid))
 
@@ -172,7 +175,8 @@
         structure-refs
         receiving
         defrec-package
-        define-record-types
+        (subset define-record-types (define-record-discloser))
+        srfi-9
         formats
         string-collectors
         delimited-readers
@@ -490,7 +494,7 @@
   (files here))
 
 (define-structure sigevents sigevents-interface
-  (open scsh-level-0 scheme define-record-types queues srfi-1
+  (open scsh-level-0 scheme srfi-9 queues srfi-1
         structure-refs threads threads-internal proposals scsh-utilities
         low-interrupt wind interrupts architecture posix-processes)
   (files event))
@@ -541,7 +545,8 @@
 (define-structures ((syslog syslog-interface)
                     (syslog-channels syslog-channels-interface))
   (open scheme
-        define-record-types finite-types enum-sets
+        (subset define-record-types (define-record-discloser))
+        srfi-9 finite-types enum-sets
         locks thread-fluids
         external-calls
         bitwise)
@@ -564,7 +569,8 @@
 (define-structure md5 md5-interface
   (open scheme
         ascii
-        define-record-types
+        (subset define-record-types (define-record-discloser))
+        srfi-9
         bitwise
         (subset i/o (read-block))
         (subset srfi-13 (string-fold-right))

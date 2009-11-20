@@ -195,7 +195,7 @@
         (change-and-cache-cwd dir)
         (thread-set-cwd! (cwd-cache))))))
 
-(define-record-type resource :resource
+(define-record-type :resource
   (make-resource align! lock)
   resource?
   (align! resource-align!)

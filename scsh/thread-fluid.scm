@@ -26,7 +26,7 @@
 ;;;
 ;;; -Roderic
 
-(define-record-type thread-fluid :thread-fluid
+(define-record-type :thread-fluid
   (really-make-thread-fluid cell)
   thread-fluid?
   (cell thread-fluid-cell set-thread-fluid-cell!))
@@ -100,7 +100,7 @@
 
 ;;; Thread cells
 
-(define-record-type thread-cell :thread-cell
+(define-record-type :thread-cell
   (make-thread-cell default)
   (default thread-cell-default))
 

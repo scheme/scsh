@@ -1,4 +1,4 @@
-(define-record-type md5-context :md5-context
+(define-record-type :md5-context
   (really-make-md5-context c-context final? init?)
   md5-context?
   (c-context md5-c-context)
@@ -29,7 +29,7 @@
     (set-md5-context-final?! context #t)
     (make-md5-digest (bits128->number digest-as-string))))
 
-(define-record-type md5-digest :md5-digest
+(define-record-type :md5-digest
   (make-md5-digest value)
   md5-digest?
   (value md5-digest-value))
@@ -45,12 +45,12 @@
 (define md5-digest->number md5-digest-value)
 
 (define (bits128->number bits-as-string)
-  (car 
+  (car
    (string-fold-right
     (lambda (c number.arity)
       (let ((number (car number.arity))
 	    (arity (cdr number.arity)))
-	(cons (bitwise-ior number 
+	(cons (bitwise-ior number
 			   (arithmetic-shift (char->ascii c) (* arity 8)))
 	      (+ arity 1))))
     (cons 0 0)

@@ -46,7 +46,7 @@
 		     (lp2 (+ from 1) (+ to 1)))
 		    (else (lp1 (cdr vecs) to)))))))
     ans))
-      
+
 
 (define (vfold kons knil v)
   (let ((len (vector-length v)))
@@ -88,7 +88,7 @@
 ; A record type whose only purpose is to run some code when we start up an
 ; image.
 
-(define-record-type reinitializer :reinitializer
+(define-record-type :reinitializer
   (make-reinitializer thunk)
   reinitializer?
   (thunk reinitializer-thunk))
@@ -130,5 +130,5 @@
 		(for-each release-lock obtained)
 		(obtain-lock next)
 		(lp (list next) (delete next locks eq?))))))))
-	
-  
+
+
