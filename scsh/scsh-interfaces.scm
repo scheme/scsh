@@ -1035,37 +1035,6 @@
 ;;           (with-dot-lock :syntax)
 ;;           with-dot-lock*))
 
-(define-interface syslog-interface
-  (export (syslog-option :syntax)
-          syslog-option?
-
-          make-syslog-options
-          syslog-options?
-          (syslog-options :syntax)
-
-          (syslog-facility :syntax)
-          syslog-facility?
-
-          (syslog-level :syntax)
-          syslog-level?
-
-          make-syslog-mask
-          syslog-mask?
-          (syslog-mask :syntax)
-          syslog-mask-all
-          syslog-mask-upto
-
-          with-syslog-destination
-          set-syslog-destination!
-
-          syslog))
-
-(define-interface syslog-channels-interface
-  (export open-syslog-channel
-          close-syslog-channel
-          set-syslog-channel!
-          with-syslog-channel))
-
 (define-interface uname-interface
   (export uname
           uname:os-name

@@ -155,7 +155,6 @@
                         ;; in separate modules, but we'll toss it in for now.
                         (interface-of ascii) ; char<->ascii
                         string-ports-interface
-                        syslog-interface
                         uname-interface
                         ))
    (scsh-level-0-internals (export set-command-line-args!
@@ -204,9 +203,6 @@
         scsh-version
         tty-flags
         scsh-internal-tty-flags ; Not exported
-
-        syslog
-
         let-opt                 ; optional-arg parsing & defaulting
 
         architecture     ; Was this by JMG ??
@@ -541,16 +537,6 @@
 ;;         threads  ; sleep
 ;;         random)
 ;;   (files dot-locking))
-
-(define-structures ((syslog syslog-interface)
-                    (syslog-channels syslog-channels-interface))
-  (open scheme
-        (subset define-record-types (define-record-discloser))
-        srfi-9 finite-types enum-sets
-        locks thread-fluids
-        external-calls
-        bitwise)
-  (files syslog))
 
 (define-structure libscsh (export dump-libscsh-image)
   (open scheme
