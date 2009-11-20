@@ -490,9 +490,9 @@
   (files here))
 
 (define-structure sigevents sigevents-interface
-  (open scsh-level-0 scheme define-record-types queues
-        structure-refs threads threads-internal proposals
-        low-interrupt wind interrupts architecture)
+  (open scsh-level-0 scheme define-record-types queues srfi-1
+        structure-refs threads threads-internal proposals scsh-utilities
+        low-interrupt wind interrupts architecture posix-processes)
   (files event))
 
 (define-structure simple-syntax (export define-simple-syntax)

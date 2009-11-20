@@ -177,7 +177,7 @@
   (run-as-long-as
    (lambda ()
      (let lp ((event (most-recent-sigevent)))
-       (let ((next-event (next-sigevent event interrupt/chld)))
+       (let ((next-event (next-sigevent event (signal chld))))
 	 (*sigchld-handler*)
 	 (lp next-event))))
    thunk
@@ -305,7 +305,7 @@
 			 => win)
 			(else
 			 (release-lock wait-lock)
-			 (let ((next-event (next-sigevent pre-event interrupt/chld)))
+			 (let ((next-event (next-sigevent pre-event (signal chld))))
 			   (obtain-lock wait-lock)
 			   (lp next-event))))))
 	       (else #f)))))))
@@ -445,7 +445,7 @@
 		      (%wait-process-group proc-group (bitwise-ior flags wait/poll))
 		      (if pid
 			  (win pid status)
-			  (lp (next-sigevent pre-event interrupt/chld))))))
+			  (lp (next-sigevent pre-event (signal chld)))))))
 		(else
 		 (values #f status))))))))
 

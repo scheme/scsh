@@ -1,8 +1,7 @@
 #! /usr/bin/scsh -s
 !#
 
-(let ((cfiles (list "scsh/syscalls" "scsh/cstuff" "scsh/scsh"
-                    "scsh/sighandlers"))
+(let ((cfiles (list "scsh/syscalls" "scsh/cstuff" "scsh/scsh"))
       (cflags '(-c -g -O2))
       (ldflags '(-shared -rdynamic))
       (cc 'gcc)

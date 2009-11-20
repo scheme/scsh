@@ -10,6 +10,38 @@
   (type sigevent-type set-sigevent-type!)
   (next sigevent-next set-sigevent-next!))
 
+(define *s48-signals*
+  ;; kill and stop are omitted because they can't be caught.
+  ;; alrm seem to be used by scheme48
+  (let ((potential (list 'abrt 'fpe
+                         'hup 'ill 'int
+                         'pipe 'quit
+                         'segv 'term 'usr1
+                         'usr2 'chld 'cont
+                         'tstp 'ttin
+                         'ttou 'bus 'trap
+                         'iot 'emt 'sys
+                         'stkflt 'urg 'io
+                         'poll 'cld 'xcpu
+                         'xfsz 'vtalrm 'prof
+                         'pwr 'info 'lost
+                         'winch 'unused)))
+    ;; This omits any signals that aren't on the current platform.
+    (filter (lambda (x) x)
+            (map (lambda (name)
+                   (let ((signal (name->signal name)))
+                     (if (signal-os-number signal)
+                         signal #f)))
+                 potential))))
+
+(define *signal-queue* (make-signal-queue *s48-signals*))
+
+(define (deliver-signals)
+  (let loop ()
+    (let ((signal (dequeue-signal! *signal-queue*)))
+      (register-signal signal)
+      (loop))))
+
 (define (make-sigevent type)
   (really-make-sigevent type #f))
 
@@ -50,7 +82,7 @@
 
 ;Called when the interrupt actually happened.
 ;;; TODO w-i-i is problaly not necessary since they're off already
-(define (register-interrupt type)
+(define (register-signal type)
   (let ((waiters (with-interrupts-inhibited
                   (lambda ()
                     (set-sigevent-next! *most-recent-sigevent* (make-sigevent type))
@@ -78,44 +110,31 @@
 
 (define (with-sigevents thunk)
   (set! sigevent-thread-queue (make-queue))
-  (set-interrupt-handler! (enum interrupt os-signal)
-                          (lambda (type enabled-interrupts)
-                                        ; type is already set in the unix signal handler
-                            (register-interrupt type)))
-  (set-interrupt-handler! (enum interrupt keyboard)
-                          (lambda (enabled-interrupts)
-                            (register-interrupt (enum interrupt keyboard))))
   (dynamic-wind
    (lambda ()
      (set! sigevents-running? #t))
-   thunk
+   (lambda ()
+     (run-as-long-as deliver-signals thunk spawn 'deliver-signals))
    (lambda ()
     (set! sigevents-running? #f))))
-
-
-;;; the vm uses the timer for the scheduler
-(define (schedule-timer-interrupt! msec)
-  (spawn (lambda ()
-           (sleep msec)
-           (register-interrupt (enum interrupt alarm)))))
 
 (define (next-sigevent pre-event type)
   (if (not (sigevent? pre-event))
       (error "pre-event is not an event"))
-  (rts-next-sigevent pre-event type eq?))
+  (rts-next-sigevent pre-event type signal=?))
 
-(define (next-sigevent-set pre-event set)
-  (if (not (sigevent? pre-event))
-      (error "pre-event is not an event"))
-  (rts-next-sigevent pre-event set interrupt-in-set?))
+;; (define (next-sigevent-set pre-event set)
+;;   (if (not (sigevent? pre-event))
+;;       (error "pre-event is not an event"))
+;;   (rts-next-sigevent pre-event set interrupt-in-set?))
 
 (define (next-sigevent/no-wait pre-event type)
   (if (not (sigevent? pre-event))
       (error "pre-event is not an event"))
-  (rts-next-sigevent/no-wait pre-event type eq?))
+  (rts-next-sigevent/no-wait pre-event type signal=?))
 
-(define (next-sigevent-set/no-wait set pre-event)
-  (if (not (sigevent? pre-event))
-      (error "pre-event is not an event"))
-  (rts-next-sigevent/no-wait pre-event set interrupt-in-set?))
+;; (define (next-sigevent-set/no-wait set pre-event)
+;;   (if (not (sigevent? pre-event))
+;;       (error "pre-event is not an event"))
+;;   (rts-next-sigevent/no-wait pre-event set interrupt-in-set?))
 
