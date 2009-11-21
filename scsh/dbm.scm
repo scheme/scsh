@@ -97,36 +97,44 @@
 
 ;;; This record will hold the pointer the the dbm structure plus
 ;;; a boolean flag with open status information
-(define-record dbm-record
-  open?
-  dbm)
+(define-record-type :dbm-record
+  (make-dbm-record open? dbm)
+  dbm-record?
+  (open? dbm-record:open? set-dbm-record:open?)
+  (dbm dbm-record:dbm))
 
 ;;; Use this record to pass btree access method specific data to dbm-open
-(define-record btree-info
-  flags
-  cachesize
-  maxkeypage
-  minkeypage
-  psize
-  lorder)
+(define-record-type :btree-info
+  (make-btree-info flags cachesize maxkeypage minkeypage psize lorder)
+  btree-info?
+  (flags btree-info:flags)
+  (cachesize btree-info:cachesize)
+  (maxkeypage btree-info:maxkeypage)
+  (minkeypage btree-info:minkeypage)
+  (psize btree-info:psize)
+  (lorder btree-info:lorder))
 
 ;;; Use this record to pass hash access method specific data to dbm-open
-(define-record hash-info
-  bsize
-  ffactor
-  nelem
-  cachesize
-  lorder)
+(define-record-type :hash-info
+  (make-hash-info bsize ffactor nelem cachesize lorder)
+  hash-info?
+  (bsize hash-info:bsize)
+  (ffactor hash-info:ffactor)
+  (nelem hash-info:nelem)
+  (cachesize hash-info:cachesize)
+  (lorder hash-info:lorder))
 
 ;;; Use this record to pass recno access method specific data to dbm-open
-(define-record recno-info
-  flags
-  cachesize
-  psize
-  lorder
-  reclen
-  bval
-  bfname)
+(define-record-type :recno-info
+  (make-recno-info flags cachesize psize lorder reclen bval bfname)
+  recno-info?
+  (flags recno-info:flags)
+  (cachesize recno-info:cachesize)
+  (psize recno-info:psize)
+  (lorder recno-info:lorder)
+  (reclen recno-info:reclen)
+  (bval recno-info:bval)
+  (bfname recno-info:bfname))
 
 ;;; Internal routine returns true if Berkeley dbm code is available
 (define-foreign %db-check (db_check)
@@ -304,7 +312,7 @@
   (let ((err (%dbm-error (dbm-record:dbm dbm))))
     (if (= err 0)
 	result
-	(begin 
+	(begin
 	  (%dbm-clearerr (dbm-record:dbm dbm))
 	  (error "Database error" err)))))
 

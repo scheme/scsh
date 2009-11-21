@@ -16,9 +16,9 @@
   (really-make-proc pid finished? status zombie)
   proc?
   (pid proc:pid)
-  (finished?  proc:finished?)                ; Running, stopped, done #f
+  (finished?  proc:finished? set-proc:finished?)                ; Running, stopped, done #f
   (status proc:status)	; The cached exit status of the process (make-placeholder)
-  (zombie proc:zombie)) ; Misnomer.  Whether or not the process has #t
+  (zombie proc:zombie set-proc:zombie)) ; Misnomer.  Whether or not the process has #t
                         ; (not) been waited on.
 
 (define-record-discloser :proc
@@ -513,10 +513,14 @@
 
 ;;; -df
 
-(define-record reaped-proc
-  proc
-  (next (make-placeholder))
-  prev)
+(define-record-type :reaped-proc
+  (really-make-reaped-proc proc next prev)
+  (proc reaped-proc:proc)
+  (next reaped-proc:next set-reaped-proc:next)
+  (prev reaped-proc:prev set-reaped-proc:prev))
+
+(define (make-reaped-proc proc prev)
+  (really-make-reaped-proc proc (make-placeholder) prev))
 
 (define reaped-proc-tail (make-reaped-proc (make-weak-pointer #f) 'head))
 (define reaped-proc-head reaped-proc-tail)

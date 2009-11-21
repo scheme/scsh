@@ -19,88 +19,67 @@
 ;;; MAKE-TTY-INFO procedure. Ech. I oughta have a lower-level record macro
 ;;; for this kind of thing.
 
-(define-record %tty-info
-  control-chars
-  input-flags
-  output-flags
-  control-flags
-  local-flags
-  input-speed
-  input-speed-code
-  output-speed
-  output-speed-code
-  min
-  time
-  ((disclose info) '("tty-info")))
+(define-record-type :tty-info
+  (really-make-tty-info control-chars input-flags output-flags control-flags
+                        local-flags input-speed input-speed-code output-speed
+                        output-speed-code min time)
+  tty-info?
+  (control-chars tty-info:control-chars
+                 set-tty-info:control-chars)
+  (input-flags tty-info:input-flags
+               set-tty-info:input-flags)
+  (output-flags tty-info:output-flags
+                set-tty-info:output-flags)
+  (control-flags tty-info:control-flags
+                 set-tty-info:control-flags)
+  (local-flags tty-info:local-flags
+               set-tty-info:local-flags)
+  (input-speed tty-info:input-speed
+               set-tty-info:input-speed)
+  (input-speed-code tty-info:input-speed-code
+                    set-tty-info:input-speed-code)
+  (output-speed tty-info:output-speed
+                set-tty-info:output-speed)
+  (output-speed-code tty-info:output-speed-code
+                     set-tty-info:output-speed-code)
+  (min tty-info:min set-tty-info:min)
+  (time tty-info:time set-tty-info:time))
 
-(define tty-info?	%tty-info?)
-(define type/tty-info	type/%tty-info)
-
-(define tty-info:control-chars 	%tty-info:control-chars)
-(define tty-info:input-flags 	%tty-info:input-flags)
-(define tty-info:output-flags 	%tty-info:output-flags)
-(define tty-info:control-flags 	%tty-info:control-flags)
-(define tty-info:local-flags 	%tty-info:local-flags)
-(define tty-info:input-speed 	%tty-info:input-speed)
-(define tty-info:output-speed 	%tty-info:output-speed)
-(define tty-info:min 		%tty-info:min)
-(define tty-info:time 		%tty-info:time)
-
-(define set-tty-info:control-chars 	set-%tty-info:control-chars)
-(define set-tty-info:input-flags 	set-%tty-info:input-flags)
-(define set-tty-info:output-flags 	set-%tty-info:output-flags)
-(define set-tty-info:control-flags 	set-%tty-info:control-flags)
-(define set-tty-info:local-flags 	set-%tty-info:local-flags)
-(define set-tty-info:min 		set-%tty-info:min)
-(define set-tty-info:time 		set-%tty-info:time)
-
-(define modify-tty-info:control-chars 	modify-%tty-info:control-chars)
-(define modify-tty-info:input-flags 	modify-%tty-info:input-flags)
-(define modify-tty-info:output-flags 	modify-%tty-info:output-flags)
-(define modify-tty-info:control-flags 	modify-%tty-info:control-flags)
-(define modify-tty-info:local-flags 	modify-%tty-info:local-flags)
-(define modify-tty-info:min 		modify-%tty-info:min)
-(define modify-tty-info:time 		modify-%tty-info:time)
+(define-record-discloser :tty-info
+  (lambda (self)
+    (list 'tty-info)))
 
 ;;; Encode the speeds at assignment time.
 (define (set-tty-info:input-speed info speed)
-  (set-%tty-info:input-speed-code info (encode-baud-rate speed))
-  (set-%tty-info:input-speed      info speed))
+  (set-tty-info:input-speed-code info (encode-baud-rate speed))
+  (set-tty-info:input-speed      info speed))
 
 (define (set-tty-info:output-speed info speed)
-  (set-%tty-info:output-speed-code info (encode-baud-rate speed))
-  (set-%tty-info:output-speed      info speed))
-
-(define (modify-tty-info:input-speed info proc)
-  (set-tty-info:input-speed info (proc (tty-info:input-speed info))))
-
-(define (modify-tty-info:output-speed info proc)
-  (set-tty-info:output-speed info (proc (tty-info:output-speed info))))
+  (set-tty-info:output-speed-code info (encode-baud-rate speed))
+  (set-tty-info:output-speed      info speed))
 
 (define (make-tty-info iflags oflags cflags lflags ispeed ospeed min time)
-  (make-%tty-info (make-string num-ttychars (ascii->char 0))
-		  iflags oflags cflags lflags
-		  ispeed (encode-baud-rate ispeed)
-		  ospeed (encode-baud-rate ospeed)
-		  min time))
+  (really-make-tty-info (make-string num-ttychars (ascii->char 0))
+                        iflags oflags cflags lflags
+                        ispeed (encode-baud-rate ispeed)
+                        ospeed (encode-baud-rate ospeed)
+                        min time))
 
 (define (copy-tty-info info)
-  (make-%tty-info (string-copy (tty-info:control-chars info))
-		  (tty-info:input-flags	       info)
-		  (tty-info:output-flags       info)
-		  (tty-info:control-flags      info)
-		  (tty-info:local-flags	       info)
-		  (tty-info:input-speed	       info)
-		  (%tty-info:input-speed-code  info)
-		  (tty-info:output-speed       info)
-		  (%tty-info:output-speed-code info)
-		  (tty-info:min		       info)
-		  (tty-info:time	       info)))
-		  
-
+  (really-make-tty-info (string-copy (tty-info:control-chars info))
+                        (tty-info:input-flags	       info)
+                        (tty-info:output-flags       info)
+                        (tty-info:control-flags      info)
+                        (tty-info:local-flags	       info)
+                        (tty-info:input-speed	       info)
+                        (tty-info:input-speed-code  info)
+                        (tty-info:output-speed       info)
+                        (tty-info:output-speed-code info)
+                        (tty-info:min		       info)
+                        (tty-info:time	       info)))
 
 (define (sleazy-call/file tty opener proc)
-  (if (string? tty) 
+  (if (string? tty)
       (opener tty (lambda (port) (sleazy-call/fdes port proc)))
       (sleazy-call/fdes tty proc)))
 
@@ -113,22 +92,24 @@
 	(fdport (:optional maybe-fdport (current-input-port))))
     (if (not (tty? fdport))
         (error "Argument to tty-info is not a tty" fdport))
-    (apply 
+    (apply
      (lambda (iflag oflag cflag lflag ispeed-code ospeed-code)
-      (make-%tty-info control-chars
-		      iflag
-		      oflag
-		      cflag
-		      lflag
-		      (decode-baud-rate ispeed-code) ispeed-code
-		      (decode-baud-rate ospeed-code) ospeed-code
-		      (char->ascii (string-ref control-chars ttychar/min))
-		      (char->ascii (string-ref control-chars ttychar/time))))
-     (sleazy-call/file fdport 
+      (really-make-tty-info control-chars
+                            iflag
+                            oflag
+                            cflag
+                            lflag
+                            (decode-baud-rate ispeed-code) ispeed-code
+                            (decode-baud-rate ospeed-code) ospeed-code
+                            (char->ascii
+                             (string-ref control-chars ttychar/min))
+                            (char->ascii
+                             (string-ref control-chars ttychar/time))))
+     (sleazy-call/file fdport
                        call-with-input-file
                        (lambda (fd) (%tty-info fd control-chars))))))
 
-(import-os-error-syscall %tty-info (fdes control-chars) 
+(import-os-error-syscall %tty-info (fdes control-chars)
   "scheme_tcgetattr")
 
 
@@ -141,7 +122,7 @@
 
 ;(define-errno-syscall (%bogus-tty-info fdes control-chars ivec)
 ;  %bogus-tty-info/errno)
-  
+
 ;(define (%%bogus-tty-info fd control-chars)
 ;  (let ((ivec (make-vector 6)))
 ;    (%bogus-tty-info fd control-chars ivec)
@@ -171,8 +152,8 @@
 	(cf (tty-info:control-flags info))
 	(lf (tty-info:local-flags   info))
 	(cc (tty-info:control-chars info))
-	(is (%tty-info:input-speed-code  info))
-	(os (%tty-info:output-speed-code info)))
+	(is (tty-info:input-speed-code  info))
+	(os (tty-info:output-speed-code info)))
     (sleazy-call/file
      fdport
      call-with-input-file
@@ -189,7 +170,7 @@
 
 
 (import-os-error-syscall %set-tty-info
-  (fdes option control-chars iflag oflag cflag lflag ispeed-code ospeed-code 
+  (fdes option control-chars iflag oflag cflag lflag ispeed-code ospeed-code
 	min time)
   "scheme_tcsetattr")
 
@@ -216,7 +197,7 @@
                       (lambda (fdes)
                         (%send-tty-break-fdes fdes duration)))))
 
-(import-os-error-syscall %send-tty-break-fdes (fdes duration) 
+(import-os-error-syscall %send-tty-break-fdes (fdes duration)
   "sch_tcsendbreak")
 
 ;;; Drain the main vein.

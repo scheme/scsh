@@ -1,6 +1,6 @@
 ;;; Scsh
 ;;; Posix advisory record-locking for file descriptors.
-;;; These procs may only be applied to integer file descriptors; 
+;;; These procs may only be applied to integer file descriptors;
 ;;; they may not be applied to ports.
 ;;; Copyright (c) 1995 by David Albertz and Olin Shivers.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -14,37 +14,18 @@
 ;;; The LOCK record type
 ;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-record %lock-region
-  exclusive?
-  start			; integer
-  len			; Positive integer or #f
-  whence		; seek/set, seek/delta, or seek/end.
-  proc      		; Process holding lock
-  )
-
-(define lock-region?               %lock-region?)
-(define lock-region:exclusive?     %lock-region:exclusive?)
-(define lock-region:whence         %lock-region:whence)
-(define lock-region:start          %lock-region:start)
-(define lock-region:len            %lock-region:len)
-(define lock-region:proc           %lock-region:proc)
-(define set-lock-region:exclusive? set-%lock-region:exclusive?)
-(define set-lock-region:whence     set-%lock-region:whence)
-(define set-lock-region:start      set-%lock-region:start)
-(define set-lock-region:len        set-%lock-region:len)
-(define set-lock-region:proc       set-%lock-region:proc)
-
-;;; Backwards compatibility for one or two releases.
-(define lock-region:pid
-  (deprecated-proc (lambda (lr)
-		     (cond ((lock-region:proc lr) => proc:pid)
-			   (else #f)))
-		   'lock-region:pid
-		   "Use lock-region:proc instead."))
+(define-record-type :lock-region
+  (really-make-lock-region exclusive? start len whence proc)
+  lock-region?
+  (exclusive? lock-region:exclusive? set-lock-region:exclusive?)
+  (start lock-region:start set-lock-region:start)     ; integer
+  (len lock-region:len set-lock-region:len)           ; Positive integer or #f
+  (whence lock-region:whence set-lock-region:whence)  ; seek/set, seek/delta, or seek/end.
+  (proc lock-region:proc set-lock-region:proc))       ; Process holding lock
 
 (define (make-lock-region exclusive? start len . maybe-whence)
   (let ((whence (:optional maybe-whence seek/set)))
-    (make-%lock-region exclusive? start len whence #f)))
+    (really-make-lock-region exclusive? start len whence #f)))
 
 
 ;;; Internal middleman routine
@@ -82,8 +63,8 @@
 (define (get-lock-region fdes lock)
   (apply (lambda (type whence start len pid)
 	   (and (not (= type lock/release))
-		(make-%lock-region (= type lock/write) start len whence
-				   (pid->proc pid 'create))))
+		(really-make-lock-region (= type lock/write) start len whence
+                                         (pid->proc pid 'create))))
 	 (call-lock-region %get-lock fcntl/get-record-lock fdes lock)))
 
 

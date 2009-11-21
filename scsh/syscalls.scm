@@ -316,19 +316,20 @@
 
 (import-os-error-syscall stat-fdes (fd data) "scheme_fstat")
 
-(define-record file-info
-  type
-  device
-  inode
-  mode
-  nlinks
-  uid
-  gid
-  size
-  atime
-  mtime
-  ctime
-  )
+(define-record-type :file-info
+  (make-file-info type device inode mode nlinks uid gid size atime mtime ctime)
+  file-info?
+  (type file-info:type)
+  (device file-info:device)
+  (inode file-info:inode)
+  (mode file-info:mode)
+  (nlinks file-info:nlinks)
+  (uid file-info:uid)
+  (gid file-info:gid)
+  (size file-info:size)
+  (atime file-info:atime)
+  (mtime file-info:mtime)
+  (ctime file-info:ctime))
 
 
 ;;; Should be redone to return multiple-values.
@@ -484,13 +485,17 @@
 ;;; User info
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-record user-info
-  name uid gid home-dir shell
+(define-record-type :user-info
+  (make-user-info name uid gid home-dir shell)
+  (name user-info:name)
+  (uid user-info:uid)
+  (gid user-info:gid)
+  (home-dir user-info:home-dir)
+  (shell user-info:shell))
 
-  ;; Make user-info records print like #{user-info shivers}.
-  ((disclose ui)
-   (list "user-info" (user-info:name ui))))
-
+(define-record-discloser :user-info
+  (lambda (self)
+    (list 'user-info (user-info:name ui))))
 
 (import-os-error-syscall
  %uid->user-info
@@ -536,11 +541,17 @@
 ;;; Group info
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-record group-info
-  name gid members
+(define-record-type :group-info
+  (make-group-info name gid members)
+  group-info?
+  (name group-info:name)
+  (gid group-info:gid)
+  (members group-info:members))
 
-  ;; Make group-info records print like #{group-info wheel}.
-  ((disclose gi) (list "group-info" (group-info:name gi))))
+;; Make group-info records print like #{group-info wheel}.
+(define-record-discloser :group-info
+  (lambda (self)
+    (list 'group-info (group-info:name self))))
 
 (import-os-error-syscall
  %gid->group-info
@@ -611,16 +622,18 @@
 ; A record for directory streams.  It just has the name and a byte vector
 ; containing the C directory object.  The name is used only for printing.
 
-(define-record directory-stream
-  name
-  c-dir)
+(define-record-type :directory-stream
+  (make-directory-stream name c-dir)
+  directory-stream?
+  (name directory-stream:name)
+  (c-dir directory-stream:c-dir set-directory-stream:c-dir))
 
-(define-record-discloser type/directory-stream
-  (lambda (ds)
-    (list 'directory-stream (directory-stream:name ds))))
+(define-record-discloser :directory-stream
+  (lambda (self)
+    (list 'directory-stream (directory-stream:name self))))
 
 ; Directory streams are meaningless in a resumed image.
-(define-record-resumer type/directory-stream #f)
+(define-record-resumer :directory-stream #f)
 
 (define (open-directory-stream name)
   (let ((dir (make-directory-stream
@@ -792,13 +805,15 @@
 
 (import-os-error-syscall errno-msg (i) "errno_msg")
 
-(define-record uname
-  os-name
-  node-name
-  release
-  version
-  machine)
+(define-record-type :uname
+  (make-uname os-name node-name release version machine)
+  uname?
+  (os-name uname:os-name)
+  (node-name uname:node-name)
+  (release uname:release)
+  (version uname:version)
+  (machine uname:machine))
 
-(define-exported-binding "uname-record-type" type/uname)
+(define-exported-binding "uname-record-type" :uname)
 
 (import-os-error-syscall uname () "scm_uname")

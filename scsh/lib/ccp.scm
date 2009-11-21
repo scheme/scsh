@@ -9,18 +9,18 @@
 ;;; for sparseness. I would suggest something like this:
 ;;;     (define-record ccp
 ;;; 	    domain		; The domain char-set
-;;; 	    map			; Sorted vector of (char . string) pairs 
+;;; 	    map			; Sorted vector of (char . string) pairs
 ;;; 				;   specifying the map.
-;;; 	    id?)		; If true, mappings not specified by MAP are 
-;;; 	    			;   identity mapping. If false, MAP must 
+;;; 	    id?)		; If true, mappings not specified by MAP are
+;;; 	    			;   identity mapping. If false, MAP must
 ;;; 				;   specify a mapping for every char in DOMAIN.
-;;; 
+;;;
 ;;; A (char . string) elements in MAP specifies a mapping for the contiguous
 ;;; sequence of L chars beginning with CHAR (in the sequence of the underlying
 ;;; char type representation), where L is the length of STRING. These MAP elements
 ;;; are sorted by CHAR, so that binary search can be used to get from an input
 ;;; character C to the right MAP element quickly.
-;;; 
+;;;
 ;;; This representation should be reasonably compact for standard mappings on,
 ;;; say, a Unicode CCP. An implementation might wish to have a cache field
 ;;; in the record for storing the full 8kb bitset when performing ccp-map
@@ -29,12 +29,13 @@
 
 (define num-chars (char-set-size char-set:full)) ; AKA 256.
 
-(define-record ccp
-  domain		; The domain char-set
-  dshared?		; Is the domain value shared or linear?
-  map			; 256-elt string
-  mshared?)		; Is the map string shared or linear?
-
+(define-record-type :ccp
+  (make-ccp domain dshared? map mshared?)
+  ccp?
+  (domain ccp:domain set-ccp:domain)
+  (dshared? ccp:dshared? set-ccp:dshared?)
+  (map ccp:map set-ccp:map)
+  (mshared? ccp:mshared set-ccp:mshared))
 
 ;;; Accessors and setters that manage the linear bookkeeping
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -156,9 +157,9 @@
 
 (define (ccp-restrict! ccp cset)
   (restrict-linear-ccp-domain ccp (lambda (d) (char-set-intersection! d cset))))
-					      
 
-;;; CCP-ADJOIN ccp from-char1 to-char1 ... 
+
+;;; CCP-ADJOIN ccp from-char1 to-char1 ...
 ;;; CCP-DELETE ccp char1 ...
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Add & delete mappings to/from a ccp.
@@ -417,7 +418,7 @@
 			   (if (= j len2-1) 0 (+ j 1))
 			   (char-set-adjoin! d c)))
 		    d)))
-				  
+
 	    ;; (#\a . #\c) -> #\A
 	    (do ((i from-start       (+ i 1))
 		 (j (char->ascii to) (+ j 1))
@@ -447,11 +448,11 @@
 
 (define (extend-ccp/mappings! base . args)
   (linear-update-ccp base (lambda (d cmap) (install-mapping-pairs cmap d args))))
-  
+
 
 ;;; CONSTRUCT-CCP! ccp elt ...
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; The kitchen-sink constructor; static typing be damned. 
+;;; The kitchen-sink constructor; static typing be damned.
 ;;; ELTS are interpreted as follows:
 ;;;	(lo-char . hi-char) to-string|lo-char		; ccp/range
 ;;; 	from-string to-string|lo-char			; ccp/range
@@ -513,7 +514,7 @@
 	(lp (g seed)
 	    (receive (from to) (f seed)
 	      (lp (g seed) (ccp-adjoin! ccp from to)))))))
-      
+
 
 
 ;;; Using CCPs
@@ -568,7 +569,7 @@
 	((< i 0))
       (string-set! m i (ascii->char i)))
     m))
-  
+
 (define ccp:0 (make-ccp char-set:empty #t id-cmap #t))
 (define ccp:1 (make-ccp char-set:full  #t id-cmap #t))
 

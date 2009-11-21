@@ -2,11 +2,13 @@
 ;;; We use S48 extensible ports.
 ;;; Copyright (c) 1993 by Olin Shivers.
 
-(define-record fdport-data
-  channel
-  revealed)
+(define-record-type :fdport-data
+  (make-fdport-data channel revealed)
+  fdport-data?
+  (channel fdport-data:channel set-fdport-data:channel)
+  (revealed fdport-data:revealed set-fdport-data:revealed))
 
-(define-record-discloser type/fdport-data
+(define-record-discloser :fdport-data
   (lambda (r)
     (list 'fdport-data
           (fdport-data:channel r) (fdport-data:revealed r))))

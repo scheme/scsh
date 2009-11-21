@@ -421,11 +421,13 @@
   (make-reinitializer install-env))
 
 
-(define-record env
-      envvec
-      alist)    ; Corresponding alist
+(define-record-type :env
+  (make-env envvec alist)
+  env?
+  (envvec env:envvec set-env:envvec)
+  (alist env:alist))
 
-(define-record-resumer type/env
+(define-record-resumer :env
   (lambda (env)
     (set-env:envvec env #f)))
 
@@ -434,14 +436,15 @@
        (eq? (env:envvec e1)
             (env:envvec e2))))
 
-(define-record envvec
-  environ ;; char**
-  )
+(define-record-type :envvec
+  (make-envvec environ)
+  envvec?
+  (environ envvec:environ))
 
 (define (add-envvec-finalizer! envvec)
   (add-finalizer! envvec envvec-finalizer))
 
-(define-exported-binding "envvec-record-type" type/envvec)
+(define-exported-binding "envvec-record-type" :envvec)
 (define-exported-binding "add-envvec-finalizer!" add-envvec-finalizer!)
 
 (define (envvec-finalizer envvec)

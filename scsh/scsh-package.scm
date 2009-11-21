@@ -47,14 +47,8 @@
         tables)
   (files weaktables))
 
-(define-structure defrec-package (export (define-record :syntax))
-  (open records record-types scheme)
-  (for-syntax (open scheme error-package receiving))
-  (files defrec))
-
 (define-structure string-collectors string-collectors-interface
-  (open scheme
-        defrec-package)
+  (open scheme srfi-9)
   (files stringcoll))
 
 (define-structure thread-fluids thread-fluids-interface

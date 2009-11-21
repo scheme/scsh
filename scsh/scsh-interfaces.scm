@@ -150,7 +150,6 @@
                               lock-region:whence
                               lock-region:start
                               lock-region:len
-                              lock-region:pid   ; Deprecated proc.
                               lock-region:proc
                               make-lock-region
 
@@ -939,7 +938,7 @@
       tty-flags-interface
       (export
           ;; The tty-info record
-          tty-info?                     type/tty-info
+          tty-info?                     :tty-info
           tty-info:control-chars        set-tty-info:control-chars
           tty-info:input-flags          set-tty-info:input-flags
           tty-info:output-flags         set-tty-info:output-flags
@@ -949,16 +948,6 @@
           tty-info:output-speed         set-tty-info:output-speed
           tty-info:min                  set-tty-info:min
           tty-info:time                 set-tty-info:time
-
-          modify-tty-info:control-chars
-          modify-tty-info:input-flags
-          modify-tty-info:output-flags
-          modify-tty-info:control-flags
-          modify-tty-info:local-flags
-          modify-tty-info:input-speed
-          modify-tty-info:output-speed
-          modify-tty-info:min
-          modify-tty-info:time
 
           make-tty-info                 copy-tty-info
 
@@ -1042,7 +1031,7 @@
           uname:release
           uname:version
           uname:machine
-          type/uname))
+          :uname))
 
 (define-interface md5-interface
   (export make-md5-context

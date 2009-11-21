@@ -2,21 +2,21 @@
 
 ;;; String collectors
 ;;; ===========================================================================
-;;; string-colllector
+;;; string-collector
 ;;; (make-string-collector)
 ;;; (collect-string! SC S)
 ;;; (clear-string-collector! SC)
 ;;; (string-collector->string SC)
 ;;;
 ;;; A string collector is a data structure that reduces the overhead of
-;;; accumulating a large string in bits and pieces. It is basically a 
+;;; accumulating a large string in bits and pieces. It is basically a
 ;;; "chunk list," where a chunk is a string of at least 128 chars. In this
 ;;; way, the list overhead is kept under 2% of the whole data structure.
 ;;; When a new string is added to the collection, it is added to the current
 ;;; chunk. When the chunk reaches 128 chars, it is added to the chunk list,
-;;; and a new chunk is started. If a large string is added to the collection, 
-;;; it is added as a chunk itself, so large strings are not split into small 
-;;; pieces. (Actually, a *copy* of the original large string is saved as a 
+;;; and a new chunk is started. If a large string is added to the collection,
+;;; it is added as a chunk itself, so large strings are not split into small
+;;; pieces. (Actually, a *copy* of the original large string is saved as a
 ;;; single chunk, so the collector's chunks are not shared with client data.)
 ;;;
 ;;; MAKE-STRING-COLLECTOR allocates a new string collector data structure.
@@ -27,11 +27,20 @@
 ;;; This facility makes it reasonably efficient to accumulate strings
 ;;; of any size in increments of any size.
 
-(define-record string-collector
-  (len 0)		; How many chars have we accumulated?
-  (chunks '())		; The chunk list.
-  (chunk #f)		; The current chunk being filled, if any.
-  (chunk-left  0))	; How many chars left to fill in the current chunk.
+(define-record-type :string-collector
+  (really-make-string-collector len chunks chunk chunk-left)
+  string-collector?
+  ;; How many chars have we accumulated?
+  (len string-collector:len set-string-collector:len)
+  ;; The chunk list.
+  (chunks string-collector:chunks set-string-collector:chunks)
+  ;; The current chunk being filled, if any.
+  (chunk string-collector:chunk set-string-collector:chunk)
+  ;; How many chars left to fill in the current chunk.
+  (chunk-left  string-collector:chunk-left set-string-collector:chunk-left))
+
+(define (make-string-collector)
+  (really-make-string-collector 0 '() #f 0))
 
 (define (clear-string-collector! sc)
   (set-string-collector:len    sc 0)
@@ -121,8 +130,7 @@
   ;; We don't actually do anything with this, but we keep it updated anyway.
   (set-string-collector:len sc (+ (string-collector:len sc) slen))
   sc))
-			      
-		 
+
 ;;; A bummed version for collecting a single character.
 
 (define (collect-char! sc c)

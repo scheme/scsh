@@ -16,11 +16,11 @@
 			 protocol-family/internet)
 		      (let* ((host (car  args))
 			     (port (cadr args))
-			     (host (car (host-info:addresses 
+			     (host (car (host-info:addresses
 					  (name->host-info host))))
 			     (port (cond ((integer? port) port)
 					 ((string? port)
-					  (service-info:port 
+					  (service-info:port
 					   (service-info (cadr args) "tcp")))
 					 (else
 					  (error
@@ -30,7 +30,7 @@
 		     ((= protocol-family
 			 protocol-family/unix)
 		      (unix-address->socket-address (car args)))
-		     (else 
+		     (else
 		      (error "socket-connect: unsupported protocol-family ~s"
 			     protocol-family)))))
     ;; Close the socket and free the file-descriptors
@@ -39,7 +39,7 @@
       (dynamic-wind
        (lambda () #f)
        (lambda () (connect-socket sock addr) (set! connected #t))
-       (lambda () 
+       (lambda ()
          (if (not connected)
              (close-socket sock))
 	 ))
@@ -56,7 +56,7 @@
 			 protocol-family/internet)
 		      (let ((port (cond ((integer? arg) arg)
 					((string? arg)
-					 (service-info:port 
+					 (service-info:port
 					  (service-info arg "tcp")))
 					(else
 					 (error "socket-connect: bad arg ~s"
@@ -66,7 +66,7 @@
 		     ((= protocol-family
 			 protocol-family/unix)
 		      (unix-address->socket-address arg))
-		     (else 
+		     (else
 		      (error "bind-listen-accept-loop: unsupported protocol-family ~s"
 			     protocol-family)))))
     (set-socket-option sock level/socket socket/reuse-address #t)
@@ -91,7 +91,7 @@
 	  ;; ECONNABORTED we just ignore
 	  ((errno packet)
 	   ((errno/connaborted) 'fick-dich-ins-knie))
-	  (call-with-values 
+	  (call-with-values
 	   (lambda () (accept-connection sock))
 	   proc))
 	 (loop))))))
@@ -99,14 +99,18 @@
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; Socket Record Structure
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-(define-record socket
-  family				; protocol family
-  inport				; input port 
-  outport)				; output port
+(define-record-type :socket
+  (make-socket family inport outport)
+  socket?
+  (family socket:family)
+  (inport socket:inport)
+  (outport socket:outport))
 
-(define-record socket-address
-  family				; address family
-  address)				; address
+(define-record-type :socket-address
+  (make-socket-address family address)
+  socket-address?
+  (family socket-address:family)
+  (address socket-address:address))
 
 ;;; returns the fdes of a socket
 ;;; not exported
@@ -123,13 +127,13 @@
 	((not (<= 0 port16 #xffff))
 	 (error "internet-address->socket-address: port out of range ~s"
 		port16))
-	(else 
+	(else
 	 (make-socket-address address-family/internet
 			      (cons address32 port16)))))
-  
+
 (define (socket-address->internet-address sockaddr)
   (if (or (not (socket-address? sockaddr))
-	  (not (= (socket-address:family sockaddr) 
+	  (not (= (socket-address:family sockaddr)
 		  address-family/internet)))
       (error "socket-address->internet-address: internet socket expected ~s"
 	     sockaddr)
@@ -143,7 +147,7 @@
 
 (define (socket-address->unix-address sockaddr)
   (if (or (not (socket-address? sockaddr))
-	  (not (= (socket-address:family sockaddr) 
+	  (not (= (socket-address:family sockaddr)
 		  address-family/unix)))
       (error "socket-address->unix-address expects an unix socket ~s" sockaddr)
       (socket-address:address sockaddr)))
@@ -151,7 +155,7 @@
 (define (make-addr af)
   (make-string (cond ((= af address-family/unix) 108)
 		     ((= af address-family/internet) 8)
-		     (else 
+		     (else
 		      (error "make-addr: unknown address-family ~s" af)))))
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -162,7 +166,7 @@
     (if (not (and (integer? pf)
 		  (integer? type)
 		  (integer? protocol)))
-	(error "create-socket: integer arguments expected ~s ~s ~s" 
+	(error "create-socket: integer arguments expected ~s ~s ~s"
 	       pf type protocol)
 	(let* ((fd  (%socket pf type protocol))
 	       (in  (make-input-fdport fd 0))
@@ -172,7 +176,7 @@
 	  (make-socket pf in out)))))
 
 
-;;; Turn a file descriptor into a socket. 
+;;; Turn a file descriptor into a socket.
 
 (define (port->socket port pf)
   ;;; ensure underlying fd is a socket by a random getsockopt call
@@ -206,7 +210,7 @@
 	(else
 	 (let ((family (socket:family sock)))
 	   (cond ((not (= family (socket-address:family name)))
-		  (error 
+		  (error
 		   "bind-socket: trying to bind incompatible address to socket ~s"
 		   name))
 		 ((and (= family address-family/unix)
@@ -230,7 +234,7 @@
 	(else
 	 (let ((family (socket:family sock)))
 	   (cond ((not (= family (socket-address:family name)))
-		  (error 
+		  (error
 		   "connect: trying to connect socket to incompatible address ~s"
 		   name))
 		 ((and (= family address-family/unix)
@@ -251,7 +255,7 @@
 			  #t)))))))))
 
 (define (connect-socket-successful? sock)
-  ;; If connect returned EINPROGRESS, we can check 
+  ;; If connect returned EINPROGRESS, we can check
   ;; it's success after  the next success with getsockopt
   (zero? (socket-option sock level/socket socket/error)))
 
@@ -266,7 +270,7 @@
            (let ((errno (socket-option sock level/socket socket/error)))
              (if (not (zero? errno))
                  (errno-error errno
-                              (errno-msg errno) 
+                              (errno-msg errno)
                               %connect
                               sock
                               name)))))))
@@ -299,15 +303,15 @@
 	    (cond ((pair? fd-addr)
 		   (let ((fd (car fd-addr))
 			 (addr (cdr fd-addr)))
-		     ((structure-ref interrupts 
-				     enable-interrupts!)) 
+		     ((structure-ref interrupts
+				     enable-interrupts!))
 		     (let* ((in     (make-input-fdport fd 0))
 			    (out    (dup->outport in)))
 		       (values (make-socket family in out)
 			       (make-socket-address family addr)))))
-		  (else (wait-for-channel 
-			 (fdport-data:channel 
-			  (fdport-data (socket:inport sock)))) 
+		  (else (wait-for-channel
+			 (fdport-data:channel
+			  (fdport-data (socket:inport sock))))
 			(loop))))))))
 
 (import-os-error-syscall %accept (sockfd family) "scheme_accept")
@@ -359,7 +363,7 @@
 (define (create-socket-pair type)
   (if (not (integer? type))
       (error "create-socket-pair: integer argument expected ~s" type)
-      (apply 
+      (apply
        (lambda (s1 s2)
         (let* ((in1  (make-input-fdport s1 0))
 	       (out1 (dup->outport in1))
@@ -375,14 +379,14 @@
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; recv syscall
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-(define (receive-message socket len . maybe-flags) 
+(define (receive-message socket len . maybe-flags)
   (let ((flags (:optional maybe-flags 0)))
     (cond ((not (socket? socket))
 	   (error "receive-message: socket expected ~s" socket))
 	  ((or (not (integer? flags))
 	       (not (integer? len)))
 	   (error "receive-message: integer expected ~s ~s" flags len))
-	  (else 
+	  (else
 	   (let ((s (make-string len)))
 	     (receive (nread from)
 		      (receive-message! socket s 0 len flags)
@@ -403,19 +407,19 @@
 			(integer? end)))
 	       (error "receive-message!: integer expected ~s ~s ~s"
 		      flags start end))
-	      (else 
+	      (else
 	       (generic-receive-message! socket flags
-					 s start end 
+					 s start end
 					 recv-substring!
 					 (socket:family socket)))))))
 
 (define (generic-receive-message! socket flags s start end reader family)
   (if (bogus-substring-spec? s start end)
-      (error "Bad substring indices" 
+      (error "Bad substring indices"
 	     reader socket flags
 	     s start end family))
     (let loop ((i start) (remote #f))
-      (if (>= i end) 
+      (if (>= i end)
 	  (values (- i start) (make-socket-address family remote))
 	  (let* ((res  (reader socket flags s i end)))
 	  (apply (lambda (nread from)
@@ -434,11 +438,11 @@
 	  ((or (not (integer? flags))
 	       (not (integer? len)))
 	   (error "receive-message/partial: integer expected ~s ~s" flags len))
-	  (else 
+	  (else
 	   (let ((s (make-string len)))
 	     (receive (nread addr)
 		      (receive-message!/partial socket s 0 len flags)
-		      (values 
+		      (values
 		       (cond ((not nread) #f)	; EOF
 			     ((= nread len) s)
 			     (else (substring s 0 nread)))
@@ -454,9 +458,9 @@
 	      ((not (integer? flags))
 	       (error "receive-message!/partial: integer expected ~s"
 		      flags))
-	      (else 
+	      (else
 	       (generic-receive-message!/partial socket
-						 flags 
+						 flags
 						 s start end
 						 recv-substring!
 						 (socket:family socket)))))))
@@ -471,21 +475,21 @@
 		    (values (and (not (zero? nread)) nread)
 		    (make-socket-address from addr)))
 	   (reader socket flags s start end)))))
-		
+
 
 (define (recv-substring! socket flags buf start end)
 	(let loop ()
 	  ((structure-ref interrupts disable-interrupts!))
-	  (let ((maybe-size-addr 
-		 (%recv-substring! (socket->fdes socket) 
+	  (let ((maybe-size-addr
+		 (%recv-substring! (socket->fdes socket)
 					 flags buf start end)))
-	    (cond (maybe-size-addr 
-		   ((structure-ref interrupts 
-				   enable-interrupts!)) 
+	    (cond (maybe-size-addr
+		   ((structure-ref interrupts
+				   enable-interrupts!))
 		   maybe-size-addr)
-		  (else (wait-for-channel 
-			 (fdport-data:channel 
-			  (fdport-data (socket:inport socket)))) 
+		  (else (wait-for-channel
+			 (fdport-data:channel
+			  (fdport-data (socket:inport socket))))
 			(loop))))))
 
 (import-os-error-syscall %recv-substring! (sockfd flags buf start end)
@@ -502,16 +506,16 @@
 	   (error "send-message: integer expected ~s" flags))
 	  ((not (string? s))
 	   (error "send-message: string expected ~s" s))
-	  (else 
+	  (else
 	   (generic-send-message socket flags
 				 s start end
-				 send-substring 
+				 send-substring
 				 (if addr (socket-address:family addr) 0)
 				 (if addr (socket-address:address addr) #f))))))
 
 (define (generic-send-message socket flags s start end writer family addr)
   (if (bogus-substring-spec? s start end)
-      (error "Bad substring indices" 
+      (error "Bad substring indices"
 	     socket flags family addr
 	     s start end writer))
   (if (= start end)
@@ -530,45 +534,45 @@
 	   (error "send-message/partial: integer expected ~s" flags))
 	  ((not (string? s))
 	   (error "send-message/partial: string expected ~s" s))
-	  (else 
+	  (else
            (generic-send-message/partial socket flags
 					 s start end
 					 send-substring
 					 (if addr (socket-address:family addr) 0)
-					 (if addr 
-					     (socket-address:address addr) 
+					 (if addr
+					     (socket-address:address addr)
 					     #f))))))
 
-(define (generic-send-message/partial socket flags s start end writer family 
+(define (generic-send-message/partial socket flags s start end writer family
 				      addr)
   (if (bogus-substring-spec? s start end)
-      (error "Bad substring indices" 
+      (error "Bad substring indices"
 	     socket flags family addr
 	     s start end writer))
-  (if (= start end) 
+  (if (= start end)
       0			; Vacuous request.
       (writer socket flags s start end family addr)))
 
 (define (send-substring socket flags buf start end family name)
   (let loop ()
     ((structure-ref interrupts disable-interrupts!))
-    (cond ((%send-substring (socket->fdes socket) flags buf start end 
+    (cond ((%send-substring (socket->fdes socket) flags buf start end
 			    family name)
 	   => (lambda (nwritten)
-		((structure-ref interrupts 
-				enable-interrupts!)) 
+		((structure-ref interrupts
+				enable-interrupts!))
 		nwritten))
-	  (else (wait-for-channel 
-		 (fdport-data:channel 
-		  (fdport-data (socket:inport socket)))) 
+	  (else (wait-for-channel
+		 (fdport-data:channel
+		  (fdport-data (socket:inport socket))))
 		(loop)))))
 
-(import-os-error-syscall 
+(import-os-error-syscall
   %send-substring (sockfd flags buf start end family name)
   "send_substring")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-;;; getsockopt syscall 
+;;; getsockopt syscall
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 (define (socket-option sock level option)
@@ -587,7 +591,7 @@
 		(%getsockopt-linger (socket->fdes sock) level option)))
 	((timeout-option? option)
 	 (apply (lambda (result/secs usecs)
-		  (cond ((= result/secs -1) 
+		  (cond ((= result/secs -1)
 			 (error "socket-option ~s ~s ~s" sock level option))
 			(else (+ result/secs (/ usecs 1000)))))
 		(%getsockopt-timeout (socket->fdes sock) level option)))
@@ -597,15 +601,15 @@
 (import-os-error-syscall %getsockopt (sock level option) "scheme_getsockopt")
 
 ;;; returns (list on-off linger)
-(import-os-error-syscall %getsockopt-linger (sockfd level optname) 
-  "scheme_getsockopt_linger") 
+(import-os-error-syscall %getsockopt-linger (sockfd level optname)
+  "scheme_getsockopt_linger")
 
 ;;; returns (list secs usecs)
-(import-os-error-syscall %getsockopt-timeout (sockfd level optname) 
+(import-os-error-syscall %getsockopt-timeout (sockfd level optname)
   "scheme_getsockopt_timeout")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-;;; setsockopt syscall 
+;;; setsockopt syscall
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 (define (set-socket-option sock level option value)
@@ -618,16 +622,16 @@
 	((value-option? option)
 	 (%setsockopt (socket->fdes sock) level option value))
 	((linger-option? option)
-	 (%setsockopt-linger (socket->fdes sock) 
-			     level option 
-			     (if value 1 0) 
+	 (%setsockopt-linger (socket->fdes sock)
+			     level option
+			     (if value 1 0)
 			     (if value value 0)))
 	((timeout-option? option)
 	 (let ((secs (truncate value)))
-	   (%setsockopt-timeout (socket->fdes sock) level option 
+	   (%setsockopt-timeout (socket->fdes sock) level option
 				secs
 				(truncate (* (- value secs) 1000)))))
-	(else 
+	(else
 	 "set-socket-option: unknown option type")))
 
 (import-os-error-syscall %setsockopt (sockfd level optname optval)
@@ -658,15 +662,18 @@
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; host lookup
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-(define-record host-info
-  name					; Host name
-  aliases				; Alternative names
-  addresses				; Host addresses
+(define-record-type :host-info
+  (make-host-info name aliases addresses)
+  host-info?
+  (name host-info:name)
+  (aliases host-info:aliases)
+  (addresses host-info:addresses))
 
-  ((disclose hi)			; Make host-info records print like
-   (list "host" (host-info:name hi))))	; #{host clark.lcs.mit.edu}.
+(define-record-discloser :host-info
+  (lambda (self)
+    (list 'host (host-info:name self))))
 
-(define-exported-binding "host-info-type" type/host-info)
+(define-exported-binding "host-info-type" :host-info)
 
 (define (host-info arg)
   (cond ((string? arg) (name->host-info arg))
@@ -674,10 +681,10 @@
 	(else (error "host-info: string or socket-address expected ~s" arg))))
 
 (define (address->host-info name)
-  (if (or (not (socket-address? name)) 
+  (if (or (not (socket-address? name))
 	  (not (= (socket-address:family name) address-family/internet)))
       (error "address->host-info: internet address expected ~s" name)
-      (let ((res (%host-address->host-info/h-errno 
+      (let ((res (%host-address->host-info/h-errno
 		  (socket-address:address name))))
 	(if (number? res)
 	    (error "address->host-info: non-zero herrno" res name)
@@ -694,23 +701,25 @@
 	     (error "name->host-info: non-zero herrno" res name)
 	     res))))
 
-(import-lambda-definition %host-name->host-info/h-errno (name) 
+(import-lambda-definition %host-name->host-info/h-errno (name)
   "scheme_host_name2host_info")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; network lookup
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-(define-record network-info
-  name					; Network name
-  aliases				; Alternative names
-  net)					; Network number
+(define-record-type :network-info
+  (make-network-info name aliases net)
+  network-info?
+  (name network-info:name)
+  (aliases network-info:aliases)
+  (net network-info:net))
 
-(define-exported-binding "network-info-type" type/network-info)
+(define-exported-binding "network-info-type" :network-info)
 
 (define (network-info arg)
   (cond ((string? arg) (name->network-info arg))
 	((socket-address? arg) (car (socket-address:address arg)))
-	(else 
+	(else
 	 (error "network-info: string or socket-address expected ~s" arg))))
 
 (define (address->network-info addr)
@@ -718,9 +727,9 @@
       (error "address->network-info: integer expected ~s" addr)
       (%net-address->network-info addr)))
 
-(import-lambda-definition %net-address->network-info (addr) 
+(import-lambda-definition %net-address->network-info (addr)
   "scheme_net_address2net_info")
- 
+
 (define (name->network-info name)
   (if (not (string? name))
       (error "name->network-info: string expected ~s" name)
@@ -728,17 +737,19 @@
 
 (import-lambda-definition %net-name->network-info (name)
   "scheme_net_name2net_info")
-		  
+
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; service lookup
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-(define-record service-info
-  name					; Service name
-  aliases				; Alternative names
-  port					; Port number
-  protocol)				; Protocol name
+(define-record-type :service-info
+  (make-service-info name aliases port protocol)
+  service-info?
+  (name service-info:name)
+  (aliases service-info:aliases)
+  (port service-info:port)
+  (protocol service-info:protocol))
 
-(define-exported-binding "service-info-type" type/service-info)
+(define-exported-binding "service-info-type" :service-info)
 
 (define (service-info . args)
   (apply (cond ((string?  (car args)) name->service-info)
@@ -753,13 +764,13 @@
 	  ((not (string? proto))
 	   (error "port->service-info: string expected ~s" proto))
 	  (else
-	   (%service-port->service-info name (if (equal? "" proto) 
-						 #f 
+	   (%service-port->service-info name (if (equal? "" proto)
+						 #f
 						 proto))))))
-	     
+
 (import-lambda-definition %service-port->service-info (port proto)
   "scheme_serv_port2serv_info")
-  
+
 (define (name->service-info name . maybe-proto)
   (let ((proto (:optional maybe-proto "")))
     (cond ((not (string? name))
@@ -767,8 +778,8 @@
 	  ((not (string? proto))
 	   (error "name->service-info: string expected ~s" proto))
 	  (else
-	   (%service-name->service-info name (if (equal? "" proto) 
-						 #f 
+	   (%service-name->service-info name (if (equal? "" proto)
+						 #f
 						 proto))))))
 
 (import-lambda-definition %service-name->service-info (name proto)
@@ -777,26 +788,28 @@
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; protocol lookup
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-(define-record protocol-info
-  name					; Protocol name
-  aliases				; Alternative names
-  number)				; Protocol number
+(define-record-type :protocol-info
+  (make-protocol-info name aliases number)
+  protocol-info?
+  (name protocol-info:name)
+  (aliases protocol-info:aliases)
+  (number protocol-info:number))
 
-(define-exported-binding "protocol-info-type" type/protocol-info)
+(define-exported-binding "protocol-info-type" :protocol-info)
 
 (define (protocol-info arg)
   (cond ((string? arg)  (name->protocol-info arg))
 	((integer? arg) (number->protocol-info arg))
 	(else (error "protocol-info: string or integer expected ~s" arg))))
 
-(define (number->protocol-info name) 
+(define (number->protocol-info name)
   (if (not (integer? name))
       (error "number->protocol-info: integer expected ~s" name)
       (%protocol-port->protocol-info name)))
 
 (import-lambda-definition %protocol-port->protocol-info (name)
   "scheme_proto_num2proto_info")
-  
+
 (define (name->protocol-info name)
   (if (not (string? name))
       (error "name->protocol-info: string expected ~s" name)
