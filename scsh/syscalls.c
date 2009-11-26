@@ -631,11 +631,6 @@ s48_ref_t free_envvec(s48_call_t call, s48_ref_t envvec)
   if(env == original_environ)
     return s48_false_2(call);
 
-  while (env[i] != 0) {
-    Free(env[i]);
-    i++;
-  }
-
   Free(env);
   return s48_true_2(call);
 }
