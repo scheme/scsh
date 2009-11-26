@@ -4,7 +4,7 @@
 
 This code depends on the latest revision of scheme48
 <http://s48.org/cgi-bin/hgwebdir.cgi/s48> with the patches here
-<http://ccs.neu.edu/home/roderic/arbeit/s48>. The patches can be managed
+<http://ccs.neu.edu/home/roderic/arbeit/s48-patches>. The patches can be managed
 easily using mercurial queues <http://mercurial.selenic.com/wiki/MqExtension>.
 
 You'll need mercurial to check out these repositories, and the forest extension
@@ -21,6 +21,12 @@ name (e.g. (ln -s linux machine) for linux).
 
 Make a copy of endian.scm.in named endian.scm with instances of @ENDIAN@ replaced
 with either "little" or "big", depending on your machine.
+
+Build the C code. This requires an older version of scsh installed.
+./build.scm
+
+In setup.scm, change the last argument in set-global-translation! to the absolute
+path of the scsh directory.
 
 In the user package (the default for scheme48) run the command:
 ,exec ,load load.scm
