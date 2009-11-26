@@ -21,24 +21,21 @@
 ;;; This whole mechanism would be better solved with a functor.
 ;;;     -Olin
 
-(define-structure error-package (export error warn)
-  (open (subset signals (error warn))))
-
 (define-structure let-opt-expanders let-opt-expanders-interface
-  (open scheme error-package srfi-8)
+  (open scheme (subset signals (error warn)) srfi-8)
   (files let-opt-expanders))
 
 (define-structure let-opt let-opt-interface
-  (open scheme error-package receiving)
+  (open scheme (subset signals (error warn)) receiving)
   (for-syntax (open scheme let-opt-expanders))
   (files let-opt))
 
 (define-structure scsh-utilities scsh-utilities-interface
-  (open bitwise error-package loopholes let-opt scheme
+  (open (subset srfi-1 (fold delete))
         (subset define-record-types (define-record-discloser))
-        srfi-9
-        records record-types
-        threads threads-internal placeholders locks srfi-1)
+        scheme bitwise (subset signals (error warn)) loopholes let-opt
+        srfi-9 records record-types
+        threads threads-internal placeholders locks)
   (files utilities))
 
 (define-structure weak-tables weak-tables-interface
@@ -65,7 +62,7 @@
   (open scheme
         byte-vectors
         (subset primitives (immutable?))
-        error-package
+        (subset signals (error warn))
         let-opt
         receiving
         re-level-0 rx-syntax
@@ -82,7 +79,7 @@
 (define-structure scsh-syntax-helpers
   (export transcribe-extended-process-form)
   (open receiving       ; receive
-        error-package
+        (subset signals (error warn))
         names           ; generated? by JMG
         scsh-utilities  ; check-arg
         scheme
@@ -155,11 +152,13 @@
                                    init-scsh-hindbrain
                                    initialize-cwd
                                    init-scsh-vars))
-;   (scsh-regexp-package scsh-regexp-interface)
    )
   (for-syntax (open scsh-syntax-helpers scheme))
   (access sigevents threads)
-  (open enumerated
+  (open (subset srfi-1 (any delete filter fold last reverse!))
+        (subset srfi-13 (string<= string-join string-index string-index-right))
+        (subset define-record-types (define-record-discloser))
+        enumerated
         posix
         os-strings
         defenum-package
@@ -167,8 +166,6 @@
         load-dynamic-externals
         structure-refs
         receiving
-        defrec-package
-        (subset define-record-types (define-record-discloser))
         srfi-9
         formats
         string-collectors
@@ -182,33 +179,23 @@
         build
         bigbit
         bitwise
-        error-package
-        exceptions
+        (subset signals (error warn))
+        (subset exceptions (with-exception-handler raise))
         conditions
         scsh-utilities
         handle
         fluids thread-fluids
         weak-tables
-        srfi-1
-
         srfi-14
-;       scsh-regexp-package
-;       scsh-regexp-internals
         scsh-version
         tty-flags
         scsh-internal-tty-flags ; Not exported
         let-opt                 ; optional-arg parsing & defaulting
-
         architecture     ; Was this by JMG ??
-
         re-level-0
         rx-syntax
-
-        srfi-13
-
         thread-fluids                   ; For exec-path-list
         loopholes               ; For my bogus CALL-TERMINALLY implementation.
-
         (modify scheme (hide call-with-input-file
                              call-with-output-file
                              with-input-from-file
@@ -327,7 +314,7 @@
         display-conditions
         ensures-loaded
         environments
-        error-package
+        (subset signals (error warn))
         evaluation
         extended-ports
         fluids
@@ -376,7 +363,7 @@
 (define-structure field-reader-package scsh-field-reader-interface
   (open receiving             ; receive
         scsh-utilities          ; deprecated-proc
-        error-package           ; error
+        (subset signals (error warn))           ; error
         (subset srfi-13 (string-join))
         (subset srfi-14 (char-set?
                          char-set:whitespace
@@ -402,7 +389,7 @@
   (open receiving               ; receive
         ;; scsh-utilities
         (subset srfi-1 (any filter))
-        error-package           ; error
+        (subset signals (error warn))           ; error
 ;       scsh-regexp-package
 ;       re-exports
         sre-syntax-tools
@@ -484,7 +471,8 @@
   (files here))
 
 (define-structure sigevents sigevents-interface
-  (open scsh-level-0 scheme srfi-9 queues srfi-1
+  (open scsh-level-0 scheme srfi-9 queues
+        (subset srfi-1 (filter))
         structure-refs threads threads-internal proposals scsh-utilities
         low-interrupt wind interrupts architecture posix-processes)
   (files event))
@@ -554,7 +542,7 @@
         bitwise
         (subset i/o (read-block))
         (subset srfi-13 (string-fold-right))
-        error-package
+        (subset signals (error warn))
         external-calls)
   (files md5))
 
