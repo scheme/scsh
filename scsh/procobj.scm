@@ -326,7 +326,8 @@
       (error "really-wait on nonpos pid" pid))
   (receive (return_pid status)
       (%wait-pid pid flags)
-   (cond ((zero? return_pid) #f)      ; failed wait/poll
+   (cond ((process-id-exit-status (integer->process-id pid)) => (lambda (x) x))
+         ((zero? return_pid) #f)      ; failed wait/poll
 	 ((= pid return_pid) status)  ; made it
 	 (else (error "mismatch in really-wait"
 		      return_pid pid)))))
