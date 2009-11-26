@@ -24,8 +24,8 @@
 	test-base)
   (files process-state-tests))
 
-(define-structure env-test 
-  (export   
+(define-structure env-test
+  (export
    setenv-test
    getenv-test
    env->alist-test
@@ -44,7 +44,7 @@
 	list-lib
 	string-lib)
   (files env-test-code))
-  
+
 (define-structure add-env-test
   (export)
   (open scheme-with-scsh
@@ -70,25 +70,10 @@
 	test-base)
   (files strings-and-chars-test))
 
-(define-structure awk-test (export)
-  (open scheme-with-scsh
-	test-base)
-  (files awk-test))
-
-(define-structure time-test (export)
-  (open scheme-with-scsh
-	test-base)
-  (files time-procedure-calls))
-
 (define-structure file-name-maniplation-test (export)
   (open scheme-with-scsh
 	test-base)
   (files file-name-manipulation-test))
-
-(define-structure pattern-matching-test (export)
-  (open scheme-with-scsh
-	test-base)
-  (files pattern-matching-test))
 
 (define-structure read-delimited-strings-test (export)
   (open scheme-with-scsh
@@ -99,11 +84,6 @@
   (open scheme-with-scsh
         test-base)
   (files bitwise-ops-test))
-
-(define-structure bug-report-tests (export)
-  (open scheme-with-scsh
-        test-base)
-  (files bug-report-tests))
 
 (define-structure terminal-device-control-test (export)
   (open scheme-with-scsh
@@ -124,13 +104,8 @@
 	add-env-test
 	system-parameter-tests
 	strings-and-chars-test
-        awk-test
-        time-test
         file-name-maniplation-test
-        pattern-matching-test
         read-delimited-strings-test
         bitwise-ops-test
-        bug-report-tests
-        terminal-device-control-test
         user-and-group-db-access-test))
 
