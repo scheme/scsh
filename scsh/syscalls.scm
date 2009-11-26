@@ -43,26 +43,16 @@
               (let loop ()
                 (with-handler
                  (lambda (condition more)
-                   ;; This block can't be used until the conditions system
-                   ;; is fixed to return some sort of indicator of what went
-                   ;; wrong when a syscall fails.
-                   ;;
-                   ;; (if (and (vm-exception? condition)
-                   ;;          (case (vm-exception-reason condition)
-                   ;;            (('os-error 'external-os-error) #t)
-                   ;;            (else #f)))
-                   ;;     (let ((stuff (condition-irritants condition)))
-                   ;;       (if (= (cadr stuff) errno/intr)
-                   ;;           (loop)
-                   ;;           (continuation-graft
-                   ;;            cont
-                   ;;            (lambda ()
-                   ;;           (apply errno-error-with-message
-                   ;;                  (cadr stuff)   ; errno
-                   ;;                  (caddr stuff)  ;msg
-                   ;;                  syscall
-                   ;;                  (cdddr stuff)))))) ;packet
-                       (more))
+                   (if (os-error? condition)
+                       (continuation-graft
+                        cont
+                        (lambda ()
+                          (apply errno-error-with-message
+                                 (os-error-code condition)
+                                 (condition-message condition)
+                                 syscall
+                                 (condition-irritants condition))))
+                       (more)))
                  (lambda ()
                    (syscall/eintr %arg ...))))))))))))
 

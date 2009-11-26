@@ -21,29 +21,17 @@
 (define (with-errno-handler* handler thunk)
   (with-handler
     (lambda (condition more)
-      (if (syscall-error? condition)
-          (let ((irritants (condition-irritants condition)))
-            (handler (condition-errno condition)        ; errno
-                     (list (condition-message condition)
-                           (condition-syscall condition)
-                           (condition-irritants condition))))   ; (msg syscall . packet)
-          ;; capture VM exceptions (currently only prim-io.scm)
-          (if (and (vm-exception? condition)
-                   (eq? (vm-exception-reason condition)
-                        'os-error))
-              ;; this information wouldn't be in the irritants in the new
-              ;; condition system. This should be changed later.
-              (let ((irritants (condition-irritants condition)))
-                (if (> (length irritants) 3)
-                    (handler (caddr irritants) ; errno
-                             (cons
-                              (last irritants) ; msg
-                              (cons
-                               (enumerand->name ; syscall (almost ...)
-                                (vm-exception-opcode condition) op)
-                                ; packet:
-                               (drop-right (cdddr irritants) 1))))))))
-      (more))
+      (cond ((syscall-error? condition)
+             (handler (condition-errno condition)
+                      (list (condition-message condition)
+                            (condition-syscall condition)
+                            (condition-irritants condition))))
+            ((os-error? condition)
+             (handler (os-error-code condition)
+                      (list (condition-message condition)
+                            (condition-who condtion)
+                            (condition-irritants condition))))
+            (else (more))))
     thunk))
 
 ;;; (with-errno-handler
