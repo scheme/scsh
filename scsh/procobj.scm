@@ -17,7 +17,7 @@
   proc?
   (pid proc:pid)
   (finished?  proc:finished? set-proc:finished?)                ; Running, stopped, done #f
-  (status proc:status)	; The cached exit status of the process (make-placeholder)
+  (status proc:status)  ; The cached exit status of the process (make-placeholder)
   (zombie proc:zombie set-proc:zombie)) ; Misnomer.  Whether or not the process has #t
                         ; (not) been waited on.
 
@@ -40,25 +40,25 @@
 
 (define process-table (make-integer-table))
 (make-reinitializer (lambda ()
-		      (set! process-table (make-integer-table))))
+                      (set! process-table (make-integer-table))))
 
 (define process-table-lock (make-lock))
 (define (process-table-ref n)
   (with-lock process-table-lock
-	     (lambda ()
-	       (weak-table-ref process-table n))))
+             (lambda ()
+               (weak-table-ref process-table n))))
 
 (define (process-table-set! n val)
   (with-lock process-table-lock
-	     (lambda ()
-	       (weak-table-set! process-table n val))))
+             (lambda ()
+               (weak-table-set! process-table n val))))
 
 (define (process-table-delete-procobj! procobj)
   (with-lock process-table-lock
-	     (lambda ()
-	       (if (eq? (weak-table-ref process-table (proc:pid procobj))
-			procobj)
-		   (weak-table-set! process-table (proc:pid procobj) #f)))))
+             (lambda ()
+               (if (eq? (weak-table-ref process-table (proc:pid procobj))
+                        procobj)
+                   (weak-table-set! process-table (proc:pid procobj) #f)))))
 
 (define (maybe-pid->proc pid)
   (process-table-ref pid))
@@ -66,18 +66,18 @@
 (define (pid->proc pid . maybe-probe?)
   (let ((probe? (:optional maybe-probe? #f)))
     (or (maybe-pid->proc pid)
-	(case probe?
-	  ((#f)     (error "Pid has no corresponding process object" pid))
-	  ((create) (new-child-proc pid))
-	  (else     #f)))))
+        (case probe?
+          ((#f)     (error "Pid has no corresponding process object" pid))
+          ((create) (new-child-proc pid))
+          (else     #f)))))
 
 ;;; Coerce pids and procs to procs.
 
 (define (->proc proc/pid)
   (cond ((proc? proc/pid) proc/pid)
-	((and (integer? proc/pid) (>= proc/pid 0))
-	 (pid->proc proc/pid 'create))
-	(else (error "Illegal parameter" ->proc proc/pid))))
+        ((and (integer? proc/pid) (>= proc/pid 0))
+         (pid->proc proc/pid 'create))
+        (else (error "Illegal parameter" ->proc proc/pid))))
 
 
 ;;; Is X a pid or a proc?
@@ -125,25 +125,25 @@
 (define (autoreap-policy . maybe-policy)
   (let ((old-policy *autoreap-policy*))
     (if (pair? maybe-policy)
-	(let ((new-policy (car maybe-policy)))
-	  (cond ((pair? (cdr maybe-policy))
-		 (error "Too many args to autoreap-policy" maybe-policy))
-		((not (memq new-policy '(early late #f)))
-		 (error "Illegal autoreap policy." new-policy))
-		(else (set! *autoreap-policy* new-policy)
-		      (cond ((eq? new-policy 'early)
-			     (set-sigchld-handler! early-sigchld-handler)
-			     (set-post/gc-handler! reap-need-reaping))
+        (let ((new-policy (car maybe-policy)))
+          (cond ((pair? (cdr maybe-policy))
+                 (error "Too many args to autoreap-policy" maybe-policy))
+                ((not (memq new-policy '(early late #f)))
+                 (error "Illegal autoreap policy." new-policy))
+                (else (set! *autoreap-policy* new-policy)
+                      (cond ((eq? new-policy 'early)
+                             (set-sigchld-handler! early-sigchld-handler)
+                             (set-post/gc-handler! reap-need-reaping))
 
-			    ((eq? new-policy 'late)
-			     (set-sigchld-handler! late-sigchld-handler)
-			     (set-post/gc-handler! reap-need-reaping))
+                            ((eq? new-policy 'late)
+                             (set-sigchld-handler! late-sigchld-handler)
+                             (set-post/gc-handler! reap-need-reaping))
 
-			    (else
-			     (set-sigchld-handler! noauto-sigchld-handler)
-			     (set-post/gc-handler!
-			      (lambda ()
-				#f))))))))
+                            (else
+                             (set-sigchld-handler! noauto-sigchld-handler)
+                             (set-post/gc-handler!
+                              (lambda ()
+                                #f))))))))
     old-policy))
 
 
@@ -159,11 +159,11 @@
   (set! set-post/gc-handler! really-set-post/gc-handler!)
   (set-post/gc-handler! handler)
   (spawn (lambda ()
-	   (let lp ((event (most-recent-sigevent)))
-	     (let ((next-event (next-sigevent event interrupt/post-gc)))
-	       (*post/gc-handler*)
- 	       (lp next-event))))
- 	 '*post/gc-handler*-thread))
+           (let lp ((event (most-recent-sigevent)))
+             (let ((next-event (next-sigevent event interrupt/post-gc)))
+               (*post/gc-handler*)
+               (lp next-event))))
+         '*post/gc-handler*-thread))
 
 (define set-post/gc-handler! start-set-post/gc-handler!)
 
@@ -178,8 +178,8 @@
    (lambda ()
      (let lp ((event (most-recent-sigevent)))
        (let ((next-event (next-sigevent event (signal chld))))
-	 (*sigchld-handler*)
-	 (lp next-event))))
+         (*sigchld-handler*)
+         (lp next-event))))
    thunk
    (structure-ref threads-internal spawn-on-root)
    'auto-reaping))
@@ -213,7 +213,7 @@
    (lambda ()
      (let ((status (atomic-wait pid wait/poll)))
        (if status
-	   (waited-by-reap pid status))
+           (waited-by-reap pid status))
        status))))
 
 ;;; Handler for SIGCHLD according policy
@@ -243,14 +243,14 @@
     (receive (pid status)
       (%wait-any (bitwise-ior wait/poll wait/stopped-children))
       (if (and pid (not (status:stop-sig status)))
-	  (begin (waited-by-reap pid status)
-		 (release-lock wait-lock)
-;		 (format (current-error-port)
-;			 "Reaping ~d[~d]~%" pid status)
-		 (lp))
-	  (begin
-	    (release-lock wait-lock)
-	    status)))))
+          (begin (waited-by-reap pid status)
+                 (release-lock wait-lock)
+;                (format (current-error-port)
+;                        "Reaping ~d[~d]~%" pid status)
+                 (lp))
+          (begin
+            (release-lock wait-lock)
+            status)))))
 
 
 
@@ -266,13 +266,13 @@
 ;;;
 ;;; FLAGS (default 0) is the exclusive or of the following:
 ;;;     wait/poll
-;;;		Return #f immediately if there are no
-;;;		unwaited children available.
-;;; 	wait/stopped-children
-;;; 		Report on suspended children as well.
+;;;             Return #f immediately if there are no
+;;;             unwaited children available.
+;;;     wait/stopped-children
+;;;             Report on suspended children as well.
 ;;;
 ;;;     If the process hasn't terminated (or suspended, if wait/stopped
-;;; 	is set) and wait/poll is set, return #f.
+;;;     is set) and wait/poll is set, return #f.
 ;;; (I'm working on the flags -df)
 
 ;;; JMG: We have to be careful about wait/poll and autoreap-policy:
@@ -287,35 +287,35 @@
 
 (define (wait pid/proc . maybe-flags)
   (let* ((flags (:optional maybe-flags 0))
-	 (proc (->proc pid/proc))
-	 (win (lambda (status)
-		(waited-by-wait proc status)
-		status)))
+         (proc (->proc pid/proc))
+         (win (lambda (status)
+                (waited-by-wait proc status)
+                status)))
     ;; save the event before we check for finished
     (let ((pre-event (most-recent-sigevent)))
       (with-lock
        wait-lock
        (lambda ()
-	 (cond ((atomic-wait proc (bitwise-ior flags wait/poll)) => win)
+         (cond ((atomic-wait proc (bitwise-ior flags wait/poll)) => win)
 
-	       ((zero? (bitwise-and flags wait/poll))
-		;; we have to block and hence use the event system
-		(let lp ((pre-event pre-event))
-		  (cond ((atomic-wait proc (bitwise-ior flags wait/poll))
-			 => win)
-			(else
-			 (release-lock wait-lock)
-			 (let ((next-event (next-sigevent pre-event (signal chld))))
-			   (obtain-lock wait-lock)
-			   (lp next-event))))))
-	       (else #f)))))))
+               ((zero? (bitwise-and flags wait/poll))
+                ;; we have to block and hence use the event system
+                (let lp ((pre-event pre-event))
+                  (cond ((atomic-wait proc (bitwise-ior flags wait/poll))
+                         => win)
+                        (else
+                         (release-lock wait-lock)
+                         (let ((next-event (next-sigevent pre-event (signal chld))))
+                           (obtain-lock wait-lock)
+                           (lp next-event))))))
+               (else #f)))))))
 
 
 ;;; -> process-object proc status/#f
 (define (atomic-wait proc flags)
   (cond ((proc:finished? proc)
-	 (placeholder-value (proc:status proc)))
-	(else (really-wait (proc:pid proc) (bitwise-ior flags wait/poll)))))
+         (placeholder-value (proc:status proc)))
+        (else (really-wait (proc:pid proc) (bitwise-ior flags wait/poll)))))
 
 ;;; This one is used, to wait on a positive pid
 ;;; We NEVER do a blocking wait syscall
@@ -328,9 +328,9 @@
       (%wait-pid pid flags)
    (cond ((process-id-exit-status (integer->process-id pid)) => (lambda (x) x))
          ((zero? return_pid) #f)      ; failed wait/poll
-	 ((= pid return_pid) status)  ; made it
-	 (else (error "mismatch in really-wait"
-		      return_pid pid)))))
+         ((= pid return_pid) status)  ; made it
+         (else (error "mismatch in really-wait"
+                      return_pid pid)))))
 
 
 
@@ -338,18 +338,18 @@
 ;;; proc_obj is maybe no longer alive
 (define (waited-by-reap pid status)
   (cond ((maybe-pid->proc pid) =>
-	 (lambda (proc)
-	   (obituary proc status)
-	   (push-reaped-proc proc)
-	   ))))
+         (lambda (proc)
+           (obituary proc status)
+           (push-reaped-proc proc)
+           ))))
 
 
 ;;; All you have to do, if a wait on proc was successful
 (define (waited-by-wait proc status)
   (if (not (status:stop-sig status))
       (begin
-	(obituary proc status)
-	(mark-proc-waited! proc))))
+        (obituary proc status)
+        (mark-proc-waited! proc))))
 
 ;;; we know from somewhere that proc is dead
 (define (obituary proc status)
@@ -369,34 +369,34 @@
 (define (wait-any . maybe-flags)
   (let ((flags (:optional maybe-flags 0)))
     (if (zero? (bitwise-and flags wait/poll))
-	(begin
-	  (receive (pid status)
-	     ;; before we maybe block via placeholder-value
-	     ;; do a really-wait-any for the ones, missed by 'late
-	    (really-wait-any (bitwise-ior flags  wait/poll))
-	    (if (not pid)
-		(let ((win (get-reaped-proc!)))
-		  (values win (placeholder-value (proc:status win))))
-		(values pid status))))
+        (begin
+          (receive (pid status)
+             ;; before we maybe block via placeholder-value
+             ;; do a really-wait-any for the ones, missed by 'late
+            (really-wait-any (bitwise-ior flags  wait/poll))
+            (if (not pid)
+                (let ((win (get-reaped-proc!)))
+                  (values win (placeholder-value (proc:status win))))
+                (values pid status))))
 
-	;; The rest of this is quite crude and can be safely ignored. -df
-	;; JMG: wait-any is crude and so its implementation
-	;; It got even worse, now that we have this fu*$#%g 'late
-	(if (maybe-obtain-lock reaped-proc-pop-lock)
-	    (if (eq? reaped-proc-head reaped-proc-tail)
-		;;; due to 'late we cannot be sure, that they all have been
-		;;; reaped
-		(begin
-		  (release-lock reaped-proc-pop-lock)
-		  (really-wait-any flags))
-		(let* ((retnode (placeholder-value reaped-proc-head))
-		       (retval (weak-pointer-ref (reaped-proc:proc retnode))))
-		  (set! reaped-proc-head (reaped-proc:next retnode))
-		  (release-lock reaped-proc-pop-lock)
-		  (if retval
-		      (values retval (placeholder-value (proc:status retval)))
-		      (values #f #f))))
-	    (values #f #f)))))
+        ;; The rest of this is quite crude and can be safely ignored. -df
+        ;; JMG: wait-any is crude and so its implementation
+        ;; It got even worse, now that we have this fu*$#%g 'late
+        (if (maybe-obtain-lock reaped-proc-pop-lock)
+            (if (eq? reaped-proc-head reaped-proc-tail)
+                ;;; due to 'late we cannot be sure, that they all have been
+                ;;; reaped
+                (begin
+                  (release-lock reaped-proc-pop-lock)
+                  (really-wait-any flags))
+                (let* ((retnode (placeholder-value reaped-proc-head))
+                       (retval (weak-pointer-ref (reaped-proc:proc retnode))))
+                  (set! reaped-proc-head (reaped-proc:next retnode))
+                  (release-lock reaped-proc-pop-lock)
+                  (if retval
+                      (values retval (placeholder-value (proc:status retval)))
+                      (values #f #f))))
+            (values #f #f)))))
 
 (define (really-wait-any flags)
   (if (zero? (bitwise-and flags wait/poll))
@@ -406,11 +406,11 @@
    (lambda ()
      (receive (pid status)
         (%wait-any flags)
-	(if pid
-	    (let ((proc (new-child-proc pid)))
-	      (waited-by-wait proc status)
-	      (values proc status))
-	    (values #f #f))))))
+        (if pid
+            (let ((proc (new-child-proc pid)))
+              (waited-by-wait proc status)
+              (values proc status))
+            (values #f #f))))))
 
 
 ;;; (wait-process-group [proc-group flags]) => [proc status]
@@ -426,29 +426,29 @@
 (define (wait-process-group . args)
   (let-optionals args ((proc-group 0) (flags 0))
     (let ((proc-group (cond ((integer? proc-group) proc-group)
-			     ((proc? proc-group)    (proc:pid proc-group))
-			     (else (error "Illegal argument" wait-process-group
-					  proc-group))))
-	  (win (lambda (pid status)
-		 (let ((proc (pid->proc pid 'create)))
-		   (if proc (waited-by-wait proc status))
-		   (values proc status)))))
+                             ((proc? proc-group)    (proc:pid proc-group))
+                             (else (error "Illegal argument" wait-process-group
+                                          proc-group))))
+          (win (lambda (pid status)
+                 (let ((proc (pid->proc pid 'create)))
+                   (if proc (waited-by-wait proc status))
+                   (values proc status)))))
       ;; save the event before we check for finished
       (let ((pre-event (most-recent-sigevent)))
-	(receive (pid status)
+        (receive (pid status)
           (%wait-process-group proc-group (bitwise-ior flags wait/poll))
           (cond (pid
-		 (win pid status))
-		((zero? (bitwise-and flags wait/poll))
-		 ;; we have to block and hence use the event system
-		 (let lp ((pre-event pre-event))
-		   (receive (pid status)
-		      (%wait-process-group proc-group (bitwise-ior flags wait/poll))
-		      (if pid
-			  (win pid status)
-			  (lp (next-sigevent pre-event (signal chld)))))))
-		(else
-		 (values #f status))))))))
+                 (win pid status))
+                ((zero? (bitwise-and flags wait/poll))
+                 ;; we have to block and hence use the event system
+                 (let lp ((pre-event pre-event))
+                   (receive (pid status)
+                      (%wait-process-group proc-group (bitwise-ior flags wait/poll))
+                      (if pid
+                          (win pid status)
+                          (lp (next-sigevent pre-event (signal chld)))))))
+                (else
+                 (values #f status))))))))
 
 
 
@@ -470,8 +470,8 @@
    (receive (pid status)
        (%wait-pid -1 flags)
     (if (zero? pid)
-	(values #f #f)			; None ready.
-	(values pid status)))))
+        (values #f #f)                  ; None ready.
+        (values pid status)))))
 
 (define (%wait-process-group pgrp flags)
   (if (zero? (bitwise-and flags wait/poll))
@@ -481,10 +481,10 @@
     ((errno/child)
      (values #f #t)))
    (receive (pid status)
-	(%wait-pid (- pgrp) flags)
+        (%wait-pid (- pgrp) flags)
      (if (zero? pid)
-	 (values #f #f)			; None ready.
-	 (values pid status)))))
+         (values #f #f)                 ; None ready.
+         (values pid status)))))
 
 
 ;;; Reaped process table
@@ -542,13 +542,13 @@
 
 (define (remove-reaped-proc reaped-proc)
   (spawn (lambda ()                 ;This is blocking, so should run by itself
-	   (set-reaped-proc:prev
-	    (placeholder-value (reaped-proc:next reaped-proc))
-	    (reaped-proc:prev reaped-proc))
-	   (set-reaped-proc:next
-	    (reaped-proc:prev reaped-proc)
-	    (reaped-proc:next reaped-proc)))
-  	 "reaped-proc-removing-thread"))
+           (set-reaped-proc:prev
+            (placeholder-value (reaped-proc:next reaped-proc))
+            (reaped-proc:prev reaped-proc))
+           (set-reaped-proc:next
+            (reaped-proc:prev reaped-proc)
+            (reaped-proc:next reaped-proc)))
+         "reaped-proc-removing-thread"))
 
 (define (pop-reaped-proc)
   (obtain-lock reaped-proc-pop-lock)        ;;; pop lock pop lock pop lock!
@@ -563,8 +563,8 @@
 (define (get-reaped-proc!)
   (let loop ((try (pop-reaped-proc)))
     (if (and try (proc:zombie try))
-	try
-	(loop (pop-reaped-proc)))))
+        try
+        (loop (pop-reaped-proc)))))
 
 ;;; PROC no longer eligible to be in the list. Delete it.
 (define (mark-proc-waited! proc)
