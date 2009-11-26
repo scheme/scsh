@@ -90,7 +90,6 @@
 (define-structure ccp-lib ccp-lib-interface
   (open srfi-14
 	ascii
-	defrec-package
 	srfi-13
 	let-opt
 	receiving
