@@ -77,26 +77,3 @@
             (,%lambda (,err-var ,data-var)
               (,%cond . ,arms))
             (,%lambda () . ,body)))))))
-
-;;;; S48 already has this machinery, i.e., (SET-INTERACTIVE?! flag)
-;;;; Interactive => breakpoint on errors.
-;;;; Noninteractive => exit on errors.
-;
-;(define $interactive-errors? (make-fluid #f))
-;
-;(define (with-interactive-errors val thunk)
-;  (let-fluid $interactive-errors? val thunk))
-;
-;(define (set-interactive-errors! val)
-;  (set-fluid! $interactive-errors? val))
-;
-;;;; Just quit if non-interactive. Otherwise, punt to next handler.
-;;;; A hack, because we use the default handler for the interactive
-;;;; case.
-;
-;(define (scsh-error-handler condition more)
-;  (if (and (error? condition)
-;          (not (fluid $interactive-errors?)))
-;      (begin (display condition (current-error-port))
-;            (exit -1))
-;      (more)))
