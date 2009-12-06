@@ -17,8 +17,12 @@
 (user)
 (open 'scsh-reader)
 (set-reader 'scsh-read)
+
 (open 'filenames)
+;;; Set this to wherever the scsh directory is...
 (run '(set-global-translation! "=scshexternal/" "/media/nordostlich/scsh/scsh/"))
+
+;;; This is to avoid scheme48's deadlock detection.
 (open 'threads)
 (run '(spawn (lambda ()
                (sleep (* 1000 60 60 24 365)))))
