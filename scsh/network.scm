@@ -90,7 +90,7 @@
 	 (with-errno-handler
 	  ;; ECONNABORTED we just ignore
 	  ((errno packet)
-	   ((errno/connaborted) 'fick-dich-ins-knie))
+	   ((connaborted) 'fick-dich-ins-knie))
 	  (call-with-values
 	   (lambda () (accept-connection sock))
 	   proc))

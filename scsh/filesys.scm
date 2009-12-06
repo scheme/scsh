@@ -16,16 +16,16 @@
   (let loop ()
     (or (with-errno-handler ; Assume it's a file and try.
 	    ((err data)
-	     ((errno/perm) #f) ; Return #f if directory
-	     ((errno/isdir) #f)
-	     ((errno/noent) #t))
+	     ((perm) #f) ; Return #f if directory
+	     ((isdir) #f)
+	     ((noent) #t))
 	    (delete-file fname)
 	    #t)
 
 	(with-errno-handler ; Assume it's a directory and try.
 	    ((err data)
-	     ((errno/notdir) #f) ; Return #f if fname is not a directory.
-	     ((errno/noent) #t))
+	     ((notdir) #f) ; Return #f if fname is not a directory.
+	     ((noent) #t))
 	    (delete-directory fname)
 	    #t)
 
@@ -40,27 +40,20 @@
     (let ((query (lambda ()
 		   (y-or-n? (string-append op-name ": " fname
 					   " already exists. Delete")))))
-      (let ((result
-	     (let loop ((override? override?))
-	       (with-errno-handler
-		((err data)
-		 ((errno/exist)
-		  (cond ((if (eq? override? 'query)
-			     (query)
-			     override?)
-			 (delete-filesys-object fname)
-			 (loop #t))
-		      ;;; raising an error here won't work due to S48's
-		      ;;; broken exception system
-			(else (list err syscall fname)))))
-		(with-resources-aligned 
-		 (list cwd-resource umask-resource euid-resource egid-resource)
-		 (lambda ()
-		   (makeit fname)))
-		#f))))
-	(if (list? result)
-	    (apply errno-error result)
-	    (if #f #f)))))
+      (let loop ((override? override?))
+        (with-errno-handler
+         ((err data)
+          ((exist)
+           (cond ((if (eq? override? 'query)
+                      (query)
+                      override?)
+                  (delete-filesys-object fname)
+                  (loop #t))
+                 (else (errno-error err syscall fname)))))
+         (with-resources-aligned
+          (list cwd-resource umask-resource euid-resource egid-resource)
+          (lambda ()
+            (makeit fname)))))))
 
 ;;;;;;;
 
@@ -100,11 +93,11 @@
 		     "create-symlink"
 		     create-symlink))
 
-;;; Unix rename() works backwards from mkdir(), mkfifo(), link(), and 
+;;; Unix rename() works backwards from mkdir(), mkfifo(), link(), and
 ;;; symlink() -- it overrides by default, (though insisting on a type
 ;;; match between the old and new object). So we can't use create-file-thing.
 ;;; Note that this loop has a tiny atomicity problem -- if someone
-;;; creates a file *after* we do our existence check, but *before* we 
+;;; creates a file *after* we do our existence check, but *before* we
 ;;; do the rename, we could end up overriding it, when the user asked
 ;;; us not to. That's life in the food chain.
 
@@ -115,20 +108,20 @@
 	    (and override?
 		 (y-or-n? (string-append "rename-file:" new-fname
 					 " already exists. Delete"))))
-	(with-resources-aligned 
+	(with-resources-aligned
 	 (list cwd-resource euid-resource egid-resource)
 	 (lambda ()
 	   (%rename-file old-fname new-fname))))))
 
 (define (read-symlink path)
-  (with-resources-aligned 
+  (with-resources-aligned
 	 (list cwd-resource euid-resource egid-resource)
 	 (lambda ()
 	   (%read-symlink path))))
 
 
 (define (delete-directory path)
-  (with-resources-aligned 
+  (with-resources-aligned
 	 (list cwd-resource euid-resource egid-resource)
 	 (lambda ()
 	   (%delete-directory path))))

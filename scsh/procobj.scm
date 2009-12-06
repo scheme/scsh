@@ -465,7 +465,7 @@
 (define (%wait-any flags)
   (with-errno-handler
    ((errno packet)
-    ((errno/child)
+    ((child)
      (values #f #t)))
    (receive (pid status)
        (%wait-pid -1 flags)
@@ -478,7 +478,7 @@
       (error "really-wait without wait/poll"))
   (with-errno-handler
    ((errno packet)
-    ((errno/child)
+    ((child)
      (values #f #t)))
    (receive (pid status)
         (%wait-pid (- pgrp) flags)

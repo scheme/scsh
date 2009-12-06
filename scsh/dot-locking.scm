@@ -12,7 +12,7 @@
   (let ((temp-name (create-temp-file file-name)))
     (with-errno-handler
      ((errno packet)
-      ((errno/exist)
+      ((exist)
        (delete-file temp-name)
        #f))
      (create-hard-link temp-name (make-lock-file-name file-name))
@@ -25,7 +25,7 @@
       (quotient (* (modulo (crank) 314159265)
 		   limit)
 		314159265))))
-			   
+
 ;; STALE-TIME is the minimum age of a lock to be broken
 ;; if #f, don't break the lock
 
@@ -64,12 +64,12 @@
 (define (break-dot-lock file-name)
   (with-errno-handler
    ((errno packet)
-    ((errno/noent) 'dont-care))
+    ((noent) 'dont-care))
    (delete-file (make-lock-file-name file-name))))
 
 (define (with-dot-lock* file-name thunk)
   (dynamic-wind
-   (lambda () 
+   (lambda ()
      (obtain-dot-lock file-name))
    (lambda ()
      (call-with-values thunk

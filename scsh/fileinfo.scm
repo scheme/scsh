@@ -13,9 +13,9 @@
 ;;;
 ;;; There's a Posix call, access(), that checks using the *real* uid, not
 ;;; the effective uid, so that setuid programs can figure out if the luser
-;;; has perms. file-not-accessible? is defined in terms of the effective uid, 
+;;; has perms. file-not-accessible? is defined in terms of the effective uid,
 ;;; so we can't use access().
-;;; 
+;;;
 ;;; This is a kind of bogus function. The only way to do a real check is to
 ;;; try an open() and see if it flies. Otherwise, there's an obvious atomicity
 ;;; problem. Also, we special case root, saying root always has all perms. But
@@ -23,7 +23,7 @@
 ;;; this case, we'd blithely say the file was writeable -- there's no way to
 ;;; check for a ROFS without doing an open(). We need a euid analog to
 ;;; access(). Ah, well.
-;;; 
+;;;
 ;;; I also should define a family of real uid perm-checking calls.
 ;;;
 ;;; Return values:
@@ -38,13 +38,13 @@
 
 (define (fd/port/fname-not-accessible? perms fd/port/fname)
   (with-errno-handler ((err data)
-		       ((errno/acces) 'search-denied)
-		       ((errno/notdir) 'no-directory)
+		       ((acces) 'search-denied)
+		       ((notdir) 'no-directory)
 
 		       ;; If the file doesn't exist, we usually return
 		       ;; 'nonexistent, but we special-case writability
 		       ;; for the directory check.
-		       ((errno/noent)
+		       ((noent)
 			(and (or (zero? (bitwise-and perms 2))
 				 ;; This string? test *has* to return #t.
 				 ;; If fd/port/fname is an fd or a port,
@@ -53,44 +53,44 @@
 				 (not (string? fd/port/fname))
 				 ;; OK, check to see if we can create
 				 ;; files in the directory.
-				 (fd/port/fname-not-accessible? 
+				 (fd/port/fname-not-accessible?
 				  2
 				  (directory-as-file-name
 				   (file-name-directory fd/port/fname))))
 			     'nonexistent)))
-		      (file-info-not-accessible? perms 
+		      (file-info-not-accessible? perms
 						 (file-info fd/port/fname))))
 
-(define (file-info-not-accessible? perms info) 
+(define (file-info-not-accessible? perms info)
   (let ((uid (user-effective-uid)))
     (and (let ((acc (file-info:mode info)))
 	   (cond ((zero? uid) #f)	; Root can do as he wishes.
 
 		 ((= (file-info:uid info) (user-effective-uid)) ; User
 		  (zero? (bitwise-and acc (arithmetic-shift perms 6))))
-		      
+
 		 ((or (= (file-info:gid info) (user-effective-gid)) ; Group
 		      (memv (file-info:gid info) (user-supplementary-gids)))
 		  (zero? (bitwise-and acc (arithmetic-shift perms 3))))
-		      
+
 		 (else			; Other
 		  (zero? (bitwise-and acc perms)))))
 	 'permission)))
 
 ;;;;;;
 
-(define (file-not-readable?   fd/port/fname)  
+(define (file-not-readable?   fd/port/fname)
   (fd/port/fname-not-accessible? 4 fd/port/fname))
-(define (file-not-writable?   fd/port/fname)  
+(define (file-not-writable?   fd/port/fname)
   (fd/port/fname-not-accessible? 2 fd/port/fname))
-(define (file-not-executable? fd/port/fname)  
+(define (file-not-executable? fd/port/fname)
   (fd/port/fname-not-accessible? 1 fd/port/fname))
 
-(define (file-readable?   fd/port/fname)  
+(define (file-readable?   fd/port/fname)
   (not (file-not-readable?   fd/port/fname)))
-(define (file-writable?   fd/port/fname)  
+(define (file-writable?   fd/port/fname)
   (not (file-not-writable?   fd/port/fname)))
-(define (file-executable? fd/port/fname)  
+(define (file-executable? fd/port/fname)
   (not (file-not-executable? fd/port/fname)))
 
 (define (file-info-not-readable?   info)  (file-info-not-accessible? 4 info))
@@ -121,8 +121,8 @@
 (define (file-not-exists? fd/port/fname . maybe-chase?)
   (with-errno-handler
       ((err data)
-       ((errno/acces) 'search-denied)
-       ((errno/noent errno/notdir) #t))
+       ((acces) 'search-denied)
+       ((noent notdir) #t))
     (apply file-info fd/port/fname maybe-chase?)
     #f))
 
@@ -155,7 +155,7 @@
 (define (file-info-directory? file-info)
   (eq? 'directory (file-info:type file-info)))
 
-(define file-directory? 
+(define file-directory?
   (file-info-to-fname/fd/port file-info-directory?))
 
 (define (file-info-fifo? file-info)
@@ -179,7 +179,7 @@
 
 (define file-special? (file-info-to-fname/fd/port file-info-special?))
 
-(define (file-info-symlink? file-info)  
+(define (file-info-symlink? file-info)
   (eq? 'symlink (file-info:type file-info)))
 
 (define (file-symlink? fd/port/fname) ; No MAYBE-CHASE?, of course.

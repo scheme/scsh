@@ -54,7 +54,7 @@
 (define (lock-region/no-block fdes lock)
   (with-errno-handler
    ((errno data)
-    ((errno/again errno/acces) #f))
+    ((again acces) #f))
    (call-lock-region %set-lock fcntl/set-record-lock-no-block fdes lock)
    #t))
 
