@@ -38,45 +38,6 @@
             lock/write
             lock/release) :number)))
 
-(define-interface posix-errno-interface
-  (export ((errno/2big
-            errno/acces
-            errno/again
-            errno/badf
-            errno/busy
-            errno/child
-            errno/deadlk
-            errno/dom
-            errno/exist
-            errno/fault
-            errno/fbig
-            errno/intr
-            errno/inval
-            errno/io
-            errno/isdir
-            errno/mfile
-            errno/mlink
-            errno/nametoolong
-            errno/nfile
-            errno/nodev
-            errno/noent
-            errno/noexec
-            errno/nolck
-            errno/nomem
-            errno/nospc
-            errno/nosys
-            errno/notdir
-            errno/notempty
-            errno/notty
-            errno/nxio
-            errno/perm
-            errno/pipe
-            errno/range
-            errno/rofs
-            errno/spipe
-            errno/srch
-            errno/xdev) :number)))
-
 (define-interface scsh-errors-interface
   (export errno-error
           error
