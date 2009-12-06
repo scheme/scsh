@@ -29,7 +29,7 @@
             ((os-error? condition)
              (handler (os-error-code condition)
                       (list (condition-message condition)
-                            (condition-who condtion)
+                            (condition-who condition)
                             (condition-irritants condition))))
             (else (more))))
     thunk))
