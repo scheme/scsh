@@ -587,8 +587,6 @@
 ;;; Directory stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(import-os-error-syscall %open-dir (dir-name) "directory_files")
-
 (define (directory-files . args)
   (with-resources-aligned
    (list cwd-resource euid-resource egid-resource)
@@ -596,7 +594,8 @@
      (let-optionals args ((dir       ".")
                           (dotfiles? #f))
        (check-arg string? dir directory-files)
-       (let* ((files (%open-dir (ensure-file-name-is-nondirectory dir)))
+       (let* ((files (map (lambda (file) (os-string->string file))
+                          (list-directory (ensure-file-name-is-nondirectory dir))))
               (files-sorted ((structure-ref sort sort-list!) files filename<=)))
          (if dotfiles? files-sorted
              (filter (lambda (f) (not (dotfile? f)))
