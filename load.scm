@@ -11,9 +11,11 @@
       "scsh/scsh-package.scm"
       "scsh/machine/packages.scm"
       "scsh/lib/char-package.scm"
-      "scsh/lib/ccp-pack.scm")
+      "scsh/lib/ccp-pack.scm"
+      "test/test-packages.scm")
 
 (user)
-
+(open 'scsh-reader)
+(set-reader 'scsh-read)
 (open 'filenames)
-(load "setup.scm")
+(run '(set-global-translation! "=scshexternal/" "/media/nordostlich/scsh/scsh/"))
