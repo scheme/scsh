@@ -17,6 +17,12 @@
 
 (import-dynamic-externals "=scshexternal/scsh")
 
+(define (byte-vector->string bytev)
+  (os-string->string (byte-vector->os-string bytev)))
+
+(define (string->byte-vector string)
+  (os-string->byte-vector (x->os-string bytev)))
+
 ;;; Move this to somewhere else as soon as Marc has published his SRFI
 (define (continuation-capture receiver)
   ((call-with-current-continuation
@@ -60,7 +66,7 @@
   (syntax-rules ()
     ((define/vector-args new raw (string-arg ...) arg ...)
      (define (new string-arg ... arg ...)
-       (raw (os-string->byte-vector (x->os-string string-arg)) ...
+       (raw (string->byte-vector string-arg) ...
             arg ...)))))
 
 ;;; Process
@@ -269,9 +275,8 @@
 (import-os-error-syscall %read-symlink-raw (path) "scsh_readlink")
 
 (define (%read-symlink path)
-  (os-string->string
-   (byte-vector->os-string
-    (%read-symlink-raw (os-string->byte-vector (x->os-string path))))))
+  (byte-vector->string
+   (%read-symlink-raw (string->byte-vector path))))
 
 (import-os-error-syscall %utime-raw (path ac m) "scm_utime")
 
@@ -697,12 +702,11 @@
 
 (define (alist->env-list alist)
   (map (lambda (var.val)
-         (os-string->byte-vector
-          (x->os-string
-           (string-append (car var.val) "="
-                          (let ((val (cdr var.val)))
-                            (if (string? val) val
-                                (string-join val ":")))))))
+         (string->byte-vector
+          (string-append (car var.val) "="
+                         (let ((val (cdr var.val)))
+                           (if (string? val) val
+                               (string-join val ":"))))))
        alist))
 
 (define (alist->env-vec alist)
@@ -791,7 +795,8 @@
 
 (import-os-error-syscall %gethostname () "scm_gethostname")
 
-(define system-name %gethostname)
+(define (system-name)
+  (byte-vector->string (%gethostname)))
 
 (import-os-error-syscall errno-msg (i) "errno_msg")
 
@@ -804,6 +809,9 @@
   (version uname:version)
   (machine uname:machine))
 
-(define-exported-binding "uname-record-type" :uname)
+(import-os-error-syscall %uname-list () "scm_uname")
 
-(import-os-error-syscall uname () "scm_uname")
+(define (uname)
+  (apply make-uname
+         (reverse (map (lambda (x)
+                         (byte-vector->string x)) (%uname-list)))))

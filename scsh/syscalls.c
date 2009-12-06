@@ -759,29 +759,26 @@ s48_ref_t fcntl_write(s48_call_t call, s48_ref_t fd,
   return s48_enter_long_2(call, ret);
 }
 
-static s48_ref_t uname_record_type_binding;
-
 s48_ref_t scm_uname(s48_call_t call)
 {
-  s48_ref_t uname_record = s48_unspecific_2(call);
+  s48_ref_t uname_list = s48_null_2(call);
   struct utsname uname_struct;
 
   if (uname(&uname_struct) == -1)
     s48_os_error_2(call, "scm_uname", errno, 0);
 
-  uname_record = s48_make_record_2(call, uname_record_type_binding);
-  s48_record_set_2(call, uname_record, 0,
-                   s48_enter_byte_string_2(call, uname_struct.sysname));
-  s48_record_set_2(call, uname_record, 1,
-                   s48_enter_byte_string_2(call, uname_struct.nodename));
-  s48_record_set_2(call, uname_record, 2,
-                   s48_enter_byte_string_2(call, uname_struct.release));
-  s48_record_set_2(call, uname_record, 3,
-                   s48_enter_byte_string_2(call, uname_struct.version));
-  s48_record_set_2(call, uname_record, 4,
-                   s48_enter_byte_string_2(call, uname_struct.machine));
+  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.sysname),
+                          uname_list);
+  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.nodename),
+                          uname_list);
+  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.release),
+                          uname_list);
+  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.version),
+                          uname_list);
+  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.machine),
+                          uname_list);
 
-  return uname_record;
+  return uname_list;
 }
 
 /*
@@ -938,6 +935,5 @@ void scsh_init_syscalls (){
 
   current_env = s48_make_global_ref(_s48_value_false);
   envvec_record_type_binding = s48_get_imported_binding_2("envvec-record-type");
-  uname_record_type_binding = s48_get_imported_binding_2("uname-record-type");
   add_envvec_finalizerB_binding = s48_get_imported_binding_2("add-envvec-finalizer!");
 }
