@@ -21,7 +21,7 @@
   (os-string->string (byte-vector->os-string bytev)))
 
 (define (string->byte-vector string)
-  (os-string->byte-vector (x->os-string bytev)))
+  (os-string->byte-vector (x->os-string string)))
 
 ;;; Move this to somewhere else as soon as Marc has published his SRFI
 (define (continuation-capture receiver)
