@@ -19,3 +19,6 @@
 (set-reader 'scsh-read)
 (open 'filenames)
 (run '(set-global-translation! "=scshexternal/" "/media/nordostlich/scsh/scsh/"))
+(open 'threads)
+(run '(spawn (lambda ()
+               (sleep (* 1000 60 60 24 365)))))
