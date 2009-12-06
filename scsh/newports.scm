@@ -341,32 +341,6 @@
 ;;; Open & Close
 ;;; ------------
 
-;;; replace rts/channel-port.scm begin
-(define (open-file fname flags . maybe-mode)
-  (let ((fd (apply open-fdes fname flags maybe-mode))
-        (access (bitwise-and flags open/access-mask)))
-    ((if (or (= access open/read) (= access open/read+write))
-         make-input-fdport
-         make-output-fdport)
-     fd 0)))
-
-(define (open-input-file fname . maybe-flags)
-  (let ((flags (:optional maybe-flags 0)))
-    (open-file fname (deposit-bit-field flags open/access-mask open/read))))
-
-(define (deposit-bit-field bits mask field)
-  (bitwise-ior (bitwise-and field mask)
-               (bitwise-and bits  (bitwise-not mask))))
-
-(define (open-output-file fname . rest)
-  (let* ((flags (if (pair? rest) (car rest)
-                    (bitwise-ior open/create open/truncate))) ; default
-         (maybe-mode (if (null? rest) '() (cdr rest)))
-         (flags (deposit-bit-field flags open/access-mask open/write)))
-    (apply open-file fname flags maybe-mode)))
-
-;;; replace rts/channel-port.scm end
-
 ;;; All these revealed-count-hacking procs have atomicity problems.
 ;;; They need to run uninterrupted.
 ;;; (port-locks should do the trick -df)
@@ -704,25 +678,6 @@
                     (lambda ()
                       (if port
                           (close port)))))))
-
-;;; replace rts/channel-port.scm begin
-(define call-with-input-file
-  (call-with-mumble-file open-input-file close-input-port))
-
-(define call-with-output-file
-  (call-with-mumble-file open-output-file close-output-port))
-
-(define (with-input-from-file string thunk)
-  (call-with-input-file string
-    (lambda (port)
-      (let-fluid $current-input-port port thunk))))
-
-(define (with-output-to-file string thunk)
-  (call-with-output-file string
-    (lambda (port)
-      (let-fluid $current-output-port port thunk))))
-
-;;; replace rts/channel-port.scm end
 
 ;;; select
 ;;; -----

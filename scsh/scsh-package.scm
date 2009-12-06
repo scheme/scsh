@@ -196,12 +196,7 @@
         rx-syntax
         thread-fluids                   ; For exec-path-list
         loopholes               ; For my bogus CALL-TERMINALLY implementation.
-        (modify scheme (hide call-with-input-file
-                             call-with-output-file
-                             with-input-from-file
-                             with-output-to-file
-                             open-input-file
-                             open-output-file))
+        scheme
 
         low-interrupt            ; for sighandler and procobj
         ;; all these seem to be for scsh-0.6 JMG
