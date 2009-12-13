@@ -162,7 +162,6 @@
         defenum-package
         external-calls
         load-dynamic-externals
-        structure-refs
         receiving
         srfi-9
         formats
@@ -296,7 +295,6 @@
         threads
 	(subset threads-internal (wait-for-event))
 	queues scheduler
-        structure-refs
         scsh-utilities
         interrupts
         low-interrupt
@@ -434,8 +432,7 @@
                       lib-dirs-interface
                       )
 
-  (open structure-refs
-        scsh-level-0
+  (open scsh-level-0
         scsh-level-0-internals
         re-exports
 ;       scsh-regexp-package
