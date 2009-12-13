@@ -9,7 +9,7 @@
       (< end start)))
 
 
-;;; Best-effort/forward-progress reading 
+;;; Best-effort/forward-progress reading
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (read-string!/partial s . args)
@@ -27,8 +27,8 @@
           ((open-input-port? fd/port)
 	   (if (= start end)
 	       0
-	       (let* ((needed (if (= 0 (bitwise-and open/non-blocking
-						    (fdes-status fd/port)))
+	       (let* ((needed (if (file-options-on? (i/o-flags fd/port)
+                                                    (file-options nonblocking))
 				  'any
 				  'immediate))
 		      (nread (if (= end (string-length s))
@@ -38,27 +38,27 @@
      		      ;;; but fills the buffer at most to the end.
 		      ;;; Therefore we allocate a new buffer here:
 				 (let* ((buf (make-string (- end start)))
-					(nread-any 
+					(nread-any
 					 (read-block buf 0 needed fd/port)))
 				   (if (not (eof-object? nread-any))
 				       (copy-bytes! buf 0 s start nread-any))
 				   nread-any))))
-		 
+
 		 (if (eof-object? nread)
 		     #f
 		     nread))))
 
-	  (else 
+	  (else
 	   (apply error "Not a fd/port in read-string!/partial" s args)))))
 
 
-(define (read-string/partial len . maybe-fd/port) 
+(define (read-string/partial len . maybe-fd/port)
   (let* ((fd/port (:optional maybe-fd/port (current-input-port))))
     (cond ((integer? fd/port)
 	   (let ((port (fdes->inport fd/port)))
 	     (set-port-buffering port bufpol/none)
 	     (read-string/partial len port)))
-	  
+
 	  ((open-input-port? fd/port)
 	   (if (= len 0)
                ""
@@ -67,7 +67,7 @@
 		 (cond ((not nread) #f)
 		       ((= nread len) buffer)
 		       (else (substring buffer 0 nread))))))
-	  (else 
+	  (else
 	   (error "Not a fd/port in read-string/partial" len fd/port)))))
 
 
@@ -94,7 +94,7 @@
 		 #f
 		 nbytes/eof))))))
 
-(define (read-string len . maybe-fd/port) 
+(define (read-string len . maybe-fd/port)
   (let* ((s (make-string len))
 	 (fd/port (:optional maybe-fd/port (current-input-port)))
 	 (nread (read-string! s fd/port 0 len)))
@@ -118,8 +118,8 @@
 	   (let ((port (fdes->outport fd/port)))
 	     (set-port-buffering port bufpol/block (- end start))
 	     (write-string/partial s port start end)))
-	  (else 
-	   ;; the only way to implement this, would be to use 
+	  (else
+	   ;; the only way to implement this, would be to use
 	   ;; channel-maybe-write. But this is an VM-instruction which is not
 	   ;; exported. Since we now have threads this shouldn;t matter.
 	   (error "write-string/parital is currently dereleased.

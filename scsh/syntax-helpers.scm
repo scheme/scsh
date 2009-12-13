@@ -78,8 +78,8 @@
 (define (transcribe-process-form pf rename compare)
   (if (and (list? pf) (pair? pf))
       (let ((head (car pf)))
-	(cond 
-	 ((compare head (rename 'begin)) 
+	(cond
+	 ((compare head (rename 'begin))
 	  (transcribe-begin-process-form (cdr pf) rename compare))
 
 	 ((compare head (rename 'epf))
@@ -95,7 +95,7 @@
 	  (let ((conns (backq (cadr pf) rename))
 		(pfs (cddr pf)))
 	    (transcribe-complex-pipeline conns pfs rename compare)))
-	
+
 	 ((compare head (rename 'pipe+))
 	  (let ((conns (backq (cadr pf) rename))
 		(pfs (cddr pf)))
@@ -143,7 +143,7 @@
 					    ,(thunkate chunk rename compare)))
 			   first-chunks)))
 	(blockify `(,@forkers ,last-chunk) rename compare))))
-      
+
 
 (define (transcribe-extended-process-form epf rename compare)
   (let* ((pf (car epf))		; First form is the process form.
@@ -171,8 +171,8 @@
 	 (%dup->fdes (rename 'dup->fdes))
 ;	 (%run/port (rename 'run/port))
 	 (%open-string-source (rename 'open-string-source))
-	 (%open/create+trunc (rename 'open/create+trunc))
-	 (%open/write+append+create (rename 'open/write+append+create))
+	 (%create+trunc (rename 'create+trunc))
+	 (%write+append+create (rename 'write+append+create))
 	 (%q (lambda (x) (list (rename 'quote) x)))
 	 (%close (rename 'close))
 	 (%move->fdes (rename 'move->fdes))
@@ -184,14 +184,14 @@
     (cond ((pair? redir)
 	   (let ((args (cdr redir))
 		 (op (car redir)))
-	     (cond 
+	     (cond
 	      ((compare op (rename '<))
 	       (receive (fdes fname) (parse-spec args 0)
 		 `(,%open ,fname 0 ,fdes)))
 
 	      ((compare op (rename '>))
 	       (receive (fdes fname) (parse-spec args 1)
-		 `(,%open ,fname ,%open/create+trunc ,fdes)))
+		 `(,%open ,fname ,%create+trunc ,fdes)))
 
 	       ;;; BUG BUG -- EPF is backquoted by parse-spec.
 ;	       ((<<<) ; Just a RUN/PORT with a specific target fdes.
@@ -208,7 +208,7 @@
 
 	      ((compare op (rename '>>))
 	       (receive (fdes fname) (parse-spec args 1)
-		 `(,%open ,fname ,%open/write+append+create ,fdes)))
+		 `(,%open ,fname ,%write+append+create ,fdes)))
 
 	      ((compare op (rename '=))
 	       (assert (= 2 (length args))) ; Syntax check.

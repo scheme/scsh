@@ -14,40 +14,34 @@
 ;;; TARGET is evicted before the shift -- if there is a port allocated to
 ;;; file descriptor TARGET, it will be shifted to another file descriptor.
 
-(define (move->fdes fd/port target)
-  (let ((doit (lambda (fd)
-		(if (not (= fd target))
-		    (begin (evict-ports target) ; Evicts any ports at TARGET.
-			   (%dup2 fd target))))))
+;; (define (move->fdes fd/port target)
+;;   (let ((doit (lambda (fd)
+;; 		(if (not (= fd target))
+;; 		    (begin (evict-ports target) ; Evicts any ports at TARGET.
+;; 			   (%dup2 fd target))))))
 
-    (cond ((integer? fd/port)
-	   (doit fd/port)
-	   target)
+;;     (cond ((integer? fd/port)
+;; 	   (doit fd/port)
+;; 	   target)
 
-	  ((fdport? fd/port)
-	   (sleazy-call/fdes fd/port doit)
-	   (if (%move-fdport target fd/port 1)
-	       (error "fdport shift failed."))
-	   fd/port)
+;; 	  ((fdport? fd/port)
+;; 	   (sleazy-call/fdes fd/port doit)
+;; 	   (if (%move-fdport target fd/port 1)
+;; 	       (error "fdport shift failed."))
+;; 	   fd/port)
 
-	  (else (error "Argument not fdport or file descriptor" fd/port)))))
+;; 	  (else (error "Argument not fdport or file descriptor" fd/port)))))
 
+(define (move->fdes port target)
+  (dup2 port target))
 
 (define (input-source? fd/port)
   (check-arg fd/port? fd/port input-source?)
-  (or (input-port? fd/port)
-      (and (integer? fd/port)
-	   (let ((access (bitwise-and open/access-mask (fdes-status fd/port))))
-	     (or (= access open/read)
-		 (= access open/read+write))))))
+  (input-port? fd/port))
 
 (define (output-source? fd/port)
   (check-arg fd/port? fd/port output-source?)
-  (or (output-port? fd/port)
-      (and (integer? fd/port)
-	   (let ((access (bitwise-and open/access-mask (fdes-status fd/port))))
-	     (or (= access open/write)
-		 (= access open/read+write))))))
+  (output-port? fd/port))
 
 
 ;;; If FD/PORT is a file descriptor, returns a file descriptor.
@@ -81,11 +75,10 @@
 
 ;;; Not exported.
 (define (shell-open path flags fdes)
-  (move->fdes (open-fdes path flags #o666) fdes))
+  (dup2 (open-file path flags (integer->file-mode #o666)) fdes))
 
-(define open/create+trunc
-  (bitwise-ior open/write (bitwise-ior open/create open/truncate)))
+(define create+trunc
+  (file-options write-only create truncate))
 
-(define open/write+append+create
-  (bitwise-ior open/write
-	       (bitwise-ior  open/append open/create)))
+(define write+append+create
+  (file-options write-only append create))
