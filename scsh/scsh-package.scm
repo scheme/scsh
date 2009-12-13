@@ -80,7 +80,7 @@
   (export transcribe-extended-process-form)
   (open receiving       ; receive
         (subset signals (error warn))
-        names           ; generated? by JMG
+        (subset names (generated?)) ; generated? by JMG
         scsh-utilities  ; check-arg
         scheme
         )
@@ -151,9 +151,8 @@
                                    init-scsh-hindbrain
                                    initialize-cwd
                                    init-scsh-vars))
-   )
+   (sigevents sigevents-interface))
   (for-syntax (open scsh-syntax-helpers scheme))
-  (access sigevents threads)
   (open (subset srfi-1 (any delete filter fold last reverse!))
         (subset srfi-13 (string<= string-join string-index string-index-right))
         (subset define-record-types (define-record-discloser))
@@ -169,8 +168,8 @@
         formats
         string-collectors
         delimited-readers
-        os-dependent            ; OS dependent stuff
-        buffered-io-flags       ; stdio dependent
+        os-dependent			; OS dependent stuff
+        buffered-io-flags		; stdio dependent
         ascii
         records
         extended-ports
@@ -188,16 +187,27 @@
         srfi-14
         scsh-version
         tty-flags
-        scsh-internal-tty-flags ; Not exported
-        let-opt                 ; optional-arg parsing & defaulting
-        architecture     ; Was this by JMG ??
+        scsh-internal-tty-flags	   ; Not exported
+        let-opt			   ; optional-arg parsing & defaulting
+        architecture		   ; Was this by JMG ??
         re-level-0
         rx-syntax
-        thread-fluids                   ; For exec-path-list
-        loopholes               ; For my bogus CALL-TERMINALLY implementation.
-        scheme
+        thread-fluids	; For exec-path-list
+        loopholes	; For my bogus CALL-TERMINALLY implementation.
+        (modify scheme
+		(rename (char-ready?  s48-char-ready?)
+			(read-char    s48-read-char)
+			(display      s48-display)
+			(newline      s48-newline)
+			(write        s48-write)
+			(write-char   s48-write-char)
+			(format       s48-format)
+			(force-output s48-force-output)))
 
-        low-interrupt            ; for sighandler and procobj
+        low-interrupt	      ; for sighandler and procobj
+	(subset interrupts (enable-interrupts!
+                            disable-interrupts!
+                            with-interrupts-inhibited))
         ;; all these seem to be for scsh-0.6 JMG
         i/o
         i/o-internal
@@ -205,7 +215,14 @@
         condvars
         proposals
         byte-vectors
-        threads locks placeholders
+        threads
+	(subset threads-internal (spawn-on-root
+                                  maybe-commit-and-block-on-queue
+                                  maybe-commit-and-make-ready
+				  thread-continuation
+                                  thread-queue-empty?
+                                  maybe-dequeue-thread!))
+	locks placeholders
         primitives
         escapes
         command-levels
@@ -215,17 +232,8 @@
         exit-hooks
         display-conditions
 
-        scsh-endian)
-  (for-syntax (open scsh-syntax-helpers scheme))
-  (access interrupts
-          sort
-          command-processor
-          escapes
-          i/o           ; S48's force-output
-          formats
-          threads-internal
-          records       ; I don't think this is necessary. !!!
-          scheme)       ; For accessing the normal I/O operators.
+        scsh-endian
+	queues)
   (files syntax
          scsh-condition
          syscalls
@@ -233,6 +241,7 @@
          rw
          newports
          fdports
+	 event
          procobj                ; New in release 0.4.
          (machine waitcodes)    ; OS dependent code.
          filesys
@@ -280,11 +289,13 @@
         condition-handler       ; simple-condition-handler
         low-level               ; flush-the-symbol-table!
         package-commands-internal
-        filenames               ; translate
+        (subset filenames (translate)) ; translate
         usual-resumer           ; usual-resumer
         environments            ; with-interaction-environment
         fluids-internal            ; JMG: get-dynamic-env
-        threads threads-internal queues scheduler
+        threads
+	(subset threads-internal (wait-for-event))
+	queues scheduler
         structure-refs
         scsh-utilities
         interrupts
@@ -297,12 +308,11 @@
                              with-output-to-file
                              open-input-file
                              open-output-file)))
-  (access threads-internal)
   (files startup))
 
 (define-structure scsh-top-package (export parse-switches-and-execute
                                            with-scsh-initialized)
-  (open command-processor
+  (open (modify command-processor (hide y-or-n?))
         command-levels          ; with-new-session
         conditions
         display-conditions
@@ -314,7 +324,7 @@
         fluids
         interfaces
         sigevents
-        low-interrupt
+        low-interrupt wind
         fluids-internal            ; JMG: get-dynamic-env
         handle                     ; JMG: with-handler
 ;       package-commands
@@ -464,13 +474,6 @@
         scheme)
   (files here))
 
-(define-structure sigevents sigevents-interface
-  (open scsh-level-0 scheme srfi-9 queues
-        (subset srfi-1 (filter))
-        structure-refs threads threads-internal proposals scsh-utilities
-        low-interrupt wind interrupts architecture posix-processes)
-  (files event))
-
 (define-structure simple-syntax (export define-simple-syntax)
   (open scheme)
  (begin (define-syntax define-simple-syntax
@@ -499,11 +502,10 @@
           fork/process
           wait/thread
           wait/process)
-  (open structure-refs
-        scheme)
-  (access scsh-level-0
-          threads
-          threads-internal)
+  (open scheme
+	(subset scsh-level-0     (fork wait))
+	(subset threads-internal (wait-for-event))
+	(subset thread-fluids    (fork-thread)))
   (files threads))
 
 ;; (define-structure dot-locking dot-locking-interface

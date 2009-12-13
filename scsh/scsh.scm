@@ -1104,7 +1104,7 @@
     ;; out interrupts across the %%FORK and NEW-CHILD-PROC
     ;; operations.
 
-    (((structure-ref interrupts with-interrupts-inhibited)
+    ((with-interrupts-inhibited
       (lambda ()
         ;; with-env-aligned is not neccessary here but it will
         ;; create the environ object in the parent process which

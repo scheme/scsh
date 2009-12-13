@@ -112,14 +112,6 @@
 ;;; (autoreap-policy [new-policy])
 ;;; Watch this area
 
-
-;;; I'm really tired of opening everything (i.e. events) in scsh-level-0
-;;; this is here until someone (Olin !!!) cleans up the scsh modules
-
-(define next-sigevent (structure-ref sigevents next-sigevent))
-(define most-recent-sigevent (structure-ref sigevents most-recent-sigevent))
-
-
 (define *autoreap-policy* #f) ; Not exported from this module.
 
 (define (autoreap-policy . maybe-policy)
@@ -181,7 +173,7 @@
          (*sigchld-handler*)
          (lp next-event))))
    thunk
-   (structure-ref threads-internal spawn-on-root)
+   spawn-on-root
    'auto-reaping))
 
 ;;; This list contains pids whose proc-obj were gc'd before they died

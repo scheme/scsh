@@ -527,7 +527,7 @@
                       (new-threads '()))
              (cond
               ((not (null? threads))
-               (if ((structure-ref threads-internal thread-continuation)
+               (if (thread-continuation
                     (car threads))
                    (loop (cdr threads)
                          (cons (car threads) new-threads))
@@ -542,7 +542,7 @@
      (lambda ()
        (placeholder-set!
         placeholder
-        ((structure-ref threads current-thread)))
+        (current-thread))
        (thunk)))
     (placeholder-value placeholder)))
 
@@ -552,9 +552,6 @@
 
 ;;; Extend R4RS i/o ops to handle file descriptors.
 ;;; -----------------------------------------------
-
-(define s48-char-ready? (structure-ref scheme char-ready?))
-(define s48-read-char   (structure-ref scheme read-char))
 
 (define-simple-syntax
   (define-r4rs-input (name arg ...) stream s48name body ...)
@@ -571,14 +568,6 @@
   (let ((port (fdes->inport input)))
     (set-port-buffering port bufpol/none)
     (s48-read-char port)))
-
-;structure refs changed to get reference from scheme -dalbertz
-(define s48-display    (structure-ref scheme display))
-(define s48-newline    (structure-ref scheme newline))
-(define s48-write      (structure-ref scheme write))
-(define s48-write-char (structure-ref scheme write-char))
-(define s48-format     (structure-ref formats format))
-(define s48-force-output (structure-ref i/o force-output))
 
 (define-simple-syntax
   (define-r4rs-output (name arg ...) stream s48name body ...)
@@ -731,7 +720,7 @@
     (lambda (port/fd)
       (if #f                            ;I'll make this right later
           (begin
-            ((structure-ref interrupts enable-interrupts!))
+            (enable-interrupts!)
             (error "SELECT on port with pending operation"
                    port/fd))))))
 
@@ -753,7 +742,7 @@
         (write-list (vector->list write-vec))
         (timeout (:optional maybe-timeout #f)))
 
-    ((structure-ref interrupts disable-interrupts!))
+    (disable-interrupts!)
 
     (for-each input-port/fdes-check-unlocked read-list)
     (for-each output-port/fdes-check-unlocked write-list)
@@ -763,7 +752,7 @@
 
       (if (or (eqv? timeout 0) (pair? any-read) (pair? any-write))
           (begin
-            ((structure-ref interrupts enable-interrupts!))
+            (enable-interrupts!)
             (values (list->vector any-read)
                     (list->vector any-write)
                     (make-vector 0)))
@@ -808,7 +797,7 @@
         (write-list (vector->list write-vec))
         (timeout (:optional maybe-timeout #f)))
 
-    ((structure-ref interrupts disable-interrupts!))
+    (disable-interrupts!)
 
     (for-each input-port/fdes-check-unlocked read-list)
     (for-each output-port/fdes-check-unlocked write-list)
@@ -817,7 +806,7 @@
           (any-write (any-output-ready (filter output-port? write-list))))
       (if (or (eqv? timeout 0) (pair? any-read) (pair? any-write))
           (begin
-            ((structure-ref interrupts enable-interrupts!))
+            (enable-interrupts!)
             (let ((n-read-ready
                    (let ((length (vector-length read-vec)))
                      (let loop ((i 0) (n 0))
@@ -920,7 +909,7 @@
   (let ((read-list (filter input-port? ports))
         (write-list (filter output-port? ports)))
 
-    ((structure-ref interrupts disable-interrupts!))
+    (disable-interrupts!)
 
     (for-each input-port/fdes-check-unlocked read-list)
     (for-each output-port/fdes-check-unlocked write-list)
@@ -930,7 +919,7 @@
 
       (if (or (eqv? timeout 0) (pair? any-read) (pair? any-write))
           (begin
-            ((structure-ref interrupts enable-interrupts!))
+            (enable-interrupts!)
             (append any-read any-write))
 
           (really-select-port-channels timeout read-list write-list)))))
@@ -940,7 +929,7 @@
   (let ((read-list (filter input-port? ports))
         (write-list (filter output-port? ports)))
 
-    ((structure-ref interrupts disable-interrupts!))
+    (disable-interrupts!)
 
     (for-each input-port/fdes-check-unlocked read-list)
     (for-each output-port/fdes-check-unlocked write-list)
@@ -950,7 +939,7 @@
 
       (if (or (eqv? timeout 0) (pair? any-read) (pair? any-write))
           (begin
-            ((structure-ref interrupts enable-interrupts!))
+            (enable-interrupts!)
             (append any-read any-write))
 
           (really-select-port-channels timeout read-list write-list)))))

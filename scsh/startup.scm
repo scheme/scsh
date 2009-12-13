@@ -82,7 +82,7 @@
                                              (propogate-upcall thread token args))
                                            (lambda ()
                                              (if (positive? (counter-value thread-count))
-                                                 ((structure-ref threads-internal wait-for-event))
+                                                 (wait-for-event)
                                                  #f))))
                (if (integer? *result*) *result* 0)))))))))) ; work around bug.
 

@@ -596,7 +596,7 @@
        (check-arg string? dir directory-files)
        (let* ((files (map (lambda (file) (os-string->string file))
                           (list-directory (ensure-file-name-is-nondirectory dir))))
-              (files-sorted ((structure-ref sort sort-list!) files filename<=)))
+              (files-sorted (sort-list! files filename<=)))
          (if dotfiles? files-sorted
              (filter (lambda (f) (not (dotfile? f)))
                      files-sorted)))))))

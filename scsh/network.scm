@@ -298,13 +298,12 @@
       (error "accept-connection: socket expected ~s" sock)
       (let ((family (socket:family sock)))
 	(let loop ()
-	  ((structure-ref interrupts disable-interrupts!))
+	  (disable-interrupts!)
 	  (let ((fd-addr (%accept (socket->fdes sock) family)))
 	    (cond ((pair? fd-addr)
 		   (let ((fd (car fd-addr))
 			 (addr (cdr fd-addr)))
-		     ((structure-ref interrupts
-				     enable-interrupts!))
+		     (enable-interrupts!)
 		     (let* ((in     (make-input-fdport fd 0))
 			    (out    (dup->outport in)))
 		       (values (make-socket family in out)
@@ -479,13 +478,12 @@
 
 (define (recv-substring! socket flags buf start end)
 	(let loop ()
-	  ((structure-ref interrupts disable-interrupts!))
+	  (disable-interrupts!)
 	  (let ((maybe-size-addr
 		 (%recv-substring! (socket->fdes socket)
 					 flags buf start end)))
 	    (cond (maybe-size-addr
-		   ((structure-ref interrupts
-				   enable-interrupts!))
+		   (enable-interrupts!)
 		   maybe-size-addr)
 		  (else (wait-for-channel
 			 (fdport-data:channel
@@ -555,12 +553,11 @@
 
 (define (send-substring socket flags buf start end family name)
   (let loop ()
-    ((structure-ref interrupts disable-interrupts!))
+    (disable-interrupts!)
     (cond ((%send-substring (socket->fdes socket) flags buf start end
 			    family name)
 	   => (lambda (nwritten)
-		((structure-ref interrupts
-				enable-interrupts!))
+		(enable-interrupts!)
 		nwritten))
 	  (else (wait-for-channel
 		 (fdport-data:channel
