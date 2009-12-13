@@ -1,37 +1,15 @@
 ;;; Copyright (c) 1994 by Olin Shivers
 ;;; Add scsh conditions to s48.
 
-;;; A syscall-error condition-type:
-
-(define-condition-type &syscall-error &error
-  make-syscall-error syscall-error?
-  (errno condition-errno)
-  (syscall condition-syscall))
-
-(define (errno-error errno syscall . irritants)
-  (errno-error-with-message errno (errno-msg errno) syscall irritants))
-
-(define (errno-error-with-message errno msg syscall . irritants)
-  (raise
-   (condition
-    (make-syscall-error errno syscall)
-    (make-message-condition msg)
-    (make-irritants-condition irritants))))
-
 (define (with-errno-handler* handler thunk)
   (with-handler
     (lambda (condition more)
-      (cond ((syscall-error? condition)
-             (handler (condition-errno condition)
-                      (list (condition-message condition)
-                            (condition-syscall condition)
-                            (condition-irritants condition))))
-            ((os-error? condition)
-             (handler (os-error-code condition)
-                      (list (condition-message condition)
-                            (condition-who condition)
-                            (condition-irritants condition))))
-            (else (more))))
+      (if (os-error? condition)
+          (handler (os-error-code condition)
+                   (list (condition-message condition)
+                         (condition-who condition)
+                         (condition-irritants condition)))
+          (more)))
     thunk))
 
 ;;; (with-errno-handler

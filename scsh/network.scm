@@ -190,7 +190,7 @@
 	(out (dup->outport port)))
     (make-socket pf in out)))
 
-(import-os-error-syscall %socket (pf type protocol) "scsh_socket")
+(import-lambda-definition-2 %socket (pf type protocol) "scsh_socket")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; close syscall
@@ -221,7 +221,7 @@
 			 family
 			 (socket-address:address name))))))))
 
-(import-os-error-syscall %bind (sockfd family name) "scheme_bind")
+(import-lambda-definition-2 %bind (sockfd family name) "scheme_bind")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; connect syscall
@@ -275,7 +275,7 @@
                               sock
                               name)))))))
 
-(import-os-error-syscall %connect (sockfd family name) "scheme_connect")
+(import-lambda-definition-2 %connect (sockfd family name) "scheme_connect")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; listen syscall
@@ -288,7 +288,7 @@
 	(else
 	 (%listen (socket->fdes sock) backlog))))
 
-(import-os-error-syscall %listen (sockfd backlog) "scsh_listen")
+(import-lambda-definition-2 %listen (sockfd backlog) "scsh_listen")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; accept syscall
@@ -313,7 +313,7 @@
 			  (fdport-data (socket:inport sock))))
 			(loop))))))))
 
-(import-os-error-syscall %accept (sockfd family) "scheme_accept")
+(import-lambda-definition-2 %accept (sockfd family) "scheme_accept")
 
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -328,7 +328,7 @@
 			       family)))
 	(make-socket-address family addr))))
 
-(import-os-error-syscall %peer-name  (sockfd family) "scheme_peer_name")
+(import-lambda-definition-2 %peer-name  (sockfd family) "scheme_peer_name")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; getsockname syscall
@@ -341,7 +341,7 @@
 	     (addr (%socket-name (socket->fdes sock) family)))
 	(make-socket-address family addr))))
 
-(import-os-error-syscall %socket-name (sockfd family) "scheme_socket_name")
+(import-lambda-definition-2 %socket-name (sockfd family) "scheme_socket_name")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; shutdown syscall
@@ -354,7 +354,7 @@
 	(else
 	 (%shutdown (socket->fdes sock) how))))
 
-(import-os-error-syscall %shutdown (sockfd how) "scsh_shutdown")
+(import-lambda-definition-2 %shutdown (sockfd how) "scsh_shutdown")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; socketpair syscall
@@ -372,7 +372,7 @@
 		  (make-socket protocol-family/unix in2 out2))))
        (%socket-pair type))))
 
-(import-os-error-syscall %socket-pair (type) "scheme_socket_pair")
+(import-lambda-definition-2 %socket-pair (type) "scheme_socket_pair")
 
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -490,7 +490,7 @@
 			  (fdport-data (socket:inport socket))))
 			(loop))))))
 
-(import-os-error-syscall %recv-substring! (sockfd flags buf start end)
+(import-lambda-definition-2 %recv-substring! (sockfd flags buf start end)
   "recv_substring")
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ;;; send syscall
@@ -564,7 +564,7 @@
 		  (fdport-data (socket:inport socket))))
 		(loop)))))
 
-(import-os-error-syscall
+(import-lambda-definition-2
   %send-substring (sockfd flags buf start end family name)
   "send_substring")
 
@@ -595,14 +595,14 @@
 	(else
 	 "socket-option: unknown option type ~s" option)))
 
-(import-os-error-syscall %getsockopt (sock level option) "scheme_getsockopt")
+(import-lambda-definition-2 %getsockopt (sock level option) "scheme_getsockopt")
 
 ;;; returns (list on-off linger)
-(import-os-error-syscall %getsockopt-linger (sockfd level optname)
+(import-lambda-definition-2 %getsockopt-linger (sockfd level optname)
   "scheme_getsockopt_linger")
 
 ;;; returns (list secs usecs)
-(import-os-error-syscall %getsockopt-timeout (sockfd level optname)
+(import-lambda-definition-2 %getsockopt-timeout (sockfd level optname)
   "scheme_getsockopt_timeout")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -631,13 +631,13 @@
 	(else
 	 "set-socket-option: unknown option type")))
 
-(import-os-error-syscall %setsockopt (sockfd level optname optval)
+(import-lambda-definition-2 %setsockopt (sockfd level optname optval)
   "scheme_setsockopt")
 
-(import-os-error-syscall %setsockopt-linger
+(import-lambda-definition-2 %setsockopt-linger
   (sockfd level optname on-off time) "scheme_setsockopt_linger")
 
-(import-os-error-syscall %setsockopt-timeout
+(import-lambda-definition-2 %setsockopt-timeout
   (sockfd level optname secs usecs) "scheme_setsockopt_timeout")
 
 ;;;-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

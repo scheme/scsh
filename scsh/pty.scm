@@ -10,9 +10,9 @@
 ;;; - PTY-{IN,OUT}PORT are input and output ports open on the controlling pty
 ;;;   device. PTY-OUTPORT is unbuffered.
 ;;; - TTYNAME is the name of the child's tty, e.g. "/dev/ttyk4".
-;;; 
+;;;
 ;;; The subprocess is placed in its own session, and the tty device
-;;; becomes the control tty for the new session/process-group/process. 
+;;; becomes the control tty for the new session/process-group/process.
 ;;; The child runs with stio hooked up to the tty; the (error-output-port)
 ;;; port is unbuffered.
 
@@ -31,7 +31,7 @@
 ;						  bufpol/none))
                               (with-stdio-ports* thunk))))
              (pty-out (dup->outport pty-in)))
-        (close-input-port tty-in) 
+        (close-input-port tty-in)
 ;      (set-port-buffering pty-out bufpol/none)
         (make-pty-a-tty! pty-in)
         (values process pty-in pty-out ttyname)))))
@@ -61,7 +61,7 @@
 
 	    (else (error "open-pty: could not open new pty"))))))
 
-(import-os-error-syscall allocate-pty () "allocate_pty")
+(import-lambda-definition-2 allocate-pty () "allocate_pty")
 
 (define (open-pty)
   (let ((pty-fd.tty-name (allocate-pty)))
@@ -80,7 +80,7 @@
     (let ((ans (string-copy name)))
       (string-set! ans 5 char)		; Change X in "/dev/Xtyzz" to CHAR.
       ans)))
-      
+
 (define pty-name->tty-name (pty/tty-name-mapper #\t)) ;/dev/ttyk3 -> /dev/ptyk3
 (define tty-name->pty-name (pty/tty-name-mapper #\p)) ;/dev/ptyk3 -> /dev/ttyk3
 
@@ -117,4 +117,4 @@
 (define (make-pty-a-tty! fd/port)
   (sleazy-call/fdes fd/port %make-pty-a-tty!))
 
-(import-os-error-syscall %make-pty-a-tty! (fd) "pty2tty")
+(import-lambda-definition-2 %make-pty-a-tty! (fd) "pty2tty")

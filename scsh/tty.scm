@@ -109,7 +109,7 @@
                        call-with-input-file
                        (lambda (fd) (%tty-info fd control-chars))))))
 
-(import-os-error-syscall %tty-info (fdes control-chars)
+(import-lambda-definition-2 %tty-info (fdes control-chars)
   "scheme_tcgetattr")
 
 
@@ -169,7 +169,7 @@
 		      (tty-info:time info))))))
 
 
-(import-os-error-syscall %set-tty-info
+(import-lambda-definition-2 %set-tty-info
   (fdes option control-chars iflag oflag cflag lflag ispeed-code ospeed-code
 	min time)
   "scheme_tcsetattr")
@@ -197,7 +197,7 @@
                       (lambda (fdes)
                         (%send-tty-break-fdes fdes duration)))))
 
-(import-os-error-syscall %send-tty-break-fdes (fdes duration)
+(import-lambda-definition-2 %send-tty-break-fdes (fdes duration)
   "sch_tcsendbreak")
 
 ;;; Drain the main vein.
@@ -213,7 +213,7 @@
            (sleazy-call/file tty call-with-output-file %tcdrain))
           (else (error "Illegal argument to DRAIN-TTY" tty)))))
 
-(import-os-error-syscall %tcdrain (fdes) "sch_tcdrain")
+(import-lambda-definition-2 %tcdrain (fdes) "sch_tcdrain")
 
 ;;; Flushing the device queues. (tcflush)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -236,7 +236,7 @@
 (define flush-tty/output (make-output-tty-flusher %flush-tty/output))
 (define flush-tty/both   (make-input-tty-flusher  %flush-tty/both))
 
-(import-os-error-syscall %tcflush (fdes flag) "sch_tcflush")
+(import-lambda-definition-2 %tcflush (fdes flag) "sch_tcflush")
 
 ;;; Stopping and starting I/O (tcflow)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -260,7 +260,7 @@
 (define start-tty-input  (make-input-flow-controller %tcflow/start-in))
 (define stop-tty-input   (make-input-flow-controller %tcflow/stop-in))
 
-(import-os-error-syscall %tcflow (fdes action) "sch_tcflow")
+(import-lambda-definition-2 %tcflow (fdes action) "sch_tcflow")
 
 ;;; Baud rate translation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -290,12 +290,12 @@
 				     proc-group
 				     (proc:pid proc-group))))))
 
-(import-os-error-syscall %set-tty-process-group (fdes pid) "sch_tcsetpgrp")
+(import-lambda-definition-2 %set-tty-process-group (fdes pid) "sch_tcsetpgrp")
 
 (define (tty-process-group port/fd/fname)
   (sleazy-call/file port/fd/fname call-with-input-file %tty-process-group))
 
-(import-os-error-syscall %tty-process-group (fdes) "sch_tcgetpgrp")
+(import-lambda-definition-2 %tty-process-group (fdes) "sch_tcgetpgrp")
 
 ;;; (open-control-tty fname [flags])
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -315,12 +315,12 @@
 	     make-output-fdport)
 	 fd 1))))
 
-(import-os-error-syscall %open-control-tty (ttyname flags) "open_ctty")
+(import-lambda-definition-2 %open-control-tty (ttyname flags) "open_ctty")
 
 (define (make-control-tty fd/port)
   (sleazy-call/fdes fd/port %make-control-tty))
 
-(import-os-error-syscall %make-control-tty (fd) "make_ctty")
+(import-lambda-definition-2 %make-control-tty (fd) "make_ctty")
 
 ;;; Random bits & pieces: isatty ttyname ctermid
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -328,11 +328,11 @@
 ;;; (tty-file-name fd/port) -> string
 ;;; (control-tty-file-name) -> string
 
-(import-os-error-syscall %tty? (fd) "sch_isatty")
+(import-lambda-definition-2 %tty? (fd) "sch_isatty")
 (define (tty? fd/port) (sleazy-call/fdes fd/port %tty?))
 
-(import-os-error-syscall %tty-file-name (fd) "sch_ttyname")
+(import-lambda-definition-2 %tty-file-name (fd) "sch_ttyname")
 
 (define (tty-file-name fd/port) (sleazy-call/fdes fd/port %tty-file-name))
 
-(import-os-error-syscall control-tty-file-name () "scm_ctermid")
+(import-lambda-definition-2 control-tty-file-name () "scm_ctermid")

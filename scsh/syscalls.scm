@@ -23,45 +23,6 @@
 (define (string->byte-vector string)
   (os-string->byte-vector (x->os-string string)))
 
-;;; Move this to somewhere else as soon as Marc has published his SRFI
-(define (continuation-capture receiver)
-  ((call-with-current-continuation
-    (lambda (cont)
-      (lambda () (receiver cont))))))
-
-(define (continuation-graft cont thunk)
-  (cont thunk))
-
-(define (continuation-return cont . returned-values)
-  (continuation-graft
-   cont
-   (lambda () (apply values returned-values))))
-
-(define-syntax import-os-error-syscall
-  (syntax-rules ()
-    ((import-os-error-syscall syscall (%arg ...) c-name)
-     (begin
-       (import-lambda-definition-2 syscall/eintr (%arg ...) c-name)
-       (define (syscall %arg ...)
-         (let ((arg %arg) ...)
-           (continuation-capture
-            (lambda (cont)
-              (let loop ()
-                (with-handler
-                 (lambda (condition more)
-                   (if (os-error? condition)
-                       (continuation-graft
-                        cont
-                        (lambda ()
-                          (apply errno-error-with-message
-                                 (os-error-code condition)
-                                 (condition-message condition)
-                                 syscall
-                                 (condition-irritants condition))))
-                       (more)))
-                 (lambda ()
-                   (syscall/eintr %arg ...))))))))))))
-
 (define-syntax define/vector-args
   (syntax-rules ()
     ((define/vector-args new raw (string-arg ...) arg ...)
@@ -79,10 +40,10 @@
     (exec-with-alias prog #f env arg-list)))
 
 
-(import-os-error-syscall exit/errno ; errno -- misnomer.
+(import-lambda-definition-2 exit/errno ; errno -- misnomer.
   (status) "scsh_exit")
 
-(import-os-error-syscall %exit/errno ; errno -- misnomer
+(import-lambda-definition-2 %exit/errno ; errno -- misnomer
   (status) "scsh__exit")
 
 (define (%exit . maybe-status)
@@ -90,10 +51,10 @@
   (error "Yikes! %exit returned."))
 
 
-(import-os-error-syscall %%fork () "scsh_fork")
+(import-lambda-definition-2 %%fork () "scsh_fork")
 
 ;;; Posix waitpid(2) call.
-(import-os-error-syscall %wait-pid/list (pid options) "wait_pid")
+(import-lambda-definition-2 %wait-pid/list (pid options) "wait_pid")
 
 (define (%wait-pid pid options)
   (apply values (%wait-pid/list pid options)))
@@ -159,9 +120,9 @@
 ;;; Process groups and session ids
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(import-os-error-syscall process-group () "scsh_getpgrp")
+(import-lambda-definition-2 process-group () "scsh_getpgrp")
 
-(import-os-error-syscall %set-process-group (pid groupid) "scsh_setpgid")
+(import-lambda-definition-2 %set-process-group (pid groupid) "scsh_setpgid")
 
 (define (set-process-group arg1 . maybe-arg2)
   (receive (pid pgrp) (if (null? maybe-arg2)
@@ -170,7 +131,7 @@
            (%set-process-group pid pgrp)))
 
 
-(import-os-error-syscall become-session-leader () "scsh_setsid")
+(import-lambda-definition-2 become-session-leader () "scsh_setsid")
 
 ;;; UMASK
 
@@ -188,12 +149,12 @@
 ;;; OOPS: The POSIX times() has a mildly useful ret value we are throwing away.
 
 
-(import-os-error-syscall process-times/list () "process_times")
+(import-lambda-definition-2 process-times/list () "process_times")
 
 (define (process-times)
   (apply values (process-times/list)))
 
-(import-os-error-syscall cpu-ticks/sec () "cpu_clock_ticks_per_sec")
+(import-lambda-definition-2 cpu-ticks/sec () "cpu_clock_ticks_per_sec")
 
 ;;; File system
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -208,11 +169,11 @@
       (call/fdes thing fd-op)))
 
 
-(import-os-error-syscall %set-file-mode-raw (path mode) "scsh_chmod")
+(import-lambda-definition-2 %set-file-mode-raw (path mode) "scsh_chmod")
 
 (define/vector-args %set-file-mode %set-file-mode-raw (path) mode)
 
-(import-os-error-syscall %set-fdes-mode (path mode) "scsh_fchmod")
+(import-lambda-definition-2 %set-fdes-mode (path mode) "scsh_fchmod")
 
 (define (set-file-mode thing mode)
   (generic-file-op thing
@@ -220,11 +181,11 @@
                    (lambda (fname) (%set-file-mode fname mode))))
 
 
-(import-os-error-syscall set-file-uid&gid-raw (path uid gid) "scsh_chown")
+(import-lambda-definition-2 set-file-uid&gid-raw (path uid gid) "scsh_chown")
 
 (define/vector-args set-file-uid&gid set-file-uid&gid-raw (path) uid gid)
 
-(import-os-error-syscall set-fdes-uid&gid (fd uid gid) "scsh_fchown")
+(import-lambda-definition-2 set-fdes-uid&gid (fd uid gid) "scsh_fchown")
 
 (define (set-file-owner thing uid)
   (generic-file-op thing
@@ -239,7 +200,7 @@
 
 ;;; Uses real uid and gid, not effective. I don't use this anywhere.
 
-(import-os-error-syscall %file-ruid-access-not-raw? (path perms) "scsh_access")
+(import-lambda-definition-2 %file-ruid-access-not-raw? (path perms) "scsh_access")
 
 (define/vector-args %file-ruid-access-not? %file-ruid-access-not-raw? (path) perms)
 
@@ -272,17 +233,17 @@
 
 (define %delete-directory remove-directory)
 
-(import-os-error-syscall %read-symlink-raw (path) "scsh_readlink")
+(import-lambda-definition-2 %read-symlink-raw (path) "scsh_readlink")
 
 (define (%read-symlink path)
   (byte-vector->string
    (%read-symlink-raw (string->byte-vector path))))
 
-(import-os-error-syscall %utime-raw (path ac m) "scm_utime")
+(import-lambda-definition-2 %utime-raw (path ac m) "scm_utime")
 
 (define/vector-args %utime %utime-raw (path) ac m)
 
-(import-os-error-syscall %utime-now-raw (path) "scm_utime_now")
+(import-lambda-definition-2 %utime-now-raw (path) "scm_utime_now")
 
 (define/vector-args %utime-now %utime-now-raw (path))
 
@@ -305,11 +266,11 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; STAT
 
-(import-os-error-syscall stat-file-raw (path data chase?) "scheme_stat")
+(import-lambda-definition-2 stat-file-raw (path data chase?) "scheme_stat")
 
 (define/vector-args stat-file stat-file-raw (path) data chase?)
 
-(import-os-error-syscall stat-fdes (fd data) "scheme_fstat")
+(import-lambda-definition-2 stat-fdes (fd data) "scheme_fstat")
 
 (define-record-type :file-info
   (make-file-info type device inode mode nlinks uid gid size atime mtime ctime)
@@ -364,18 +325,18 @@
 ;;; "no-declare" as there is no agreement among the OS's as to whether or not
 ;;; the OLD-NAME arg is "const". It *should* be const.
 
-(import-os-error-syscall %create-symlink-raw (old-name new-name) "scsh_symlink")
+(import-lambda-definition-2 %create-symlink-raw (old-name new-name) "scsh_symlink")
 
 (define/vector-args %create-symlink %create-symlink-raw (old-name new-name))
 
 ;;; "no-declare" as there is no agreement among the OS's as to whether or not
 ;;; the PATH arg is "const". It *should* be const.
 
-(import-os-error-syscall %truncate-file-raw (path length) "scsh_truncate")
+(import-lambda-definition-2 %truncate-file-raw (path length) "scsh_truncate")
 
 (define/vector-args %truncate-file %truncate-file-raw (path) length)
 
-(import-os-error-syscall %truncate-fdes (path length) "scsh_ftruncate")
+(import-lambda-definition-2 %truncate-fdes (path length) "scsh_ftruncate")
 
 (define (truncate-file thing length)
   (generic-file-op thing
@@ -386,7 +347,7 @@
   (with-resources-aligned (list cwd-resource euid-resource egid-resource)
                           (lambda () (unlink path))))
 
-(import-os-error-syscall %sync-file (fd) "scsh_fsync")
+(import-lambda-definition-2 %sync-file (fd) "scsh_fsync")
 
 (define (sync-file fd/port)
   (if (output-port? fd/port) (force-output fd/port))
@@ -394,18 +355,18 @@
 
 
 ;;; Amazingly bogus syscall -- doesn't *actually* sync the filesys.
-(import-os-error-syscall sync-file-system () "scsh_sync")
+(import-lambda-definition-2 sync-file-system () "scsh_sync")
 
 ;;; I/O
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(import-os-error-syscall %close-fdes (fd) "scsh_close")
+(import-lambda-definition-2 %close-fdes (fd) "scsh_close")
 
-(import-os-error-syscall %dup (fd) "scsh_dup")
+(import-lambda-definition-2 %dup (fd) "scsh_dup")
 
-(import-os-error-syscall %dup2 (fd-from fd-to) "scsh_dup2")
+(import-lambda-definition-2 %dup2 (fd-from fd-to) "scsh_dup2")
 
-(import-os-error-syscall %fd-seek (fd offset whence) "scsh_lseek")
+(import-lambda-definition-2 %fd-seek (fd offset whence) "scsh_lseek")
 
 
 (define seek/set 0)                     ;Unix codes for "whence"
@@ -427,9 +388,9 @@
   (let ((fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
     (%fd-seek fd 0 seek/delta)))
 
-(import-os-error-syscall %char-ready-fdes? (fd) "char_ready_fdes")
+(import-lambda-definition-2 %char-ready-fdes? (fd) "char_ready_fdes")
 
-(import-os-error-syscall %open-raw (path flags mode) "scsh_open")
+(import-lambda-definition-2 %open-raw (path flags mode) "scsh_open")
 
 (define/vector-args %open %open-raw (path) flags mode)
 
@@ -439,7 +400,7 @@
      (lambda ()
       (%open path flags (:optional maybe-mode #o666)))))
 
-(import-os-error-syscall pipe-fdes () "scheme_pipe")
+(import-lambda-definition-2 pipe-fdes () "scheme_pipe")
 
 (define (pipe)
   (apply (lambda (r-fd w-fd)
@@ -453,7 +414,7 @@
 ;;; Signals (rather incomplete)
 ;;; ---------------------------
 
-(import-os-error-syscall signal-pid (pid signal) "scsh_kill")
+(import-lambda-definition-2 signal-pid (pid signal) "scsh_kill")
 
 (define (signal-process proc signal)
   (signal-pid (cond ((proc? proc)    (proc:pid proc))
@@ -492,12 +453,12 @@
   (lambda (self)
     (list 'user-info (user-info:name ui))))
 
-(import-os-error-syscall
+(import-lambda-definition-2
  %uid->user-info
  (uid user-info-record)
  "user_info_uid")
 
-(import-os-error-syscall
+(import-lambda-definition-2
  %name->user-info
  (name user-info-record)
  "user_info_name")
@@ -548,12 +509,12 @@
   (lambda (self)
     (list 'group-info (group-info:name self))))
 
-(import-os-error-syscall
+(import-lambda-definition-2
  %gid->group-info
  (gid group-info-record)
  "group_info_gid")
 
-(import-os-error-syscall
+(import-lambda-definition-2
  %name->group-info
  (name group-info-record)
  "group_info_name")
@@ -649,9 +610,9 @@
           (close-dir c-dir)
           (set-directory-stream:c-dir dir-stream #f)))))
 
-(import-os-error-syscall open-dir (name) "scm_opendir")
-(import-os-error-syscall close-dir (dir-stream) "scm_closedir")
-(import-os-error-syscall read-dir (dir-stream) "scm_readdir")
+(import-lambda-definition-2 open-dir (name) "scm_opendir")
+(import-lambda-definition-2 close-dir (dir-stream) "scm_closedir")
+(import-lambda-definition-2 read-dir (dir-stream) "scm_readdir")
 
 
 ;;; I do this one in C, I'm not sure why:
@@ -714,7 +675,7 @@
 
 ;;; ENV->ALIST
 
-(import-os-error-syscall %load-env () "scm_envvec")
+(import-lambda-definition-2 %load-env () "scm_envvec")
 
 (define (environ-env->alist)
   (let ((env-list.envvec (%load-env)))
@@ -725,27 +686,27 @@
 ;;; ALIST->ENV
 
 ;;; (%create-env ((vector 'X) -> address))
-(import-os-error-syscall %create-env (envvec) "create_env")
+(import-lambda-definition-2 %create-env (envvec) "create_env")
 
 ;;; assumes aligned env
 (define (envvec-alist->env alist)
   (%create-env (alist->env-vec alist)))
 
-(import-os-error-syscall %align-env (envvec) "align_env")
+(import-lambda-definition-2 %align-env (envvec) "align_env")
 
-(import-os-error-syscall %free-env (envvec) "free_envvec")
+(import-lambda-definition-2 %free-env (envvec) "free_envvec")
 
 
 ;;; Fd-ports
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(import-os-error-syscall %set-cloexec (fd val) "set_cloexec")
+(import-lambda-definition-2 %set-cloexec (fd val) "set_cloexec")
 
 ;;; Some of fcntl()
 ;;;;;;;;;;;;;;;;;;;
 
-(import-os-error-syscall %fcntl-read (fd command) "fcntl_read")
-(import-os-error-syscall %fcntl-write (fd command val) "fcntl_write")
+(import-lambda-definition-2 %fcntl-read (fd command) "fcntl_read")
+(import-lambda-definition-2 %fcntl-write (fd command val) "fcntl_write")
 
 ;;; fcntl()'s F_GETFD and F_SETFD.  Note that the SLEAZY- prefix on the
 ;;; CALL/FDES isn't an optimisation; it's *required* for the correct behaviour
@@ -790,14 +751,14 @@
     (let lp ()
       (or (%sleep-until when) (lp)))))
 
-(import-os-error-syscall %sleep-until (secs) "sleep_until")
+(import-lambda-definition-2 %sleep-until (secs) "sleep_until")
 
-(import-os-error-syscall %gethostname () "scm_gethostname")
+(import-lambda-definition-2 %gethostname () "scm_gethostname")
 
 (define (system-name)
   (byte-vector->string (%gethostname)))
 
-(import-os-error-syscall errno-msg (i) "errno_msg")
+(import-lambda-definition-2 errno-msg (i) "errno_msg")
 
 (define-record-type :uname
   (make-uname os-name node-name release version machine)
@@ -808,7 +769,7 @@
   (version uname:version)
   (machine uname:machine))
 
-(import-os-error-syscall %uname-list () "scm_uname")
+(import-lambda-definition-2 %uname-list () "scm_uname")
 
 (define (uname)
   (apply make-uname

@@ -8,8 +8,8 @@
 ;;; C syscall interface
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(import-os-error-syscall %set-lock (fd cmd type whence start len) "set_lock")
-(import-os-error-syscall %get-lock (fd cmd type whence start len) "get_lock")
+(import-lambda-definition-2 %set-lock (fd cmd type whence start len) "set_lock")
+(import-lambda-definition-2 %get-lock (fd cmd type whence start len) "get_lock")
 
 ;;; The LOCK record type
 ;;;;;;;;;;;;;;;;;;;;;;;;
