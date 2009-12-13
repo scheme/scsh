@@ -306,11 +306,10 @@
 ;;; SunOS, and SVR4.
 
 (define (open-control-tty ttyname . maybe-flags)
-  (let ((flags (:optional maybe-flags open/read+write)))
-      (let ((fd (%open-control-tty ttyname flags))
-	    (access (bitwise-and flags open/access-mask)))
-	((if (or (= access open/read)
-		 (= access open/read+write))
+  (let ((flags (:optional maybe-flags (file-options read-write))))
+      (let ((fd (%open-control-tty ttyname flags)))
+	((if (or (file-option-on? flags (file-options read-only))
+		 (file-option-on? flags (file-options read-write)))
 	     make-input-fdport
 	     make-output-fdport)
 	 fd 1))))

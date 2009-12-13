@@ -16,6 +16,7 @@
 
 (define-structure file-system-test (export)
   (open	scheme-with-scsh
+	posix-files
 	test-base)
   (files file-system-tests))
 

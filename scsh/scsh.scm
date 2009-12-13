@@ -617,8 +617,9 @@
 ;;;
 
 (define (create-temp-file . maybe-prefix)
-  (let ((oflags (bitwise-ior open/write
-                             (bitwise-ior open/create open/exclusive))))
+  (let ((oflags (file-option write-only
+                             create
+                             exclusive)))
     (apply temp-file-iterate
            (lambda (fname)
              (close-fdes (open-fdes fname oflags #o600))
