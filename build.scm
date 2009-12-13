@@ -2,7 +2,7 @@
 !#
 
 (let ((cfiles (list "scsh/syscalls" "scsh/cstuff" "scsh/scsh"))
-      (cflags '(-c -g -O2))
+      (cflags '(-c -g -O2 -fPIC))
       (ldflags '(-shared -rdynamic))
       (cc 'gcc)
       (ld 'gcc))
