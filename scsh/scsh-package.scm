@@ -89,13 +89,13 @@
 ;;; The bufpol/{block, line, none} values
 (define-structure buffered-io-flags buffered-io-flags-interface
   (open defenum-package scheme)
-  (files (machine bufpol)))
+  (files bufpol))
 
 
 (define-structures ((tty-flags tty-flags-interface)
                     (scsh-internal-tty-flags scsh-internal-tty-flags-interface))
   (open scheme ascii bitwise)
-  (files (machine tty-consts)))
+  (files tty-consts))
 
 
 
