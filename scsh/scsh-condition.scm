@@ -21,21 +21,37 @@
 ;;;   . body)
 
 (define-syntax with-errno-handler
-  (syntax-rules ()
-    ((with-errno-handler ((the-errno data) clause1 clause2 ...) body1 body2 ...)
-     (call-with-current-continuation
-      (lambda (ret)
-        (with-errno-handler* (lambda (the-errno data)
-                               (error-arms (the-errno data ret)
-                                           clause1 clause2 ...))
-                             (lambda () body1 body2 ...)))))))
+  (lambda (exp rename compare)
+    (let* ((%lambda (rename 'lambda))
+           (%cond (rename 'cond))
+           (%else (rename 'else))
+           (%weh (rename 'with-errno-handler*))
+           (%errno (rename 'errno))
+           (%= (rename 'errno=?))
+           (%begin (rename `begin))
+           (%or (rename `or))
+           (%call/cc (rename 'call-with-current-continuation))
+           (%cwv (rename 'call-with-values))
+           (%ret (rename 'ret)) ; I think this is the way to gensym.
 
-(define-syntax error-arms
-  (syntax-rules ()
-    ((error-arms (the-errno data ret) (else body1 body2 ...))
-     (call-with-values (lambda () body1 body2 ...) ret))
-    ((error-arms (the-errno data ret) ((error-name1 error-name2 ...) body1 body2 ...)
-                 clause1 clause2 ...)
-     (if (or (errno=? (errno error-name1) the-errno) (errno=? (errno error-name2) the-errno) ...)
-         (call-with-values (lambda () body1 body2 ...) ret)
-         (error-arms (the-errno data ret) clause1 clause2 ...)))))
+           (err-var (caaadr exp))
+           (data-var (car (cdaadr exp)))
+           (clauses (cdadr exp))
+           (body (cddr exp))
+
+           (arms (map (lambda (clause)
+                        (let ((test (if (compare (car clause) %else)
+                                        %else
+                                        (let ((errs (car clause)))
+                                          `(,%or . ,(map (lambda (err)
+                                                           `(,%= (,%errno ,err) ,err-var))
+                                                         errs))))))
+                          `(,test
+                            (,%cwv (,%lambda () . ,(cdr clause)) ,%ret))))
+                      clauses)))
+
+      `(,%call/cc (,%lambda (,%ret)
+                            (,%weh
+                             (,%lambda (,err-var ,data-var)
+                                       (,%cond . ,arms))
+                             (,%lambda () . ,body)))))))

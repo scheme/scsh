@@ -652,7 +652,7 @@
           (let ((fname (format #f template (number->string i))))
             (receive retvals (with-errno-handler
                                ((errno data)
-                                ((errno/exist errno/acces) #f))
+                                ((exist acces) #f))
                                (maker fname))
               (if (car retvals) (apply values retvals)
                   (loop (+ i 1)))))))))
