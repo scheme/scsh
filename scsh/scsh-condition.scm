@@ -27,6 +27,7 @@
            (%else (rename 'else))
            (%weh (rename 'with-errno-handler*))
            (%errno (rename 'errno))
+           (%int->errno (rename 'integer->errno))
            (%= (rename 'errno=?))
            (%begin (rename `begin))
            (%or (rename `or))
@@ -44,7 +45,8 @@
                                         %else
                                         (let ((errs (car clause)))
                                           `(,%or . ,(map (lambda (err)
-                                                           `(,%= (,%errno ,err) ,err-var))
+                                                           `(,%= (,%errno ,err)
+                                                                 (,%int->errno ,err-var)))
                                                          errs))))))
                           `(,test
                             (,%cwv (,%lambda () . ,(cdr clause)) ,%ret))))

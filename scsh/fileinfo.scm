@@ -123,8 +123,10 @@
       ((err data)
        ((acces) 'search-denied)
        ((noent notdir) #t))
-    (apply file-info fd/port/fname maybe-chase?)
-    #f))
+      (if maybe-chase?
+          (get-file-info fd/port/fname)
+          (get-file/link-info fd/port/fname))
+      #f))
 
 (define (file-exists? fd/port/fname . maybe-chase?)
   (not (apply file-not-exists? fd/port/fname maybe-chase?)))
