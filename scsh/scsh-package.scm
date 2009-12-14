@@ -103,11 +103,6 @@
   (open scheme)
   (files scsh-version))
 
-(define-structure scsh-endian scsh-endian-interface
-  (open scheme
-        bitwise)
-  (files endian))
-
 ;;; The scsh-level-0 package is for implementation convenience.
 ;;; The scsh startup and top-level modules need access to scsh
 ;;; procedures, but they export procedures that are themselves
@@ -117,10 +112,7 @@
 
 (define-structures
   ((scsh-level-0
-    (compound-interface posix-fdflags-interface
-                        sockets-network-interface ; Standard Network Interface
-                        os-extras-interface ; Extra stuff from OS.
-                        scsh-delimited-readers-interface
+    (compound-interface scsh-delimited-readers-interface
                         scsh-errors-interface
                         scsh-io-interface
                         scsh-file-interface
@@ -135,8 +127,6 @@
                         scsh-file-names-interface
                         scsh-misc-interface
                         scsh-high-level-process-interface
-                        scsh-sockets-interface ; new in 0.3
-                        scsh-endian-interface
                         tty-interface ; new in 0.4
                         scsh-version-interface
                         (interface-of srfi-14) ;; export this here for
@@ -167,7 +157,6 @@
         formats
         string-collectors
         delimited-readers
-        os-dependent			; OS dependent stuff
         buffered-io-flags		; stdio dependent
         ascii
         records
@@ -230,8 +219,6 @@
         simple-syntax
         exit-hooks
         display-conditions
-
-        scsh-endian
 	queues)
   (files syntax
          scsh-condition
@@ -242,19 +229,14 @@
          fdports
 	 event
          procobj                ; New in release 0.4.
-         (machine waitcodes)    ; OS dependent code.
          filesys
          fileinfo
          glob
          filemtch
-         (machine time_dep)
-         network                ; New in release 0.3.
-         flock                  ; New in release 0.4.
          tty                    ; New in release 0.4.
          pty                    ; New in release 0.4.
-         scsh
-;        re
-         )
+         waitcodes
+         scsh)
 ;  (optimize auto-integrate)
   (begin
     ;; work around for SRFI 14 naming fuckage

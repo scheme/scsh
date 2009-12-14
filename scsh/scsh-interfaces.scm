@@ -11,33 +11,6 @@
           (let-optionals* :syntax)
           (:optional      :syntax)))
 
-(define-interface posix-fdflags-interface
-  (export ((open/read
-            open/write
-            open/read+write
-            open/non-blocking
-            open/append
-            open/no-control-tty
-            open/create
-            open/truncate
-            open/exclusive
-            open/access-mask) :number)
-
-          ((fcntl/dup-fdes
-            fcntl/get-fdes-flags
-            fcntl/set-fdes-flags
-            fcntl/get-status-flags
-            fcntl/set-status-flags
-            fcntl/get-record-lock
-            fcntl/set-record-lock
-            fcntl/set-record-lock-no-block) :number)
-
-          (fdflags/close-on-exec :number)
-
-          ((lock/read
-            lock/write
-            lock/release) :number)))
-
 (define-interface scsh-errors-interface
   (export errno-error
           error
@@ -64,11 +37,6 @@
                               dup->outport
                               dup->fdes
                               open-file
-
-                              fdes-flags
-                              set-fdes-flags
-                              fdes-status
-                              set-fdes-status
 
                               init-fdports!  ;added by JMG
                               port->channel  ;overwrites channel-i/o
@@ -105,21 +73,6 @@
                               open-input-file
                               open-output-file
                               format
-
-                              lock-region?
-                              lock-region:exclusive?
-                              lock-region:whence
-                              lock-region:start
-                              lock-region:len
-                              lock-region:proc
-                              make-lock-region
-
-                              lock-region
-                              lock-region/no-block
-                              get-lock-region
-                              unlock-region
-                              with-region-lock*
-                              (with-region-lock :syntax)
 
                               fork-pty-session
                               open-pty
@@ -549,112 +502,6 @@
 (define-interface weak-tables-interface
   (export make-weak-table weak-table-set! weak-table-ref weak-table-walk
           strengthen-weak-table-ref weaken-weak-table-ref))
-
-;;; semi-standard network magic numbers
-;;; should be available on all platforms
-;;; if not, tell us, and we'll move it
-;;; to the os-dependent directory
-
-;;; for now, all socket option magic numbers
-;;; are considered machine dependent until
-;;; there is a standard or a clear portable subset
-
-(define-interface sockets-network-interface
-  (export shutdown/receives
-          shutdown/sends
-          shutdown/sends+receives
-          herror/host-not-found
-          herror/try-again
-          herror/no-recovery
-          herror/no-data
-          herror/no-address
-          address-family/unspecified
-          address-family/unix
-          address-family/internet
-          socket-type/stream
-          socket-type/datagram
-          socket-type/raw
-          ;;socket-type/rdm
-          ;;socket-type/seqpacket
-          protocol-family/unspecified
-          protocol-family/unix
-          protocol-family/internet
-          internet-address/any
-          internet-address/loopback
-          internet-address/broadcast
-          message/out-of-band
-          message/peek
-          message/dont-route
-          level/socket
-          options/boolean
-          options/value
-          options/linger
-          options/timeout))
-
-(define-interface scsh-endian-interface
-  (export net-to-host-32
-          net-to-host-16
-          host-to-net-32
-          host-to-net-16))
-
-;;; actual functions interface
-(define-interface scsh-sockets-interface
-  (export socket-connect
-          bind-listen-accept-loop
-          bind-prepare-listen-accept-loop
-          socket?
-          socket:family
-          socket:inport
-          socket:outport
-          socket-address?
-          socket-address:family
-          internet-address->socket-address
-          socket-address->internet-address
-          unix-address->socket-address
-          socket-address->unix-address
-          create-socket
-          port->socket
-          close-socket
-          bind-socket
-          connect-socket
-          connect-socket-no-wait
-          connect-socket-successful?
-          listen-socket
-          accept-connection
-          socket-remote-address
-          socket-local-address
-          shutdown-socket
-          create-socket-pair
-          receive-message
-          receive-message!
-          receive-message/partial
-          receive-message!/partial
-          send-message
-          send-message/partial
-          socket-option
-          set-socket-option
-
-          host-info
-          host-info?
-          host-info:name
-          host-info:aliases
-          host-info:addresses
-          network-info
-          network-info?
-          network-info:name
-          network-info:aliases
-          network-info:net
-          service-info
-          service-info?
-          service-info:name
-          service-info:aliases
-          service-info:port
-          service-info:protocol
-          protocol-info
-          protocol-info?
-          protocol-info:name
-          protocol-info:aliases
-          protocol-info:number))
 
 (define-interface scsh-field-reader-interface
   (export join-strings

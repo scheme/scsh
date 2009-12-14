@@ -308,8 +308,8 @@
 (define (open-control-tty ttyname . maybe-flags)
   (let ((flags (:optional maybe-flags (file-options read-write))))
       (let ((fd (%open-control-tty ttyname flags)))
-	((if (or (file-option-on? flags (file-options read-only))
-		 (file-option-on? flags (file-options read-write)))
+	((if (or (file-options-on? flags (file-options read-only))
+		 (file-options-on? flags (file-options read-write)))
 	     make-input-fdport
 	     make-output-fdport)
 	 fd 1))))

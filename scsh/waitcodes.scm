@@ -1,8 +1,8 @@
 ;;; Scsh routines for analysing exit codes returned by WAIT.
 ;;; Copyright (c) 1994 by Olin Shivers. See file COPYING.
 ;;;
-;;; To port these to a new OS, consult /usr/include/sys/wait.h, 
-;;; and check the WIFEXITED, WEXITSTATUS, WIFSTOPPED, WSTOPSIG, 
+;;; To port these to a new OS, consult /usr/include/sys/wait.h,
+;;; and check the WIFEXITED, WEXITSTATUS, WIFSTOPPED, WSTOPSIG,
 ;;; WIFSIGNALED, and WTERMSIG macros for the magic fields they use.
 ;;; These definitions are for Linux.
 ;;;
@@ -25,7 +25,7 @@
        (bitwise-and #xFF (arithmetic-shift status -8))))
 
 
-;;; If the process terminated abnormally, 
+;;; If the process terminated abnormally,
 ;;; return the terminating signal, otw #f.
 
 (define (status:term-sig status)

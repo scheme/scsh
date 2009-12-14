@@ -702,37 +702,6 @@
 
 (import-lambda-definition-2 %set-cloexec (fd val) "set_cloexec")
 
-;;; Some of fcntl()
-;;;;;;;;;;;;;;;;;;;
-
-(import-lambda-definition-2 %fcntl-read (fd command) "fcntl_read")
-(import-lambda-definition-2 %fcntl-write (fd command val) "fcntl_write")
-
-;;; fcntl()'s F_GETFD and F_SETFD.  Note that the SLEAZY- prefix on the
-;;; CALL/FDES isn't an optimisation; it's *required* for the correct behaviour
-;;; of these procedures. Straight CALL/FDES modifies unrevealed file
-;;; descriptors by clearing their CLOEXEC bit when it reveals them -- so it
-;;; would interfere with the reading and writing of that bit!
-
-(define (fdes-flags fd/port)
-  (sleazy-call/fdes fd/port
-    (lambda (fd) (%fcntl-read fd fcntl/get-fdes-flags))))
-
-(define (set-fdes-flags fd/port flags)
-  (sleazy-call/fdes fd/port
-    (lambda (fd) (%fcntl-write fd fcntl/set-fdes-flags flags))))
-
-;;; fcntl()'s F_GETFL and F_SETFL.
-;;; Get: Returns open flags + get-status flags (below)
-;;; Set: append, sync, async, nbio, nonblocking, no-delay
-
-(define (fdes-status fd/port)
-  (sleazy-call/fdes fd/port
-    (lambda (fd) (%fcntl-read fd fcntl/get-status-flags))))
-
-(define (set-fdes-status fd/port flags)
-  (sleazy-call/fdes fd/port
-    (lambda (fd) (%fcntl-write fd fcntl/set-status-flags flags))))
 
 ;;; Miscellaneous
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

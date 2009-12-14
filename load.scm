@@ -9,7 +9,6 @@
       "rx/packages.scm"
       "scsh/scsh-interfaces.scm"
       "scsh/scsh-package.scm"
-      "scsh/machine/packages.scm"
       "scsh/lib/char-package.scm"
       "scsh/lib/ccp-pack.scm"
       "test/test-packages.scm")
