@@ -49,7 +49,7 @@
                       override?)
                   (delete-filesys-object fname)
                   (loop #t))
-                 (else (errno-error err syscall fname)))))
+                 (else (errno-error err syscall (car data) fname)))))
          (with-resources-aligned
           (list cwd-resource umask-resource euid-resource egid-resource)
           (lambda ()

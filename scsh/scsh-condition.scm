@@ -2,15 +2,22 @@
 ;;; Add scsh conditions to s48.
 
 (define (with-errno-handler* handler thunk)
-  (with-handler
-    (lambda (condition more)
+  (with-exception-handler
+    (lambda (condition)
       (if (os-error? condition)
           (handler (os-error-code condition)
                    (list (condition-message condition)
                          (condition-who condition)
                          (condition-irritants condition)))
-          (more)))
+          (raise condition)))
     thunk))
+
+(define (errno-error errno who message . irritants)
+  (raise (condition
+          (make-os-error errno)
+          (make-who-condition who)
+          (make-message-condition message)
+          (make-irritants-condition irritants))))
 
 ;;; (with-errno-handler
 ;;;   ((errno data) ; These are vars bound in this scope.
