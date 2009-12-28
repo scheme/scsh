@@ -155,7 +155,7 @@
         load-dynamic-externals
         receiving
         srfi-9
-        formats
+        (modify formats (rename (format s48-format)))
         string-collectors
         delimited-readers
         buffered-io-flags		; stdio dependent
@@ -190,7 +190,6 @@
 			(newline      s48-newline)
 			(write        s48-write)
 			(write-char   s48-write-char)
-			(format       s48-format)
 			(force-output s48-force-output)))
 
         low-interrupt	      ; for sighandler and procobj
