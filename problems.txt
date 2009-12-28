@@ -2,9 +2,6 @@
 
 Listing of some problems shown by tests.
 
-* Undefined
-errno-error (for file-nlinks)
-
 * Not universal
 These'll usually only work with file names, but should work with
 file descriptors, fdports, and file names.
@@ -23,6 +20,3 @@ set-file-mode
 
 * Invalid arguments
 write-block
-
-* Byte vector conversion related
-file-type-symlink
