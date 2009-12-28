@@ -1,4 +1,4 @@
-;;; Basic functions for the scsh-test-suite 
+;;; Basic functions for the scsh-test-suite
 ;;; Author: 2001 David Frese
 
 ;; --- The list to store the tests ---
@@ -11,9 +11,9 @@
 ;; group - a symbol for the group of this test
 ;; proc  - the function that does the test
 ;; args  - the arguments for proc
-;; add-test deletes all previously added tests that have the same 
+;; add-test deletes all previously added tests that have the same
 ;;   name (group is ignored)!
-;; proc should return #f or signal an error, if the test failed. 
+;; proc should return #f or signal an error, if the test failed.
 ;; Every other value means, that the test succeeded.
 
 (define (add-test! name group proc . args)
@@ -33,13 +33,13 @@
 	*test-list*))
 
 ;; --- add-test-multiple! ----------------------------------------
-;; This function calls add-test! multiple times, with the same proc, 
+;; This function calls add-test! multiple times, with the same proc,
 ;;   but different arguments.
 ;; name, group, proc see add-test! above
 ;; input-lists - each additional parameter has to be a list, specifying
 ;;   alternative operands for proc.
-;; Now add-test! is called for each permutation of input-lists. 
-;;   If there's more than 1 permutation, the name is appended with 
+;; Now add-test! is called for each permutation of input-lists.
+;;   If there's more than 1 permutation, the name is appended with
 ;;   "-1"..."-n" respectively.
 ;; Example:
 ;; (add-test-multiple! 'test 'general proc '(a b) '(1 2))
@@ -48,12 +48,12 @@
 ;; (add-test 'test-2 'general proc 'b 1)
 ;; (add-test 'test-3 'general proc 'a 2)
 ;; (add-test 'test-4 'general proc 'b 2)
-;; Note: In future versions, these tests will run simultanously 
+;; Note: In future versions, these tests will run simultanously
 ;; with multi-threading.
 
 (define (add-test-multiple! name group proc . input-lists)
   (let* ((permutations (permute-lists input-lists))
-	 (single? (and (not (null? permutations)) 
+	 (single? (and (not (null? permutations))
 		       (null? (cdr permutations)))))
     (let loop ((i 0)
 	       (permutations permutations))
@@ -61,7 +61,7 @@
 	  (let ((input-params (car permutations))
 		(new-name (if single?
 			      name
-			      (string->symbol (string-append 
+			      (string->symbol (string-append
 					       (symbol->string name)
 					       "-"
 					       (number->string i))))))
@@ -117,7 +117,7 @@
 			   (display " ... "))))
       (if (not silent)
 	  (display-start))
-      
+
       (call-with-current-continuation
        (lambda (k)
          (if (with-handler
@@ -143,11 +143,11 @@
                #f)))))))
 
 ;; --- Exported functions to make a test -------------------------------
-;; The following 3 functions start the testing. They all have an 
+;; The following 3 functions start the testing. They all have an
 ;; optional parameter >silent< with default #f. if silent is #t,
 ;; only those tests that signaled an error are printed on the screen.
 ;; test-single - runs the test with that name, returns the result of proc.
-;; test-group  - runs all tests that are part of that group. the result 
+;; test-group  - runs all tests that are part of that group. the result
 ;;               is unspecified.
 ;; test-all    - runs all tests in the test-suite.
 
@@ -183,12 +183,12 @@
 
 (define (test-all . rest)
   (for-each (lambda (test)
-	      (apply run-test 
+	      (apply run-test
 		     test rest))
 	    *test-list*))
-	      
+
 ;; --- Summary functions -------------------------------------------
-;; test-summary displays all registered tests in the test-suite, if 
+;; test-summary displays all registered tests in the test-suite, if
 ;; called with no arguments. Calling it with the additional parameter
 ;; group, displays only those tests that belong to that group.
 

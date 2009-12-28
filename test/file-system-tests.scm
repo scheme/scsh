@@ -155,7 +155,7 @@
 	     (with-cwd (create-temp-dir)
 		       (create-file fname)
 		       (create-symlink fname linkname)
-		       (let ((result (equal? fname 
+		       (let ((result (equal? fname
 					     (read-symlink linkname))))
 			 (delete-filesys-object fname)
 			 (delete-filesys-object linkname)
@@ -170,7 +170,7 @@
 		       (create-file name1)
 		       (rename-file name1 name2)
 		       (let ((result (and (file-exists? name2)
-					  (file-not-exists? name1))))		     
+					  (file-not-exists? name1))))
 			 (delete-filesys-object name2)
 			 result)))
 	   "file-1" "file-2")
@@ -186,7 +186,7 @@
 	(name-3 (string->symbol (string-append (symbol->string name)
 					       "/port"))))
     ;; Test as a filename
-    (apply add-test-multiple! 
+    (apply add-test-multiple!
 	   name-1 'file-system
 	   (lambda (fname . params)
 	     (with-cwd (create-temp-dir)
@@ -201,7 +201,7 @@
 	   input-lists)
 
     ;; Test as a fdes
-    (apply add-test-multiple! 
+    (apply add-test-multiple!
 	   name-2 'file-system
 	   (lambda (fname . params)
 	     (with-cwd (create-temp-dir)
@@ -217,7 +217,7 @@
 	   input-lists)
 
     ;; Test as a port
-    (apply add-test-multiple! 
+    (apply add-test-multiple!
 	   name-3 'file-system
 	   (lambda (fname . params)
 	     (with-cwd (create-temp-dir)
@@ -234,10 +234,10 @@
 
 
 
-;; --- Set-file-mode ---			     
+;; --- Set-file-mode ---
 
-(add-test/fname/fd/port! 'set-file-mode 
-			 #f 
+(add-test/fname/fd/port! 'set-file-mode
+			 #f
 			 (lambda (fname/fd/port mode)
 			   (set-file-mode fname/fd/port mode)
 			   (file-perms fname/fd/port))
@@ -246,8 +246,8 @@
 
 ;; --- Set-file-owner ---
 
-(add-test/fname/fd/port! 'set-file-owner 
-			 #f 
+(add-test/fname/fd/port! 'set-file-owner
+			 #f
 			 (lambda (fname/fd/port uid)
 			   (set-file-owner fname/fd/port uid)
 			   (file-owner fname/fd/port))
@@ -257,8 +257,8 @@
 
 ;; --- Set-file-group ---
 
-(add-test/fname/fd/port! 'set-file-group 
-			 #f 
+(add-test/fname/fd/port! 'set-file-group
+			 #f
 			 (lambda (fname/fd/port gid)
 			   (set-file-group fname/fd/port gid)
 			   (file-group fname/fd/port))
@@ -305,7 +305,7 @@
 
 ;; --- truncate-file ---
 
-(add-test/fname/fd/port! 'truncate-file 
+(add-test/fname/fd/port! 'truncate-file
 			(lambda (port)
 			  (write (make-string 100 #\*) port))
 			(lambda (fname/fd/port len)
@@ -351,7 +351,7 @@
 ;					     fname))
 ;		    (socket (create-socket protocol-family/unix
 ;					   socket-type/raw))
-;		    (addr (unix-address->socket-address 
+;		    (addr (unix-address->socket-address
 ;			   pathname)))
 ;	       (bind-socket socket addr)
 ;	       ;; now fname should be a socket
@@ -461,7 +461,7 @@
 (add-test/fname/fd/port! 'file-last-status-change
 			 #f
 			 (lambda (fname/fd/port)
-			   (let ((before (file-last-status-change 
+			   (let ((before (file-last-status-change
 					  fname/fd/port)))
 			     ;; do anything
 			     (set-file-mode fname/fd/port #o777)
