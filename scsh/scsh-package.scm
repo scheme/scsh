@@ -146,6 +146,7 @@
   (open (subset srfi-1 (any delete filter fold last reverse!))
         (subset srfi-13 (string<= string-join string-index string-index-right))
         (subset define-record-types (define-record-discloser))
+        (subset sort (sort-list!))
         enumerated
         posix
         os-strings
