@@ -1,0 +1,28 @@
+-*- outline -*-
+
+Listing of some problems shown by tests.
+
+* Undefined
+errno-error (for file-nlinks)
+
+* Not universal
+These'll usually only work with file names, but should work with
+file descriptors, fdports, and file names.
+
+(open-fdport? and port->fdes seems to be involvled)
+file-last-mod
+file-last-access
+file-group
+file-owner
+file-nlinks
+file-mode
+truncate-file
+set-file-group
+set-file-owner
+set-file-mode
+
+* Invalid arguments
+write-block
+
+* Byte vector conversion related
+file-type-symlink
