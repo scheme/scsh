@@ -622,7 +622,7 @@
                               exclusive)))
     (apply temp-file-iterate
            (lambda (fname)
-             (close-fdes (open-fdes fname oflags #o600))
+             (close-output-port (open-file fname oflags (integer->file-mode #o600)))
              fname)
            (if (null? maybe-prefix) '()
                (list (string-append (constant-format-string (car maybe-prefix))
@@ -638,7 +638,7 @@
      (number->string (pid))
      "~a")))
 
-(define *temp-file-template* (make-fluid 'not-initialized-temp-file-template))
+(define *temp-file-template* (make-fluid (initial-temp-file)))
 
 (define temp-file-reinitializer
   (make-reinitializer
