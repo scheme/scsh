@@ -424,18 +424,6 @@ s48_ref_t scheme_fstat(s48_call_t call, s48_ref_t fd, s48_ref_t vec)
   return really_stat (call, &s, vec);
 }
 
-s48_ref_t scsh_symlink(s48_call_t call, s48_ref_t sch_name1, s48_ref_t sch_name2)
-{
-  int retval;
-
-  RETRY_OR_RAISE_NEG(retval,
-                     symlink(s48_extract_byte_vector_2(call, sch_name1),
-                             s48_extract_byte_vector_2(call, sch_name2)),
-                     "scsh_symlink");
-
-  return s48_unspecific_2(call);
-}
-
 s48_ref_t scsh_truncate(s48_call_t call, s48_ref_t sch_path, s48_ref_t sch_length)
 {
   int retval;
@@ -904,7 +892,6 @@ void scsh_init_syscalls (){
   S48_EXPORT_FUNCTION(scm_utime_now);
   S48_EXPORT_FUNCTION(scheme_stat);
   S48_EXPORT_FUNCTION(scheme_fstat);
-  S48_EXPORT_FUNCTION(scsh_symlink);
   S48_EXPORT_FUNCTION(scsh_truncate);
   S48_EXPORT_FUNCTION(scsh_ftruncate);
   S48_EXPORT_FUNCTION(scsh_fsync);

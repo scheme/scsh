@@ -321,13 +321,7 @@
 (define file-attributes
   (deprecated-proc file-info "file-attributes" "Use file-info instead."))
 
-
-;;; "no-declare" as there is no agreement among the OS's as to whether or not
-;;; the OLD-NAME arg is "const". It *should* be const.
-
-(import-lambda-definition-2 %create-symlink-raw (old-name new-name) "scsh_symlink")
-
-(define/vector-args %create-symlink %create-symlink-raw (old-name new-name))
+(define %create-symlink create-symbolic-link)
 
 ;;; "no-declare" as there is no agreement among the OS's as to whether or not
 ;;; the PATH arg is "const". It *should* be const.

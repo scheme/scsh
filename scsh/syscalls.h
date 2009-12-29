@@ -20,8 +20,6 @@ s48_ref_t scsh_rename(s48_call_t call, s48_ref_t sch_from, s48_ref_t sch_to);
 
 s48_ref_t scsh_rmdir(s48_call_t call, s48_ref_t sch_path);
 
-s48_ref_t scsh_symlink(s48_call_t call, s48_ref_t sch_name1, s48_ref_t name2);
-
 s48_ref_t scsh_truncate(s48_call_t call, s48_ref_t sch_path, s48_ref_t sch_length);
 
 s48_ref_t scsh_ftruncate(s48_call_t call, s48_ref_t sch_fdes, s48_ref_t sch_length);
