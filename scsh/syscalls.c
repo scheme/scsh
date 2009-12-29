@@ -703,19 +703,6 @@ s48_ref_t scm_gethostname(s48_call_t call)
     return s48_enter_byte_string_2(call, hostname);
 }
 
-s48_ref_t errno_msg(s48_call_t call, s48_ref_t sch_i)
-{
-  int i = s48_extract_long_2(call, sch_i);
-#ifdef HAVE_STRERROR
-  return(s48_enter_byte_string_2(call, strerror(i)));
-#else
-  if( i < 0 || i > sys_nerr )
-    s48_error_2(call, "errno_msg", "", 1, sch_i);
-  else
-    return s48_enter_byte_string_2(call, sys_errlist[i]);
-#endif /* !HAVE_STRERROR */
-}
-
 /* Some of fcntl()
 ******************
 */
@@ -891,7 +878,6 @@ void scsh_init_syscalls (){
   S48_EXPORT_FUNCTION(fcntl_write);
   S48_EXPORT_FUNCTION(sleep_until);
   S48_EXPORT_FUNCTION(scm_gethostname);
-  S48_EXPORT_FUNCTION(errno_msg);
   S48_EXPORT_FUNCTION(user_info_uid);
   S48_EXPORT_FUNCTION(user_info_name);
   S48_EXPORT_FUNCTION(group_info_gid);

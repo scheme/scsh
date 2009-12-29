@@ -718,8 +718,6 @@
 (define (system-name)
   (byte-vector->string (%gethostname)))
 
-(import-lambda-definition-2 errno-msg (i) "errno_msg")
-
 (define-record-type :uname
   (make-uname os-name node-name release version machine)
   uname?

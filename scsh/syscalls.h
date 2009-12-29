@@ -129,8 +129,6 @@ s48_ref_t create_env(s48_call_t call, s48_ref_t vec);
 
 s48_ref_t scm_gethostname(s48_call_t call);
 
-s48_ref_t errno_msg(s48_call_t call, s48_ref_t sch_i);
-
 s48_ref_t fcntl_read(s48_call_t call, s48_ref_t fd, s48_ref_t command);
 
 s48_ref_t fcntl_write(s48_call_t call, s48_ref_t fd,
