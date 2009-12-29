@@ -729,9 +729,9 @@
   (version uname:version)
   (machine uname:machine))
 
-(import-lambda-definition-2 %uname-list () "scm_uname")
-
 (define (uname)
-  (apply make-uname
-         (reverse (map (lambda (x)
-                         (byte-vector->string x)) (%uname-list)))))
+  (make-uname (os-name)
+              (os-node-name)
+              (os-release-name)
+              (os-version-name)
+              (machine-name)))

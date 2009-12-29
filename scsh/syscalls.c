@@ -747,28 +747,6 @@ s48_ref_t fcntl_write(s48_call_t call, s48_ref_t fd,
   return s48_enter_long_2(call, ret);
 }
 
-s48_ref_t scm_uname(s48_call_t call)
-{
-  s48_ref_t uname_list = s48_null_2(call);
-  struct utsname uname_struct;
-
-  if (uname(&uname_struct) == -1)
-    s48_os_error_2(call, "scm_uname", errno, 0);
-
-  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.sysname),
-                          uname_list);
-  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.nodename),
-                          uname_list);
-  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.release),
-                          uname_list);
-  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.version),
-                          uname_list);
-  uname_list = s48_cons_2(call, s48_enter_byte_string_2(call, uname_struct.machine),
-                          uname_list);
-
-  return uname_list;
-}
-
 /*
  *  User db access routines
  */
@@ -914,7 +892,6 @@ void scsh_init_syscalls (){
   S48_EXPORT_FUNCTION(sleep_until);
   S48_EXPORT_FUNCTION(scm_gethostname);
   S48_EXPORT_FUNCTION(errno_msg);
-  S48_EXPORT_FUNCTION(scm_uname);
   S48_EXPORT_FUNCTION(user_info_uid);
   S48_EXPORT_FUNCTION(user_info_name);
   S48_EXPORT_FUNCTION(group_info_gid);
