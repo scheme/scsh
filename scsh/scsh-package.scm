@@ -189,15 +189,14 @@
 			(display      s48-display)
 			(newline      s48-newline)
 			(write        s48-write)
-			(write-char   s48-write-char)
-			(force-output s48-force-output)))
+			(write-char   s48-write-char)))
 
         low-interrupt	      ; for sighandler and procobj
 	(subset interrupts (enable-interrupts!
                             disable-interrupts!
                             with-interrupts-inhibited))
         ;; all these seem to be for scsh-0.6 JMG
-        i/o
+        (modify i/o (rename (force-output s48-force-output)))
         i/o-internal
         channels channel-i/o
         condvars

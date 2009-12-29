@@ -406,16 +406,15 @@
   (cond ((integer? fd/port)
          (proc fd/port))
 
-        ((fdport? fd/port)
+        ((fd-port? fd/port)
          (let ((port fd/port))
            (dynamic-wind
             (lambda ()
               (if (not port) (error "Can't throw back into call/fdes.")))
-            (lambda () (proc (port->fdes port)))
+            (lambda () (proc (port->fd port)))
             (lambda ()
-              (release-port-handle port)
+              ;; (release-port-handle port)
               (set! port #f)))))
-
         (else (error "Not a file descriptor or fdport." fd/port))))
 
 ;;; Don't mess with the revealed count in the port case
@@ -423,7 +422,7 @@
 
 (define (sleazy-call/fdes fd/port proc)
   (proc (cond ((integer? fd/port) fd/port)
-              ((fdport? fd/port) (fdport-data:fd (fdport-data fd/port)))
+              ((fd-port? fd/port) (port->fd fd/port))
               (else (error "Not a file descriptor or fdport." fd/port)))))
 
 

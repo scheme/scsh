@@ -207,7 +207,7 @@
 	     (with-cwd (create-temp-dir)
 		       (let ((port (open/create-file fname (file-options write-only))))
 			 (if before-func (before-func port))
-			 (let ((result (apply func (cons (port->fdes port)
+			 (let ((result (apply func (cons (port->fd port)
 							 params))))
 			   (close port)
 			   (delete-filesys-object fname)
