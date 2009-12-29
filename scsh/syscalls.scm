@@ -20,14 +20,11 @@
 (define (byte-vector->string bytev)
   (os-string->string (byte-vector->os-string bytev)))
 
-(define (string->byte-vector string)
-  (os-string->byte-vector (x->os-string string)))
-
 (define-syntax define/vector-args
   (syntax-rules ()
     ((define/vector-args new raw (string-arg ...) arg ...)
      (define (new string-arg ... arg ...)
-       (raw (string->byte-vector string-arg) ...
+       (raw (string->os-byte-vector string-arg) ...
             arg ...)))))
 
 ;;; Process
@@ -237,7 +234,7 @@
 
 (define (%read-symlink path)
   (byte-vector->string
-   (%read-symlink-raw (string->byte-vector path))))
+   (%read-symlink-raw (string->os-byte-vector path))))
 
 (import-lambda-definition-2 %utime-raw (path ac m) "scm_utime")
 
@@ -656,7 +653,7 @@
 
 (define (alist->env-list alist)
   (map (lambda (var.val)
-         (string->byte-vector
+         (string->os-byte-vector
           (string-append (car var.val) "="
                          (let ((val (cdr var.val)))
                            (if (string? val) val
