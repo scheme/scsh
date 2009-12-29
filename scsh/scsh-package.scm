@@ -150,7 +150,8 @@
         enumerated
         posix-processes
         posix-process-data
-        posix-files
+        (modify posix-files (rename (read-directory-stream
+                                     s48-read-directory-stream)))
         posix-i/o
         posix-users
         posix-errnos

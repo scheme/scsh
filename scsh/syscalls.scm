@@ -539,6 +539,12 @@
 ;;; Directory stuff
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(define (read-directory-stream directory)
+  (let ((dir-stream (s48-read-directory-stream directory)))
+    (if dir-stream
+        (os-string->string (s48-read-directory-stream directory))
+        dir-stream)))
+
 (define (directory-files . args)
   (with-resources-aligned
    (list cwd-resource euid-resource egid-resource)
@@ -564,47 +570,6 @@
       (if (dotfile? f2)
           #f
           (string<= f1 f2))))
-
-; A record for directory streams.  It just has the name and a byte vector
-; containing the C directory object.  The name is used only for printing.
-
-(define-record-type :directory-stream
-  (make-directory-stream name c-dir)
-  directory-stream?
-  (name directory-stream:name)
-  (c-dir directory-stream:c-dir set-directory-stream:c-dir))
-
-(define-record-discloser :directory-stream
-  (lambda (self)
-    (list 'directory-stream (directory-stream:name self))))
-
-; Directory streams are meaningless in a resumed image.
-(define-record-resumer :directory-stream #f)
-
-(define (open-directory-stream name)
-  (let ((dir (make-directory-stream
-              name
-              (with-resources-aligned
-               (list cwd-resource euid-resource egid-resource)
-               (lambda ()
-                 (open-dir name))))))
-    (add-finalizer! dir close-directory-stream)
-    dir))
-
-(define (read-directory-stream dir-stream)
-  (read-dir (directory-stream:c-dir dir-stream)))
-
-(define (close-directory-stream dir-stream)
-  (let ((c-dir (directory-stream:c-dir dir-stream)))
-    (if c-dir
-        (begin
-          (close-dir c-dir)
-          (set-directory-stream:c-dir dir-stream #f)))))
-
-(import-lambda-definition-2 open-dir (name) "scm_opendir")
-(import-lambda-definition-2 close-dir (dir-stream) "scm_closedir")
-(import-lambda-definition-2 read-dir (dir-stream) "scm_readdir")
-
 
 ;;; I do this one in C, I'm not sure why:
 ;;; It is used by MATCH-FILES.
