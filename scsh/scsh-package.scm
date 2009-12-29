@@ -148,7 +148,13 @@
         (subset define-record-types (define-record-discloser))
         (subset sort (sort-list!))
         enumerated
-        posix
+        posix-processes
+        posix-process-data
+        posix-files
+        posix-i/o
+        posix-users
+        posix-errnos
+        posix-platform-names
         os-strings
         defenum-package
         external-calls
