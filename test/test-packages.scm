@@ -16,7 +16,7 @@
 
 (define-structure file-system-test (export)
   (open scheme-with-scsh
-        posix-files
+        (subset posix-files (file-options))
         (subset posix-i/o (port->fd))
         test-base)
   (files file-system-tests))
