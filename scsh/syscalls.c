@@ -137,53 +137,6 @@ s48_ref_t scsh_kill (s48_call_t call, s48_ref_t sch_pid, s48_ref_t sch_signal)
   return s48_enter_long_2(call, retval);
 }
 
-/* Read the symlink. */
-#ifdef MAXPATHLEN
-s48_ref_t scsh_readlink(s48_call_t call, s48_ref_t sch_path)
-{
-  char linkpath[MAXPATHLEN+1];
-  int retval;
-
-  RETRY_OR_RAISE_NEG(retval,
-                     readlink(s48_extract_byte_vector_2(call, sch_path),
-                              linkpath, MAXPATHLEN),
-                     "scsh_readlink");
-
-  linkpath[retval] = '\0';
-  return s48_enter_byte_string_2(call, linkpath);
-}
-
-#else
-s48_ref_t scsh_readlink(s48_call_t call, s48_ref_t sch_path)
-{
-  char *linkpath;
-  int size;
-  int retval;
-  s48_ref_t sch_sym_link_path = s48_unspecific_2(call);
-
-  for (size = 256;; size *=2){
-
-    linkpath = Malloc(char,size);
-    if (!linkpath)
-      s48_os_error_2(call, "scsh_readlink", errno, 1, sch_path);
-
-    retval = readlink(s48_extract_byte_vector_2(call, sch_path), linkpath, size);
-
-    if (retval == -1){
-      free (linkpath);
-      s48_os_error_2(call, "scsh_readlink", errno, 1, sch_path);
-    }
-
-    if (retval < size){
-      sch_sym_link_path = s48_enter_byte_substring_2(call, linkpath, retval);
-      free (linkpath);
-      return sch_sym_link_path;
-    }
-    free (linkpath);
-  }
-}
-#endif
-
 /* Scheme interfaces to utime().
 ** Complicated by need to pass real 32-bit quantities.
 */
@@ -766,7 +719,6 @@ void scsh_init_syscalls (){
   S48_EXPORT_FUNCTION(scsh_chown);
   S48_EXPORT_FUNCTION(scsh_fchown);
   S48_EXPORT_FUNCTION(scsh_access);
-  S48_EXPORT_FUNCTION(scsh_readlink);
   S48_EXPORT_FUNCTION(scm_utime);
   S48_EXPORT_FUNCTION(scm_utime_now);
   S48_EXPORT_FUNCTION(scheme_stat);

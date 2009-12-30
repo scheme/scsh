@@ -14,8 +14,6 @@ s48_ref_t scheme_pipe(s48_call_t call);
 
 s48_ref_t scsh_kill (s48_call_t call, s48_ref_t pid, s48_ref_t signal);
 
-s48_ref_t scsh_readlink(s48_call_t call, s48_ref_t path);
-
 s48_ref_t scsh_rename(s48_call_t call, s48_ref_t sch_from, s48_ref_t sch_to);
 
 s48_ref_t scsh_rmdir(s48_call_t call, s48_ref_t sch_path);

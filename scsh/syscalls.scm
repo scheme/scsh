@@ -213,29 +213,6 @@
 ;(define (file-readable? fname)
 ;  (file-access? fname 4))
 
-(define %create-hard-link link)
-
-(define (%create-fifo path mode)
-  (make-fifo path (integer->file-mode mode)))
-
-(define (%%create-directory path mode)
-  (make-directory path (integer->file-mode mode)))
-
-(define (%create-directory path . maybe-mode)
-  (let ((mode (:optional maybe-mode #o777))
-        (fname (ensure-file-name-is-nondirectory path)))
-    (%%create-directory fname mode)))
-
-(define %rename-file rename)
-
-(define %delete-directory remove-directory)
-
-(import-lambda-definition-2 %read-symlink-raw (path) "scsh_readlink")
-
-(define (%read-symlink path)
-  (byte-vector->string
-   (%read-symlink-raw (string->os-byte-vector path))))
-
 (import-lambda-definition-2 %utime-raw (path ac m) "scm_utime")
 
 (define/vector-args %utime %utime-raw (path) ac m)

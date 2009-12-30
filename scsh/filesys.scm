@@ -62,7 +62,8 @@
 	(override? (if (or (null? rest) (null? (cdr rest))) #f
 		       (cadr rest))))
     (create-file-thing dir
-		       (lambda (dir) (%create-directory dir perms))
+		       (lambda (dir)
+                         (make-directory dir (integer->file-mode perms)))
 		       override?
 		       "create-directory"
 		       create-directory)))
@@ -72,7 +73,8 @@
 	(override? (if (or (null? rest) (null? (cdr rest))) #f
 		       (cadr rest))))
     (create-file-thing fifo
-		       (lambda (fifo) (%create-fifo fifo perms))
+		       (lambda (fifo)
+                         (make-fifo fifo (integer->file-mode perms))) ;from posix-files
 		       override?
 		       "create-fifo"
 		       create-fifo)))
@@ -80,7 +82,7 @@
 (define (create-hard-link old-fname new-fname . maybe-override?)
   (create-file-thing new-fname
 		     (lambda (new-fname)
-		       (%create-hard-link old-fname new-fname))
+		       (link old-fname new-fname)) ;from posix-files
 		     (:optional maybe-override? #f)
 		     "create-hard-link"
 		     create-hard-link))
@@ -111,17 +113,16 @@
 	(with-resources-aligned
 	 (list cwd-resource euid-resource egid-resource)
 	 (lambda ()
-	   (%rename-file old-fname new-fname))))))
+	   (rename old-fname new-fname)))))) ;from posix-files
 
 (define (read-symlink path)
   (with-resources-aligned
 	 (list cwd-resource euid-resource egid-resource)
 	 (lambda ()
-	   (%read-symlink path))))
-
+	   (os-string->string (read-symbolic-link path))))) ;from posix-files
 
 (define (delete-directory path)
   (with-resources-aligned
 	 (list cwd-resource euid-resource egid-resource)
 	 (lambda ()
-	   (%delete-directory path))))
+	   (remove-directory path)))) ; from posix-files
