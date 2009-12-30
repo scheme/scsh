@@ -420,58 +420,30 @@
                                     proc-group))))
               (signal-os-number signal)))
 
-;;; SunOS, not POSIX:
-;;; (define-foreign signal-process-group/errno
-;;;   (killpg (integer proc-group) (integer signal))
-;;;   (to-scheme integer errno_or_false))
-;;;
-;;; (define-errno-syscall (signal-process-group proc-group signal)
-;;;   signal-process-group/errno)
-
-
 ;;; User info
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-record-type :user-info
-  (make-user-info name uid gid home-dir shell)
-  (name user-info:name)
-  (uid user-info:uid)
-  (gid user-info:gid)
-  (home-dir user-info:home-dir)
-  (shell user-info:shell))
-
-(define-record-discloser :user-info
-  (lambda (self)
-    (list 'user-info (user-info:name ui))))
-
-(import-lambda-definition-2
- %uid->user-info
- (uid user-info-record)
- "user_info_uid")
-
-(import-lambda-definition-2
- %name->user-info
- (name user-info-record)
- "user_info_name")
-
-(define (uid->user-info uid)
-  (let ((empty-user-info (make-user-info #f uid #f #f #f)))
-    (if (%uid->user-info uid empty-user-info)
-        empty-user-info
-        (error "Cannot get user's information" uid->user-info uid))))
-
-
-(define (name->user-info name)
-  (let ((empty-user-info (make-user-info name #f #f #f #f)))
-    (if (%name->user-info name empty-user-info)
-        empty-user-info
-        (error "Cannot get user's information" name->user-info name))))
-
 (define (user-info uid/name)
   ((cond ((string?  uid/name) name->user-info)
-         ((integer? uid/name) uid->user-info)
+         ((integer? uid/name) (lambda (uid)
+                                (user-id->user-info (integer->user-id uid))))
          (else (error "user-info arg must be string or integer" uid/name)))
    uid/name))
+
+(define (user-info:name user-info)
+  (os-string->string (user-info-name user-info)))
+
+(define (user-info:uid user-info)
+  (user-id->integer (user-info-id user-info)))
+
+(define (user-info:gid user-info)
+  (group-id->integer (user-info-group user-info)))
+
+(define (user-info:home-dir user-info)
+  (os-string->string (user-info-home-directory user-info)))
+
+(define (user-info:shell user-info)
+  (os-string->string (user-info-shell user-info)))
 
 ;;; Derived functions
 
@@ -484,49 +456,24 @@
 (define (%homedir uid/name)
   (user-info:home-dir (user-info uid/name)))
 
-
 ;;; Group info
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define-record-type :group-info
-  (make-group-info name gid members)
-  group-info?
-  (name group-info:name)
-  (gid group-info:gid)
-  (members group-info:members))
-
-;; Make group-info records print like #{group-info wheel}.
-(define-record-discloser :group-info
-  (lambda (self)
-    (list 'group-info (group-info:name self))))
-
-(import-lambda-definition-2
- %gid->group-info
- (gid group-info-record)
- "group_info_gid")
-
-(import-lambda-definition-2
- %name->group-info
- (name group-info-record)
- "group_info_name")
-
-(define (gid->group-info  gid)
-  (let ((empty-group-info (make-group-info #f gid #f)))
-    (if (%gid->group-info gid empty-group-info)
-        empty-group-info
-        (error "Cannot get group's information for gid" gid))))
-
-(define (name->group-info name)
-  (let ((empty-group-info (make-group-info name #f #f)))
-    (if (%name->group-info name empty-group-info)
-        empty-group-info
-        (error "Cannot get group's information for name" name))))
-
 (define (group-info gid/name)
   ((cond ((string?  gid/name) name->group-info)
-         ((integer? gid/name) gid->group-info)
+         ((integer? gid/name) (lambda (gid)
+                                (group-id->group-info (integer->group-id gid))))
          (else (error "group-info arg must be string or integer" gid/name)))
    gid/name))
+
+(define (group-info:name group-info)
+  (os-string->string (group-info-name group-info)))
+
+(define (group-info:gid group-info)
+  (group-id->integer (group-info-id group-info)))
+
+(define (group-info:members group-info)
+  (map os-string->string (group-info-members group-info)))
 
 ;;; Derived functions
 
@@ -571,38 +518,10 @@
           #f
           (string<= f1 f2))))
 
-;;; I do this one in C, I'm not sure why:
-;;; It is used by MATCH-FILES.
-;;; 99/7: No one is using this function, so I'm commenting it out.
-;;; Later, we could tune up the globber or regexp file-matcher to use
-;;; it (but should shift it into the rx directory). But I should also go
-;;; to a file-at-a-time cursor model for directory fetching. -Olin
-
-;(define-foreign %filter-C-strings!
-;  (filter_stringvec (string pattern) ((C "char const ** ~a") cvec))
-;  static-string        ; error message -- #f if no error.
-;  integer)     ; number of files that pass the filter.
-
-
-;(define (match-files regexp . maybe-dir)
-;  (let ((dir (:optional maybe-dir ".")))
-;    (check-arg string? dir match-files)
-;    (receive (err cvec numfiles)
-;            (%open-dir (ensure-file-name-is-nondirectory dir))
-;      (if err (errno-error err match-files regexp dir))
-;      (receive (err numfiles) (%filter-C-strings! regexp cvec)
-;       (if err (error err match-files))
-;       (%sort-file-vector cvec numfiles)
-;       (let ((files (C-string-vec->Scheme&free cvec numfiles)))
-;         (vector->list files))))))
-
-
 ;;; Environment manipulation
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;; (var . val) / "var=val" rep conversion:
-
-
 
 (define (split-env-string var=val)
   (let ((i (string-index var=val #\=)))

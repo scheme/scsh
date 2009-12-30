@@ -734,92 +734,6 @@ s48_ref_t fcntl_write(s48_call_t call, s48_ref_t fd,
   return s48_enter_long_2(call, ret);
 }
 
-/*
- *  User db access routines
- */
-
-s48_ref_t user_info_uid(s48_call_t call, s48_ref_t scheme_uid,
-                        s48_ref_t user_info_record)
-{
-  struct passwd *pwd = getpwuid(s48_extract_long_2(call, scheme_uid));
-
-  if( !pwd ) {
-    return s48_false_2(call);
-  }
-
-  s48_record_set_2(call, user_info_record, 0, s48_enter_byte_string_2(call, pwd->pw_name));
-  s48_record_set_2(call, user_info_record, 2, s48_enter_long_2(call, pwd->pw_gid));
-  s48_record_set_2(call, user_info_record, 3, s48_enter_byte_string_2(call, pwd->pw_dir));
-  s48_record_set_2(call, user_info_record, 4, s48_enter_byte_string_2(call, pwd->pw_shell));
-
-  return s48_true_2(call);
-}
-
-s48_ref_t user_info_name(s48_call_t call, s48_ref_t scheme_name,
-                         s48_ref_t user_info_record)
-{
-  struct passwd *pwd = getpwnam(s48_extract_byte_vector_2(call, scheme_name));
-
-  if(!pwd) {
-    return s48_false_2(call);
-  }
-
-  s48_record_set_2(call, user_info_record, 1, s48_enter_long_2(call, pwd->pw_uid));
-  s48_record_set_2(call, user_info_record, 2, s48_enter_long_2(call, pwd->pw_gid));
-  s48_record_set_2(call, user_info_record, 3, s48_enter_byte_string_2(call, pwd->pw_dir));
-  s48_record_set_2(call, user_info_record, 4, s48_enter_byte_string_2(call, pwd->pw_shell));
-
-  return s48_true_2(call);
-}
-
-s48_ref_t group_info_gid (s48_call_t call, s48_ref_t scheme_gid,
-                          s48_ref_t group_info_record)
-{
-  struct group *grp = getgrgid(s48_extract_long_2(call, scheme_gid));
-  s48_ref_t member_list;
-
-  if(!grp) {
-    return s48_false_2(call);
-  }
-
-  s48_record_set_2(call, group_info_record, 0,
-                   s48_enter_byte_string_2(call, grp->gr_name));
-
-  member_list = char_pp_2_string_list(call, grp->gr_mem);
-
-  if(!member_list) {
-    return s48_false_2(call);
-  }
-
-  s48_record_set_2(call, group_info_record, 2, member_list);
-
-  return s48_true_2(call);
-}
-
-s48_ref_t group_info_name(s48_call_t call, s48_ref_t scheme_name,
-                          s48_ref_t group_info_record)
-{
-  struct group *grp = getgrnam(s48_extract_byte_vector_2(call, scheme_name));
-  s48_ref_t member_list;
-
-  if(!grp) {
-    return s48_false_2(call);
-  }
-
-  s48_record_set_2(call, group_info_record, 1,
-                   s48_enter_long_2(call, grp->gr_gid));
-
-  member_list = char_pp_2_string_list(call, grp->gr_mem);
-
-  if(!member_list) {
-    return s48_false_2(call);
-  }
-
-  s48_record_set_2(call, group_info_record, 2, member_list);
-
-  return s48_true_2(call);
-}
-
 s48_ref_t sleep_until(s48_call_t call, s48_ref_t scm_when)
 {
     time_t now = time(0);
@@ -878,10 +792,6 @@ void scsh_init_syscalls (){
   S48_EXPORT_FUNCTION(fcntl_write);
   S48_EXPORT_FUNCTION(sleep_until);
   S48_EXPORT_FUNCTION(scm_gethostname);
-  S48_EXPORT_FUNCTION(user_info_uid);
-  S48_EXPORT_FUNCTION(user_info_name);
-  S48_EXPORT_FUNCTION(group_info_gid);
-  S48_EXPORT_FUNCTION(group_info_name);
 
   current_env = s48_make_global_ref(_s48_value_false);
   envvec_record_type_binding = s48_get_imported_binding_2("envvec-record-type");
