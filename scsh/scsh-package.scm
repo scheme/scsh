@@ -127,7 +127,7 @@
                         scsh-file-names-interface
                         scsh-misc-interface
                         scsh-high-level-process-interface
-                        tty-interface ; new in 0.4
+                        ;; tty-interface ; new in 0.4
                         scsh-version-interface
                         (interface-of srfi-14) ;; export this here for
                         (export ->char-set)    ;; this kludge
@@ -239,8 +239,8 @@
          fileinfo
          glob
          filemtch
-         tty                    ; New in release 0.4.
-         pty                    ; New in release 0.4.
+         ;; tty                    ; New in release 0.4.
+         ;; pty                    ; New in release 0.4.
          waitcodes
          scsh)
 ;  (optimize auto-integrate)
@@ -276,11 +276,12 @@
         condition-handler       ; simple-condition-handler
         low-level               ; flush-the-symbol-table!
         package-commands-internal
-        (subset filenames (translate)) ; translate
+        (subset filenames (translate))
         usual-resumer           ; usual-resumer
         environments            ; with-interaction-environment
         fluids-internal            ; JMG: get-dynamic-env
         threads
+        command-processor
 	(subset threads-internal (wait-for-event))
 	queues scheduler
         scsh-utilities
@@ -288,6 +289,7 @@
         low-interrupt
         sigevents
         primitives
+        os-strings
         (modify scheme (hide call-with-input-file
                              call-with-output-file
                              with-input-from-file
@@ -310,6 +312,7 @@
         fluids
         interfaces
         sigevents
+        scsh-reader
         low-interrupt wind
         fluids-internal            ; JMG: get-dynamic-env
         handle                     ; JMG: with-handler
@@ -415,7 +418,7 @@
                       awk-interface
                       char-predicates-interface; Urk -- Some of this is R5RS!
                       ;; dot-locking-interface
-                      md5-interface
+                      ;; md5-interface
                       ;; configure-interface
                       lib-dirs-interface
                       )
@@ -430,7 +433,7 @@
         field-reader-package
         char-predicates-lib     ; Urk -- Some of this is R5RS!
         ;; dot-locking
-        md5
+        ;; md5
         ;; configure
         lib-dirs
         scheme)
