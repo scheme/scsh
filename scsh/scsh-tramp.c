@@ -29,7 +29,7 @@
 ** triggers.
 **
 ** There are two downsides to doing things this way.
-** 1. You pay an extra exec(2) at startup time. 
+** 1. You pay an extra exec(2) at startup time.
 **    And scsh starts up slow enough as it is.
 ** 2. You cannot specify extra arguments for the vm this way. The most
 **    important one you might want to specify is the heap size arg, -h.
@@ -37,10 +37,10 @@
 
 #include <errno.h>
 #include <unistd.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 
 #ifndef VM
-#define VM "/usr/local/lib/scsh/scshvm"
+#define VM "/usr/local/lib/scheme48/scheme48vm"
 #endif
 #ifndef IMAGE
 #define IMAGE "/usr/local/lib/scsh/scsh.image"
@@ -50,9 +50,9 @@ main(int argc, char *argv[])
 {
     char **ap, **aq, **newav;
 
-    /* Insert "-o" VM "-i" IMAGE between argv[0] and argv[1]. */
+    /* Insert "-i" IMAGE between argv[0] and argv[1]. */
 
-    argc += 4;					/* We're adding 4 new elts. */
+    argc += 3;					/* We're adding 3 new elts. */
     newav = (char **) malloc((argc+1) * sizeof(char*));	/* Alloc new argv. */
     if( !newav ) {
 	perror(argv[0]);
@@ -60,15 +60,14 @@ main(int argc, char *argv[])
 	}
 
     newav[0] = argv[0];		/* Install new header args. */
-    newav[1] = "-o";
-    newav[2] = VM;
-    newav[3] = "-i";
-    newav[4] = IMAGE;
-    
-    for(ap=&argv[0], aq=&newav[4]; *ap;)	/* Copy over orignal argv */
+    newav[1] = "-I";
+    newav[2] = IMAGE;
+    newav[3] = argv[0];
+
+    for(ap=&argv[0], aq=&newav[3]; *ap;)	/* Copy over orignal argv */
 	*++aq = *++ap;				/*   & the terminating NULL. */
 
     execv(VM, newav);				/* Do it. */
     perror(argv[0]);
     exit(-1);
-    }
+}
