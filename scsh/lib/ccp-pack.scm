@@ -95,6 +95,7 @@
 	receiving
 	(subset srfi-1 (every fold))
 	error-package
+	define-record-types
 	scheme)
   (files ccp)
   (optimize auto-integrate))
