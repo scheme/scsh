@@ -3,9 +3,7 @@
 * Dependencies
 
 This code depends on the latest revision of scheme48
-<http://s48.org/cgi-bin/hgwebdir.cgi/s48> with the patches here
-<http://ccs.neu.edu/home/roderic/arbeit/s48-patches>. The patches can be managed
-easily using mercurial queues <http://mercurial.selenic.com/wiki/MqExtension>.
+<http://s48.org/cgi-bin/hgwebdir.cgi/s48>
 
 You'll need mercurial to check out these repositories, and the forest extension
 <http://mercurial.selenic.com/wiki/ForestExtension> to manage this repo's
