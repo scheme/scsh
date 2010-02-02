@@ -13,6 +13,8 @@ submodules.
 
 If you haven't already, clone the repository's submodules using the command:
 hg fseed .fsnap
+(or, if you couldn't bother installing forest, just clone
+<http://ccs.neu.edu/home/roderic/arbeit/rx> for now)
 
 (Until this can be done automatically), set any platform specific variables at
 the top of the Makefile.
