@@ -615,16 +615,16 @@
 ;;; ---------------------------
 
 (define (with-current-input-port* port thunk)
-  (let-fluid $current-input-port port thunk))
+  (call-with-current-input-port port thunk))
 
 (define (with-current-output-port* port thunk)
-  (let-fluid $current-output-port port thunk))
+  (call-with-current-output-port port thunk))
 
 (define (with-current-error-port* port thunk)
-  (let-fluid $current-error-port port thunk))
+  (call-with-current-noise-port port thunk))
 
 (define (with-error-output-port* port thunk)
-  (let-fluid $current-error-port port thunk))
+  (call-with-current-noise-port port thunk))
 
 (define-simple-syntax (with-current-input-port port body ...)
   (with-current-input-port* port (lambda () body ...)))
