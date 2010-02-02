@@ -16,13 +16,11 @@ submodules.
 If you haven't already, clone the repository's submodules using the command:
 hg fseed .fsnap
 
-Build the C code. This requires an older version of scsh installed.
-./build.scm
+(Until this can be done automatically), set any platform specific variables at
+the top of the Makefile.
 
-In load.scm, change the last argument in set-global-translation! to the absolute
-path of the scsh directory.
+Run `make` to build everything.
 
-In the user package (the default for scheme48) run the command:
-,exec ,load load.scm
-At this point, you can try to open the scsh structure. However, doing so will
-probably give errors and warnings about missing symbols and similar things for now.
+Run `go` to test scsh before installing
+
+Run `make install` to install scsh (If you dare).
