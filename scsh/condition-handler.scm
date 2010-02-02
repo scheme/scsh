@@ -6,9 +6,11 @@
            (display-condition c port)
            (halt 1))
           ((warning? c)
-           (display-condition c port))          ;Proceed
+           (display-condition c port)) ;Proceed
           ((interrupt-condition? c)
-           ;; (and ... (= (cadr c) interrupt/keyboard)) ?
            (halt 2))
+          ((vm-exception? c)
+           (display-condition c port)
+           (halt 1))
           (else
            (punt)))))
