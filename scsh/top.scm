@@ -33,16 +33,13 @@
 (define (load-quietly filename p)
   (if (not (string? filename))
       (error "not a string in load-quietly" filename))
-  (let-fluid $current-noise-port (make-null-output-port)
-	     (lambda () (load-into filename p))))
+  (silently (lambda () (load-into filename p))))
 
 (define (load-port-quietly port p)
-  (let-fluid $current-noise-port (make-null-output-port)
-    (lambda () (load-port port p))))
+  (silently (lambda () (load-port port p))))
 
 (define (really-ensure-loaded noise . structs)
-  (let-fluid $current-noise-port (make-null-output-port)
-	     (lambda ()
+  (silently (lambda ()
 	       (apply ensure-loaded structs))))
 
 (define (load-library-file file lib-dirs script-file package)
@@ -109,7 +106,6 @@
 	   (switches '())	; A list of handler thunks
 	   (top-entry #f)	; -t <entry>
 	   (need-script? #f))	; Found a -ds, -dm, or -de?
-;    (display args    (current-output-port))
     (if (pair? args)
 	(let ((arg  (car args))
 	      (args (cdr args)))
@@ -329,8 +325,73 @@
      (init-scsh-vars)
      (thunk))))
 
-(define (parse-switches-and-execute all-args context)
-  #f)
+(define (parse-switches-and-execute all-args context env)
+  (receive (switches term-switch term-val top-entry args)
+      (parse-scsh-args (cdr all-args))
+    (with-handler
+        (lambda (cond more)
+          (if (error? cond)
+              (with-handler
+                  (lambda (c m)
+                    (scheme-exit-now 1))
+                (lambda ()
+                  (display-condition cond (current-error-port))
+                  (scsh-exit-now 1)))
+              (more)))
+      (lambda ()
+        (with-scsh-initialized
+         (lambda ()
+           ;; Have to do these before calling DO-SWITCHES, because actions
+           ;; performed while processing the switches may use these guys.
+           (set-command-line-args!
+            (cons (if (eq? term-switch 's)
+                      term-val	; Script file.
+                      (if (eq? term-val 'sfd)
+                          "file-descriptor-script" ; -sfd <num>
+                          (car all-args))) ;we don't get arg0..
+                  args))
+
+           (let* ((script-loaded?  (do-switches switches term-val)))
+             (if (not script-loaded?) ; There wasn't a -ds, -dm, or -de,
+                 (if (eq? term-switch 's) ; but there is a script,
+                     (load-quietly term-val; so load it now.
+                                   (interaction-environment))
+                     (if (eq? term-switch 'sfd)
+                         (load-port-quietly term-val (interaction-environment)))))
+
+             (cond ((not term-switch)	; -- interactive
+                    (scsh-exit-now       ;; TODO: ,exit will bypass this
+                     (with-interaction-environment env
+                       (lambda ()
+                         (restart-command-processor
+                          args
+                          context
+                          (lambda ()
+                            (display (string-append
+                                      "Welcome to scsh "
+                                      scsh-version-string)
+                                     (current-output-port))
+                            (newline (current-output-port))
+                            (display "Type ,? for help."
+                                     (current-output-port))
+                            (newline (current-output-port))
+                            ;; (in-package (user-environment) '())
+                            )
+                          values)))))
+
+                   ((eq? term-switch 'c)
+                    (let ((result (eval (read-exactly-one-sexp-from-string term-val)
+                                        (interaction-environment))))
+                      (scsh-exit-now 0)))
+
+                   (top-entry		; There was a -e <entry>.
+                    ((eval top-entry (interaction-environment))
+                     (command-line))
+                    (scsh-exit-now 0))
+
+                   ;; Otherwise, the script executed as it loaded,
+                   ;; so we're done.
+                   (else (scsh-exit-now 0))))))))))
 
 
 (define (read-exactly-one-sexp-from-string s)

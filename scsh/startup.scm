@@ -6,9 +6,10 @@
 ;;; or executes the -s script.
 
 (define (make-scsh-starter)
-  (let ((context (user-context)))
+  (let ((context (user-context))
+        (env (environment-for-commands)))
     (lambda (args)
-      (parse-switches-and-execute args context))))
+      (parse-switches-and-execute args context env))))
 
 
 ;;; Had to define these as the ones in s48's build.scm do not properly
@@ -27,9 +28,9 @@
     (newline (command-output))
     ;JMG: it is set to #f in the vm, so I omit it now
 ;;;(flush-the-symbol-table!)    ;Gets restored at next use of string->symbol
-    (write-image filename
+    (write-image (x->os-byte-vector filename)
                  (scsh-stand-alone-resumer start)
-                 "Scsh 0.6")
+                 (string->os-byte-vector (string-append "Scsh " scsh-version-string)))
     #t))
 
 
@@ -52,39 +53,41 @@
                               filename)))
 
 (define (scsh-stand-alone-resumer start)
-  (usual-resumer                        ; sets up exceptions, interrupts,
-                                        ; and current input & output
-   (lambda (args)                       ; VM gives us our args, but not our program.
-     (init-fdports!)
+  (make-usual-resumer                     ; sets up exceptions, interrupts,
+   #t                                     ; and current input & output
+   (lambda (args)                         ; VM gives us our args, but not our program.
      (call-with-current-continuation
       (lambda (halt)
-        (set! %vm-prog-args args)
+        (set! %vm-prog-args
+              (map (lambda (arg) (os-string->string arg)) args))
         (set-command-line-args! %vm-prog-args)
         (with-handler
          (simple-condition-handler halt (current-error-port))
          (lambda ()
-           (let ((dynamic-env (get-dynamic-env))
-                 (*result* 4711))
-             (let ((runnable (make-queue))
-                   (thread (make-thread (lambda ()
-                                          (set! *result*
-                                                (start (command-line))))
-                                        'scsh-initial-thread))
-                   (thread-count (make-counter)))
+           (let ((*result* (start (command-line))))
+             ;; (let ((dynamic-env (get-dynamic-env))
+             ;;       (*result* 4711))
+             ;;   (let ((runnable (make-queue))
+             ;;         (thread (make-thread (lambda ()
+             ;;                                (set! *result*
+             ;;                                      (start (command-line))))
+             ;;                              'scsh-initial-thread))
+             ;;         (thread-count (make-counter)))
 
-               (enqueue! runnable thread)
-               (increment-counter! thread-count)
+             ;;     (enqueue! runnable thread)
+             ;;     (increment-counter! thread-count)
 
-               (run-threads
-                (round-robin-event-handler runnable 200 dynamic-env thread-count
-                                           (lambda args #f)
-                                           (lambda (thread token args) ; upcall handler
-                                             (propogate-upcall thread token args))
-                                           (lambda ()
-                                             (if (positive? (counter-value thread-count))
-                                                 (wait-for-event)
-                                                 #f))))
-               (if (integer? *result*) *result* 0)))))))))) ; work around bug.
+             ;;     (run-threads
+             ;;      (round-robin-event-handler runnable 200 dynamic-env thread-count
+             ;;                                 (lambda args #f)
+             ;;                                 (lambda (thread token args) ; upcall handler
+             ;;                                   (propogate-upcall thread token args))
+             ;;                                 (lambda ()
+             ;;                                   (if (positive? (counter-value thread-count))
+             ;;                                       (wait-for-event)
+             ;;                                       #f))))
+             ;;     (if (integer? *result*) *result* 0)))
+             (if (integer? *result*) *result* 0))))))))) ; work around bug.
 
 (define %vm-prog-args #f)
 
