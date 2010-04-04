@@ -21,13 +21,6 @@
 ;;;	SCSH-VERSION: scsh-version-string
 ;;;     HANDLE: with-handler
 
-;;; This should be defined by the package code, but it isn't.
-
-(define (get-struct config-pack struct-name)
-  (let ((s (environment-ref config-pack struct-name)))
-    (cond ((structure? s) s)
-	  (else (error "not a structure" s struct-name)))))
-
 ;;; ensure-loaded and load-into now write to noise-port anyway
 
 (define (load-quietly filename p)
@@ -277,12 +270,11 @@
 	     (lp switches script-loaded?))
 
 	    ((string=? (car switch) "-o")
-	     (let ((struct-name (cdr switch))
-		   (cp (config-package)))
+	     (let ((struct-name (cdr switch)))
 	       ;; Should not be necessary to do this ensure-loaded, but it is.
-	       (really-ensure-loaded #f (get-struct cp struct-name))
+	       (really-ensure-loaded #f (get-structure struct-name))
 	       (package-open! (interaction-environment)
-			      (lambda () (get-struct cp struct-name)))
+			      (lambda () (get-structure struct-name)))
 ;	       (format #t "Opened ~s~%" struct-name)
 	       (lp switches script-loaded?)))
 
@@ -298,7 +290,7 @@
 
 	    ((string=? (car switch) "-m")
 ;	     (format #t "struct-name ~s~%" (cdr switch))
-	     (let ((struct (get-struct (config-package) (cdr switch))))
+	     (let ((struct (get-structure (cdr switch))))
 ;	       (format #t "struct-name ~s, struct ~s~%" (cdr switch) struct)
 	       (let ((pack (structure-package struct)))
 ;		 (format #t "package ~s~%" pack)
