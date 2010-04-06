@@ -1,2 +1,5 @@
 syntax: regexp
 .*\.(o|so)$
+go
+scsh.image
+scsh
