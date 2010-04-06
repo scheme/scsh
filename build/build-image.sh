@@ -10,7 +10,7 @@ opens=$6
 
 $scheme48 -a batch <<EOF
 ,translate =scshexternal/ $lib
-,config ,load $srcdir/scsh/scsh-read.scm
+,config ,load $srcdir/scheme/scsh-read.scm
 ,config ,open scsh-reader
 ,config ,set-reader scsh-read
 ,open scsh-reader
