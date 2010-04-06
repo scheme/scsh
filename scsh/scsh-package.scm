@@ -290,6 +290,8 @@
         sigevents
         primitives
         os-strings
+        scsh-reader
+        (subset packages-internal (set-package-reader!))
         (modify scheme (hide call-with-input-file
                              call-with-output-file
                              with-input-from-file

@@ -182,7 +182,7 @@
 ;;; -lp-clear/lp-default switch, and return the final result package and a
 ;;; flag saying if the script was loaded by a -ds, -dm, or -de.
 
-(define (do-switches switches script-file)
+(define (do-switches switches script-file env)
 
 ; (format #t "Switches = ~a~%" switches)
   (let lp ((switches switches)
@@ -194,7 +194,7 @@
 	  (cond
 
 	    ((equal? switch "-ds")
-	     (load-quietly script-file (interaction-environment))
+	     (load-quietly script-file env)
 ;	     (format #t "loaded script ~s~%" script-file)
 	     (lp switches #t))
 
@@ -226,7 +226,7 @@
 
 	    ((string=? (car switch) "-l")
 ;	     (format #t "loading file ~s~%" (cdr switch))
-	     (load-quietly (cdr switch) (interaction-environment))
+	     (load-quietly (cdr switch) env)
 	     (lp switches script-loaded?))
 
 	    ((string=? (car switch) "-lm")
@@ -236,7 +236,7 @@
 
 	    ((string=? (car switch) "-le")
 ;	     (format #t "loading exec file ~s~%" (cdr switch))
-             (let ((current-package (interaction-environment)))
+             (let ((current-package env))
                (load-quietly (cdr switch) (user-command-environment))
                (set-interaction-environment! current-package)
                (lp switches script-loaded?)))
@@ -247,7 +247,7 @@
 	     (lp switches script-loaded?))
 
 	    ((string=? (car switch) "-lel")
-             (let ((current-package (interaction-environment)))
+             (let ((current-package env))
                (load-library-file (cdr switch) (lib-dirs) script-file
                                   (user-command-environment))
                (set-interaction-environment! current-package)
@@ -273,8 +273,7 @@
 	     (let ((struct-name (cdr switch)))
 	       ;; Should not be necessary to do this ensure-loaded, but it is.
 	       (really-ensure-loaded #f (get-structure struct-name))
-	       (package-open! (interaction-environment)
-			      (lambda () (get-structure struct-name)))
+	       (package-open! env (lambda () (get-structure struct-name)))
 ;	       (format #t "Opened ~s~%" struct-name)
 	       (lp switches script-loaded?)))
 
@@ -317,7 +316,7 @@
      (init-scsh-vars)
      (thunk))))
 
-(define (parse-switches-and-execute all-args context env)
+(define (parse-switches-and-execute all-args context commands-env int-env)
   (receive (switches term-switch term-val top-entry args)
       (parse-scsh-args (cdr all-args))
     (with-handler
@@ -343,17 +342,17 @@
                           (car all-args))) ;we don't get arg0..
                   args))
 
-           (let* ((script-loaded?  (do-switches switches term-val)))
+           (let* ((script-loaded?  (do-switches switches term-val int-env)))
              (if (not script-loaded?) ; There wasn't a -ds, -dm, or -de,
                  (if (eq? term-switch 's) ; but there is a script,
                      (load-quietly term-val; so load it now.
-                                   (interaction-environment))
+                                   int-env)
                      (if (eq? term-switch 'sfd)
-                         (load-port-quietly term-val (interaction-environment)))))
+                         (load-port-quietly term-val int-env))))
 
              (cond ((not term-switch)	; -- interactive
                     (scsh-exit-now       ;; TODO: ,exit will bypass this
-                     (with-interaction-environment env
+                     (with-interaction-environment commands-env
                        (lambda ()
                          (restart-command-processor
                           args
@@ -373,11 +372,11 @@
 
                    ((eq? term-switch 'c)
                     (let ((result (eval (read-exactly-one-sexp-from-string term-val)
-                                        (interaction-environment))))
+                                        int-env)))
                       (scsh-exit-now 0)))
 
                    (top-entry		; There was a -e <entry>.
-                    ((eval top-entry (interaction-environment))
+                    ((eval top-entry int-env)
                      (command-line))
                     (scsh-exit-now 0))
 
