@@ -227,6 +227,8 @@
                           newline
                           write-char)
                     (rename (force-output s48-force-output)))
+        (modify formats (rename (format s48-format))
+                        (expose format))
         i/o-internal channels channel-i/o ports
         (subset threads-internal (thread-continuation))
         (subset posix-i/o (fd-port? port->fd))
