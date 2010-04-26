@@ -19,12 +19,107 @@
                                      :values))
           (with-errno-handler :syntax)))
 
+(define-interface scsh-continuations-interface
+  (export call-terminally))
 
+(define-interface scsh-file-syscalls-interface
+  (export %set-cloexec
+	  %open %close-fdes %dup %dup2 %pipe-fdes
+	  %fd-seek
+	  %char-ready-fdes?
+	  %truncate-file %truncate-fdes
+	  %create-symlink
+	  %set-file-mode %set-fdes-mode
+	  %set-file-uid&gid %set-fdes-uid&gid
+	  %utime %utime-now
+	  %stat-file %stat-fdes
+	  %sync-file %sync-file-system))
 
 (define buffered-io-flags-interface
   (export ((bufpol/block
             bufpol/line
             bufpol/none) :number)))
+
+(define-interface scsh-newports-interface
+  (export call/fdes
+	  sleazy-call/fdes
+	  fdes->inport
+	  set-port-buffering
+	  fdes->outport
+	  evict-ports
+	  fdport?
+	  %move-fdport
+	  close-fdes
+	  make-input-fdport
+	  make-output-fdport
+	  open-fdes
+	  fdport-data:fd
+	  close
+	  fdport-data
+	  select
+	  fdport-data:channel
+	  seek/set
+	  open-file
+	  pipe
+	  with-current-output-port*
+	  close-after
+	  with-current-error-port
+	  with-current-output-port
+	  with-current-input-port
+	  flush-all-ports
+	  with-current-error-port*
+	  with-current-input-port*
+	  close-after
+	  with-current-error-port
+	  with-current-output-port
+	  flush-all-ports
+	  error-output-port
+	  close
+	  release-port-handle
+	  flush-all-ports-no-threads
+	  select!
+	  with-error-output-port*
+	  release-port-handle
+	  seek/end
+	  port-revealed
+	  select-port-channels
+	  with-error-output-port
+	  seek/delta
+	  tell
+	  seek
+	  port->fdes select-ports
+	  char-ready?
+	  read-char
+	  display write newline write-char
+	  force-output
+	  open-input-file
+	  with-output-to-file with-input-from-file
+	  call-with-input-file call-with-output-file
+	  open-output-file))
+
+(define-interface scsh-read/write-interface
+  (export read-string/partial
+	  read-string!/partial
+	  read-string read-string!
+	  write-string
+	  write-string/partial))
+
+(define-interface scsh-flock-interface
+  (export lock-region?
+	  lock-region:exclusive?
+	  lock-region:whence
+	  lock-region:start
+	  lock-region:len
+	  lock-region:pid		; Deprecated proc.
+	  lock-region:proc
+	  make-lock-region
+
+	  lock-region
+	  lock-region/no-block
+	  get-lock-region
+	  unlock-region
+	  with-region-lock*
+	  (with-region-lock :syntax)))
 
 (define-interface scsh-io-interface
   (compound-interface buffered-io-flags-interface
@@ -37,10 +132,6 @@
                               dup->outport
                               dup->fdes
                               open-file
-
-                              init-fdports!  ;added by JMG
-                              port->channel  ;overwrites channel-i/o
-
                               force-output
                               set-port-buffering
                               bufpol/block
@@ -55,8 +146,6 @@
 
                               flush-all-ports
                               flush-all-ports-no-threads
-                              y-or-n?
-                              *y-or-n-eof-count*
                               ;; R4RS I/O procedures that scsh provides.
                               write
                               char-ready?
@@ -88,13 +177,12 @@
                               (with-current-error-port :syntax)
                               with-error-output-port*
                               (with-error-output-port :syntax)
-                              set-current-input-port!
-                              set-current-output-port!
-                              set-current-error-port!
-                              set-error-output-port!
+                              ;; set-current-input-port!
+                              ;; set-current-output-port!
+                              ;; set-current-error-port!
+                              ;; set-error-output-port!
 
                               stdports->stdio
-                              stdio->stdports
                               with-stdio-ports*
                               (with-stdio-ports :syntax)
 
@@ -198,22 +286,38 @@
           file-exists?
 
           sync-file
-          sync-file-system
+          sync-file-system))
 
-          open-directory-stream
-          close-directory-stream
-          read-directory-stream
-
-          directory-files
-          glob
+(define-interface scsh-globbing-interface
+  (export glob
           glob-quote
-          file-match
+          maybe-directory-files))
 
-          create-temp-file
+(define-interface scsh-file-matching-interface
+  (export file-match))
+
+(define-interface scsh-temp-files-interface
+  (export create-temp-file
           temp-file-iterate
           temp-file-channel
           *temp-file-template*))
 
+(define-interface scsh-process-objects-interface
+  (export proc?
+          proc:pid
+          pid->proc
+          autoreap-policy
+          with-autoreaping
+          reap-zombies
+          wait
+          wait-any
+          wait-process-group
+          status:exit-val
+          status:stop-sig
+          status:term-sig
+          wait/poll
+          wait/stopped-children
+          new-child-proc))
 
 (define-interface scsh-process-interface
   (export exec
@@ -222,39 +326,30 @@
           exec-path/env
           %exec
           exec-path-search
-
           exit
           %exit
-
           suspend
-
           fork
           %fork
-
-          proc?
-          proc:pid
-          pid->proc
-
-          autoreap-policy
-          with-autoreaping
-          reap-zombies
-
-          wait
-          wait-any
-          wait-process-group
-
-          status:exit-val
-          status:stop-sig
-          status:term-sig
-          wait/poll
-          wait/stopped-children
-
           process-sleep
           process-sleep-until
-
           call-terminally
-          halts?))
+          halts?
+          fork/pipe
+          %fork/pipe
+          fork/pipe+
+          %fork/pipe+
+          tail-pipe
+          tail-pipe+
+          exec-path-list
+          init-exec-path-list)) ; ### should be internal
 
+(define-interface scsh-fdports-interface
+  (export move->fdes
+          dup
+          dup->fdes dup->inport dup->outport
+          shell-open
+          create+trunc))
 
 (define-interface scsh-process-state-interface
   (export with-resources-aligned
@@ -296,52 +391,53 @@
           euid-resource
           egid-resource
 
-          system-name
           process-times
           cpu-ticks/sec))
 
 
 (define-interface scsh-user/group-db-interface
-  (export user-info
+  (export name->user-info
+          user-info
           user-info?
           user-info:name
           user-info:uid
           user-info:gid
           user-info:home-dir
           user-info:shell
-
           ->uid
           ->username
-
+	  %homedir		     ; #### for scsh.scm
+	  init-home-directory
+	  home-directory
+	  home-dir home-file
           group-info
           group-info?
           group-info:name
           group-info:gid
           group-info:members
-
           ->gid
           ->groupname))
 
-
 (define-interface scsh-command-line-interface
-  (export command-line-arguments
+  (export set-command-line-args!
+          command-line-arguments
           command-line
           arg
           arg*
-          argv))
 
+argv))
 
 (define-interface scsh-signals-interface
   (export signal-process
           signal-process-group))
 
-
 (define-interface scsh-environment-interface
-  (export install-env
-          setenv
+  (export setenv
           getenv
           env->alist
           alist->env
+          alist->env-vec ; #### for %EXEC
+          alist->env-list
           alist-delete
           alist-update
           alist-compress
@@ -353,33 +449,6 @@
           add-after
           environ-resource))
 
-
-(define-interface scsh-home-interface
-  (export home-directory
-          exec-path-list))
-
-
-;;; Kill me?
-(define-interface scsh-regexp-interface
-  (export string-match
-          regexp-match?
-          match:start
-          match:end
-          match:substring
-          make-regexp
-          ->regexp
-          regexp?
-          regexp-search
-          regexp-substitute
-          regexp-substitute/global
-          regexp-quote))
-
-
-(define-interface scsh-string-interface
-  (export substitute-env-vars
-          ;string-index string-index-right ; Now in string-lib
-          ))
-
 (define-interface scsh-file-names-interface
   (export file-name-as-directory
           file-name-directory?
@@ -388,23 +457,25 @@
           file-name-absolute?
           file-name-directory
           file-name-nondirectory
+          ensure-file-name-is-nondirectory
+	  ensure-file-name-is-directory
           split-file-name
           path-list->file-name
           file-name-extension
           file-name-sans-extension
           replace-extension
           parse-file-name
-          expand-file-name
-          simplify-file-name
-          resolve-tilde-file-name
+          simplify-file-name))
+
+(define-interface scsh-file-names-system-interface
+  (export resolve-tilde-file-name
           resolve-file-name
+          expand-file-name
           absolute-file-name
-          home-dir
-          home-file))
+          substitute-env-vars))
 
 (define-interface scsh-misc-interface
   (export (receive :syntax)
-
           arithmetic-shift
           bitwise-and
           bitwise-ior
@@ -427,13 +498,6 @@
           (run/string     :syntax)
           (run/sexp       :syntax)
           (run/sexps      :syntax)
-
-          fork/pipe
-          %fork/pipe
-          fork/pipe+
-          %fork/pipe+
-          tail-pipe
-          tail-pipe+
           run/collecting*
           run/port+proc*
           run/port*
@@ -441,11 +505,17 @@
           run/string*
           run/sexp*
           run/sexps*
-          run/strings*
+          run/strings*))
 
+(define-interface scsh-collect-ports-interface
+  (export port->string
+	  port->list
+	  port->sexp-list
+	  port->string-list
+	  port-fold
+	  reduce-port
           make-char-port-filter
           make-string-port-filter))
-
 
 (define-interface scsh-version-interface
   (export scsh-major-version
@@ -490,14 +560,33 @@
           skip-char-set))
 
 (define-interface scsh-utilities-interface
-  (export mapv mapv! vector-every? copy-vector initialize-vector vector-append
+  (export (define-simple-syntax :syntax)
+          mapv
+          mapv!
+          vector-every?
+          copy-vector
+          initialize-vector
+          vector-append
           vfold vfold-right
           check-arg
           deprecated-proc
           real->exact-integer
           make-reinitializer
           run-as-long-as
-          obtain-all-or-none))
+          obtain-all-or-none
+          with-lock
+          stringify
+          bogus-substring-spec?))
+
+(define-interface scsh-resources-interface
+  (export with-resources-aligned
+	  make-resource))
+
+(define-interface scsh-directories-interface
+  (export open-directory-stream
+	  close-directory-stream
+	  read-directory-stream
+	  directory-files))
 
 (define-interface weak-tables-interface
   (export make-weak-table weak-table-set! weak-table-ref weak-table-walk
@@ -741,7 +830,7 @@
 
 
 ;;; POSIX termios tty control.
-(define-interface tty-interface
+(define-interface scsh-tty-interface
   (compound-interface
       tty-flags-interface
       (export
@@ -787,6 +876,18 @@
           tty-file-name
           control-tty-file-name
           )))
+
+(define-interface scsh-stdio-interface
+  (export stdports->stdio
+          with-stdio-ports*
+          (with-stdio-ports :syntax)))
+
+(define-interface scsh-ptys-interface
+  (export fork-pty-session
+	  open-pty
+	  pty-name->tty-name
+	  tty-name->pty-name
+	  make-pty-generator))
 
 (define-interface sigevents-interface
   (export most-recent-sigevent

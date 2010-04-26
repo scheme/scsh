@@ -10,7 +10,10 @@
 (define-structure test-base test-base-interface
   (open scheme-with-scsh
         handle
-	list-lib
+        (subset srfi-1 (filter
+                        delete!
+                        find
+                        fold-right))
 	define-record-types)
   (files test-base))
 
@@ -43,8 +46,7 @@
    add-after-test)
   (open scheme-with-scsh
  	thread-fluids
-	list-lib
-	string-lib)
+        (subset srfi-1 (every)))
   (files env-test-code))
 
 (define-structure add-env-test

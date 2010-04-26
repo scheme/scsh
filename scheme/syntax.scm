@@ -2,15 +2,10 @@
 ;;; Translating process forms into Scheme code.
 ;;; Copyright (c) 1993 by Olin Shivers.
 
-(define-syntax define-simple-syntax
-  (syntax-rules ()
-    ((define-simple-syntax (name . pattern) result)
-     (define-syntax name (syntax-rules () ((name . pattern) result))))))
-
 ;;; The three basic forms for running an extended process form:
 ;;; EXEC-EPF, &, and RUN. EXEC-EPF is the foundation.
 
-;; This is used by the macro for the << redirection to prevent the temporary 
+;; This is used by the macro for the << redirection to prevent the temporary
 ;; port from being closed by a GC before the process exec's
 (define <<-port-holder)
 
@@ -30,7 +25,7 @@
 ;;;     Run each proc until one completes successfully (i.e., exit status 0).
 ;;;     Return true if some proc completes successfully; otherwise #f.
 ;;;
-;;; (&& pf1 ... pfn) 
+;;; (&& pf1 ... pfn)
 ;;;     Run each proc until one fails (i.e., exit status non-0).
 ;;;     Return true if all procs complete successfully; otherwise #f.
 
@@ -72,4 +67,19 @@
 
 ;(define-simple-syntax (test-mac trans . form)
 ;  (pp (expand-mac trans (quote form))))
+
+;; Return a Unix port such that reads on it get the chars produced by
+;; DISPLAYing OBJ. For example, if OBJ is a string, then reading from
+;; the port produces the characters of OBJ.
+;;
+;; This implementation works by writing the string out to a temp file,
+;; but that isn't necessary. It could work, for example, by forking off a
+;; writer process that outputs to a pipe, i.e.,
+;;     (run/port (begin (display obj (fdes->outport 1))))
+
+(define (open-string-source obj)
+  (receive (inp outp) (temp-file-channel)
+    (display obj outp)
+    (close-output-port outp)
+    inp))
 

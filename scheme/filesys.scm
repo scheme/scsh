@@ -115,6 +115,27 @@
 	 (lambda ()
 	   (rename old-fname new-fname)))))) ;from posix-files
 
+(define (y-or-n? question . maybe-eof-value)
+  (let loop ((count *y-or-n-eof-count*))
+    (display question)
+    (display " (y/n)? ")
+    (let ((line (read-line)))
+      (cond ((eof-object? line)
+             (newline)
+             (if (= count 0)
+                 (:optional maybe-eof-value (error "EOF in y-or-n?"))
+                 (begin (display "I'll only ask another ")
+                        (write count)
+                        (display " times.")
+                        (newline)
+                        (loop (- count 1)))))
+            ((< (string-length line) 1) (loop count))
+            ((char=? (string-ref line 0) #\y) #t)
+            ((char=? (string-ref line 0) #\n) #f)
+            (else (loop count))))))
+
+(define *y-or-n-eof-count* 100)
+
 (define (read-symlink path)
   (with-resources-aligned
 	 (list cwd-resource euid-resource egid-resource)

@@ -85,7 +85,7 @@
 	       fname)))	; Posix strangeness: solid slashes are root.
 	(else fname)))
 
-    
+
 (define (split-file-name fname)
   (let* ((fname (ensure-file-name-is-nondirectory fname))
 	 (len (string-length fname)))
@@ -116,7 +116,7 @@
                    '("/")
                    w/slashes) ; Absolute path not relocated.
 	       (cons (file-name-as-directory root) w/slashes)))))
-		   
+
 
 (define (parse-file-name fname)
   (let ((nd (file-name-nondirectory fname)))
@@ -149,37 +149,6 @@
 
 (define (replace-extension fname ext)
   (string-append (file-name-sans-extension fname) ext))
-
-
-(define (resolve-tilde-file-name fname)
-  (let ((len (string-length fname)))
-    (if (and (> len 0) (char=? #\~ (string-ref fname 0)))
-	(let ((tilde->homedir (lambda (end)
-				(if (= end 1)
-				    home-directory ; Just ~
-				    (let* ((user (substring fname 1 end))
-					   (ui (name->user-info user)))
-				      (user-info:home-dir ui))))))
-	  (cond ((string-index fname #\/ 1) =>
-		 (lambda (slash)
-		   (string-append (tilde->homedir slash) "/"
-				  (substring fname (+ slash 1) len))))
-		(else (tilde->homedir len))))
-	fname)))
-
-(define (resolve-file-name fname . maybe-root)
-  (let* ((root (ensure-file-name-is-nondirectory (:optional maybe-root ".")))
-	 (fname (ensure-file-name-is-nondirectory fname)))
-    (if (zero? (string-length fname))
-	"/"
-	(let ((c (string-ref fname 0)))
-	  (cond ((char=? #\/ c) fname) 	; Absolute file name.
-
-		((char=? #\~ c) 	; ~ file name
-		 (resolve-tilde-file-name fname))
-
-		(else (string-append (file-name-as-directory root) fname)))))))
-
 
 ;;; - Remove leading and internal occurrences of dot. A trailing dot
 ;;;   is left alone, in case the parent is a symlink.
@@ -222,65 +191,3 @@
 				     (cons elt ans)))))
 		    (list slashes))))
       (apply string-append ans))))
-
-
-(define (expand-file-name fname . maybe-dir)
-  (simplify-file-name (apply resolve-file-name fname maybe-dir)))
-
-
-(define (absolute-file-name fname . maybe-root)
-  (let ((fname (ensure-file-name-is-nondirectory fname)))
-    (if (zero? (string-length fname))
-	"/"
-	(simplify-file-name
-	  (if (char=? #\/ (string-ref fname 0))
-	      fname 	; Absolute file name.
-	      (let ((root (:optional maybe-root (cwd))))
-		(string-append (file-name-as-directory root) fname)))))))
-
-
-(define (home-dir . maybe-user)
-  (if (pair? maybe-user)
-      (let ((user (car maybe-user)))
-	(ensure-file-name-is-nondirectory
-	    (or (%homedir user)
-		(error "Cannot get user's home directory"
-		       user))))
-      home-directory))
-
-
-;;; (home-file [user] fname)
-
-(define (home-file arg1 . maybe-arg2)
-  (receive (dir fname)
-	   (if (pair? maybe-arg2)
-	       (values (home-dir arg1) (car maybe-arg2))
-	       (values home-directory  arg1))
-    (string-append (file-name-as-directory dir) fname)))
-
-
-;;; Ugh.
-(define (substitute-env-vars str)
-  (let lp ((ans '()) (s str))
-    (let ((len (string-length s)))
-      (cond
-        ((zero? len) (apply string-append (reverse! ans)))
-	((string-index s #\$) =>
-	 (lambda (i)
-	   (let ((ans (cons (substring s 0 i) ans))
-		 (s (substring s (+ i 1) len))
-		 (len (- len (+ i 1))))
-	     (if (zero? len)
-		 (lp ans "")
-		 (let ((next-char (string-ref s 0)))
-		   (cond ((char=? #\{ next-char)
-			  (cond ((string-index s #\}) =>
-				 (lambda (i)
-				   (lp (cons (getenv (substring s 1 i)) ans)
-				       (substring s (+ i 1) len))))
-				(else (error "Unbalanced ${ delimiter in string" s))))
-			 (else
-			  (let ((i (or (string-index s #\/) len)))
-			    (lp (cons (getenv (substring s 0 i)) ans)
-				(substring s i len))))))))))
-	(else (lp (cons s ans) ""))))))

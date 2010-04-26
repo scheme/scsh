@@ -449,17 +449,17 @@
   current-error-port)
 
 
-(define (init-fdports!)
-  (set-fluid! $current-input-port
-              (channel-port->input-fdport (current-input-port)))
-  (set-port-buffering (current-input-port) bufpol/none)
+;; (define (init-fdports!)
+;;   (set-fluid! $current-input-port
+;;               (channel-port->input-fdport (current-input-port)))
+;;   (set-port-buffering (current-input-port) bufpol/none)
 
-  (set-fluid! $current-output-port
-              (channel-port->output-fdport (current-output-port)))
-  (set-fluid! $current-error-port
-              (channel-port->unbuffered-output-fdport (current-error-port)))
-  (set-fluid! $current-noise-port
-              (fluid $current-error-port)))
+;;   (set-fluid! $current-output-port
+;;               (channel-port->output-fdport (current-output-port)))
+;;   (set-fluid! $current-error-port
+;;               (channel-port->unbuffered-output-fdport (current-error-port)))
+;;   (set-fluid! $current-noise-port
+;;               (fluid $current-error-port)))
 
 ;;; Generic port operations
 ;;; -----------------------
@@ -642,10 +642,10 @@
 ;;; -------------------
 ;;; Side-effecting variants of with-current-input-port* and friends.
 
-(define (set-current-input-port!  port) (set-fluid! $current-input-port  port))
-(define (set-current-output-port! port) (set-fluid! $current-output-port port))
-(define (set-current-error-port!  port) (set-fluid! $current-error-port  port))
-(define (set-error-output-port!   port) (set-fluid! $current-error-port  port))
+;; (define (set-current-input-port!  port) (set-fluid! $current-input-port  port))
+;; (define (set-current-output-port! port) (set-fluid! $current-output-port port))
+;; (define (set-current-error-port!  port) (set-fluid! $current-error-port  port))
+;; (define (set-error-output-port!   port) (set-fluid! $current-error-port  port))
 
 
 ;;; call-with-foo-file with-foo-to-file
@@ -975,3 +975,42 @@
                                      (port/fdes->output-channel write-port)))
                               ready-write-channels))
                        write-list))))))
+
+;;; I/O
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(define seek/set 0)                     ;Unix codes for "whence"
+(define seek/delta 1)
+(define seek/end 2)
+
+(define (seek fd/port offset . maybe-whence)
+  (if (and (open-input-port? fd/port)
+           (> (byte-vector-length (port-buffer fd/port)) 1))
+      (error "Seek does currently not work on buffered ports" fd/port))
+  (if (and (open-output-port? fd/port)
+           (> (byte-vector-length (port-buffer fd/port)) 0))
+      (error "Seek does currently not work on buffered ports" fd/port))
+  (let ((whence (:optional maybe-whence seek/set))
+        (fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
+    (%fd-seek fd offset whence)))
+
+(define (tell fd/port)
+  (let ((fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
+    (%fd-seek fd 0 seek/delta)))
+
+(define (open-fdes path flags . maybe-mode) ; mode defaults to 0666
+    (with-resources-aligned
+     (list cwd-resource umask-resource euid-resource egid-resource)
+     (lambda ()
+      (%open path flags (:optional maybe-mode #o666)))))
+
+(import-lambda-definition-2 pipe-fdes () "scheme_pipe")
+
+(define (pipe)
+  (apply (lambda (r-fd w-fd)
+           (let ((r (fdes->inport  r-fd))
+                 (w (fdes->outport w-fd)))
+             (release-port-handle r)
+             (release-port-handle w)
+             (values r w)))
+         (pipe-fdes)))

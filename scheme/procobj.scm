@@ -324,7 +324,11 @@
          (else (error "mismatch in really-wait"
                       return_pid pid)))))
 
+;;; Posix waitpid(2) call.
+(import-lambda-definition-2 %wait-pid/list (pid options) "wait_pid")
 
+(define (%wait-pid pid options)
+  (apply values (%wait-pid/list pid options)))
 
 ;;; All you have to do, if pid was reaped
 ;;; proc_obj is maybe no longer alive

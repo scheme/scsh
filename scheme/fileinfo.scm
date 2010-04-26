@@ -36,6 +36,52 @@
 ;;;
 ;;; Otherwise, signals an error.
 
+(define-record-type :file-info
+  (make-file-info type device inode mode nlinks uid gid size atime mtime ctime)
+  file-info?
+  (type file-info:type)
+  (device file-info:device)
+  (inode file-info:inode)
+  (mode file-info:mode)
+  (nlinks file-info:nlinks)
+  (uid file-info:uid)
+  (gid file-info:gid)
+  (size file-info:size)
+  (atime file-info:atime)
+  (mtime file-info:mtime)
+  (ctime file-info:ctime))
+
+;;; Should be redone to return multiple-values.
+(define (%file-info fd/port/fname chase?)
+  (let ((ans-vec (make-vector 11))
+        (file-type (lambda (type-code)
+                     (vector-ref '#(block-special char-special directory fifo
+                                                  regular socket symlink)
+                                 type-code))))
+    (generic-file-op fd/port/fname
+                     (lambda (fd)
+                       (%stat-fdes fd ans-vec))
+                     (lambda (fname)
+                       (%stat-file fname ans-vec chase?)))
+    (make-file-info (file-type (vector-ref ans-vec 0))
+                    (vector-ref ans-vec 1)
+                    (vector-ref ans-vec 2)
+                    (vector-ref ans-vec 3)
+                    (vector-ref ans-vec 4)
+                    (vector-ref ans-vec 5)
+                    (vector-ref ans-vec 6)
+                    (vector-ref ans-vec 7)
+                    (vector-ref ans-vec 8)
+                    (vector-ref ans-vec 9)
+                    (vector-ref ans-vec 10))))
+
+(define (file-info fd/port/fname . maybe-chase?)
+  (let ((chase? (:optional maybe-chase? #t)))
+    (%file-info fd/port/fname chase?)))
+
+(define file-attributes
+  (deprecated-proc file-info "file-attributes" "Use file-info instead."))
+
 (define (fd/port/fname-not-accessible? perms fd/port/fname)
   (with-errno-handler ((err data)
 		       ((acces) 'search-denied)

@@ -3,12 +3,6 @@
 
 ;;; Note: read ops should check to see if their string args are mutable.
 
-(define (bogus-substring-spec? s start end)
-  (or (< start 0)
-      (< (string-length s) end)
-      (< end start)))
-
-
 ;;; Best-effort/forward-progress reading
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

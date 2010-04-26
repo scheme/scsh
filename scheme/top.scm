@@ -313,7 +313,19 @@
 (define (with-scsh-initialized thunk)
   (with-sigevents
    (lambda ()
-     (init-scsh-vars)
+     (init-home-directory
+      (cond ((getenv "HOME") => ensure-file-name-is-nondirectory)
+              ;; loosing at this point would be really bad, so some
+              ;; paranoia comes in order
+              (else (call-with-current-continuation
+                     (lambda (k)
+                       (with-handler
+                        (lambda (condition more)
+                          (warn "Starting up with no home directory ($HOME).")
+                          (k "/"))
+                        (lambda ()
+                          (user-info:home-dir (user-info (user-uid))))))))))
+     (init-exec-path-list)
      (thunk))))
 
 (define (parse-switches-and-execute all-args context commands-env int-env)

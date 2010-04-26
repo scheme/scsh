@@ -1,6 +1,11 @@
 ;;; Random useful utilities.
 ;;; Copyright (c) 1993 by Olin Shivers.
 
+(define-syntax define-simple-syntax
+  (syntax-rules ()
+    ((define-simple-syntax (name . pattern) result)
+     (define-syntax name (syntax-rules () ((name . pattern) result))))))
+
 (define (mapv f v)
   (let* ((len (vector-length v))
 	 (ans (make-vector len)))
@@ -131,4 +136,16 @@
 		(obtain-lock next)
 		(lp (list next) (delete next locks eq?))))))))
 
+(define (stringify thing)
+  (cond ((string? thing) thing)
+        ((symbol? thing)
+         (symbol->string thing))
+        ((integer? thing)
+         (number->string thing))
+        (else (error "Can only stringify strings, symbols, and integers."
+                     thing))))
 
+(define (bogus-substring-spec? s start end)
+  (or (< start 0)
+      (< (string-length s) end)
+      (< end start)))

@@ -28,8 +28,11 @@
   (open error-package	; ERROR
 	scsh-utilities	; DEPRECATED-PROC
 	srfi-14
-	scheme)
-
+	(modify scheme (hide char-lower-case?
+                             char-upper-case?
+                             char-alphabetic?
+                             char-numeric?
+                             char-whitespace?)))
   (begin
     ;; These are R5RS. We can't use the native S48 ones, because they
     ;; don't handle full Latin-1.

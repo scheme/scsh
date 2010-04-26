@@ -35,6 +35,9 @@ SCHEME48 = /usr/local/bin/scheme48
 
 enough: c/scsh.so scsh scsh.image go
 
+test: enough
+	$(srcdir)/build/test.sh $(srcdir)
+
 C = c/syscalls.o \
     c/cstuff.o \
     c/scsh.o
@@ -43,41 +46,55 @@ c/scsh.so: $(C)
 	$(LD) -o $@ $(C) $(DYNAMIC_EXTERNALS_LDFLAGS_IN_PLACE)
 
 # not a complete list yet.
-SCHEME = scheme/condition-handler.scm \
+SCHEME = scheme/command-line.scm \
+	 scheme/condition-handler.scm \
+	 scheme/continuation.scm \
+	 scheme/directory.scm \
 	 scheme/enumconst.scm \
+	 scheme/environment.scm \
 	 scheme/event.scm \
-	 scheme/low-interrupt.scm \
 	 scheme/fdports.scm \
+	 scheme/file.scm \
 	 scheme/fileinfo.scm \
 	 scheme/filemtch.scm \
 	 scheme/filesys.scm \
 	 scheme/fname.scm \
+	 scheme/fname-system.scm \
 	 scheme/fr.scm \
 	 scheme/glob.scm \
 	 scheme/dot-locking.scm \
 	 scheme/here.scm \
 	 scheme/lib-dirs.scm \
 	 scheme/libscsh.scm \
+	 scheme/low-interrupt.scm \
 	 scheme/md5.scm \
 	 scheme/meta-arg.scm \
 	 scheme/newports.scm \
+	 scheme/port-collect.scm \
+	 scheme/process-high-level.scm \
+	 scheme/process-state.scm \
+	 scheme/process.scm \
 	 scheme/procobj.scm \
 	 scheme/pty.scm \
 	 scheme/rdelim.scm \
+	 scheme/resource.scm \
 	 scheme/rw.scm \
 	 scheme/scsh-condition.scm \
 	 scheme/scsh-interfaces.scm \
 	 scheme/scsh-package.scm \
 	 scheme/scsh-read.scm \
 	 scheme/scsh-version.scm \
-	 scheme/scsh.scm \
+	 scheme/signal.scm \
 	 scheme/startup.scm \
+	 scheme/stdio.scm \
 	 scheme/stringcoll.scm \
 	 scheme/syntax-helpers.scm \
 	 scheme/syntax.scm \
-	 scheme/syscalls.scm \
+	 scheme/system.scm \
+	 scheme/temp-file.scm \
 	 scheme/top.scm \
 	 scheme/tty.scm \
+	 scheme/user-group.scm \
 	 scheme/utilities.scm \
 	 scheme/weaktables.scm \
 	 rx/packages.scm \
@@ -114,12 +131,9 @@ LOADS = $(srcdir)/rx/interfaces.scm \
 	$(srcdir)/scheme/lib/ccp-pack.scm \
 	$(srcdir)/scheme/lib/char-package.scm
 
-OPENS = floatnums scsh scsh-top-package scsh-here-string-hax \
-	srfi-1 srfi-13 srfi-14 # srfi-14 is also exported by scsh
-
 scsh.image: $(SCHEME)
 	$(srcdir)/build/build-image.sh $(srcdir) \
-		"`pwd`/c/" '$@' '$(SCHEME48) -h 0' '$(LOADS)' '$(OPENS)'
+		"`pwd`/c/" '$@' '$(SCHEME48) -h 0' '$(LOADS)'
 
 dirs:
 	for dir in $(bindir) $(LIB) $(SHARE); do\
