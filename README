@@ -23,4 +23,6 @@ Run `make` to build everything.
 
 Run `go` to test scsh before installing
 
+Run `make test` to run automated tests on your build
+
 Run `make install` to install scsh (If you dare).
