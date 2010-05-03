@@ -399,9 +399,9 @@
 
 (define-structure scsh-signals scsh-signals-interface
   (open scheme
-	signals
+	(subset signals (error))
         (subset external-calls (import-lambda-definition-2))
-        (subset posix-processes (signal-os-number))
+        (subset posix-processes (signal-os-number signal))
 	scsh-process-objects)
   (files signal))
 

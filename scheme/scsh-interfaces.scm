@@ -428,7 +428,8 @@
 argv))
 
 (define-interface scsh-signals-interface
-  (export signal-process
+  (export (signal :syntax)
+          signal-process
           signal-process-group))
 
 (define-interface scsh-environment-interface
