@@ -438,7 +438,6 @@ argv))
           alist->env
           alist->env-vec ; #### for %EXEC
           alist->env-list
-          alist-delete
           alist-update
           alist-compress
           with-env*

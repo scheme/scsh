@@ -135,7 +135,7 @@
 	(subset primitives (add-finalizer!))
 	records
 	(subset signals (error))
-	(subset srfi-1 (fold filter))
+	(subset srfi-1 (fold filter alist-delete))
 	(subset srfi-13 (string-index string-join))
 	(subset scsh-utilities
 		(with-lock make-reinitializer define-simple-syntax))
@@ -838,28 +838,6 @@
         char-predicates-lib     ; Urk -- Some of this is R5RS!
         lib-dirs))
 
-(define-structure scheme-with-scsh
-  (compound-interface (interface-of scsh)
-                      (interface-of scheme))
-  (open scsh
-        (modify scheme (hide call-with-input-file
-                             call-with-output-file
-                             with-input-from-file
-                             with-output-to-file
-                             open-input-file
-                             open-output-file
-                             char-whitespace?
-                             char-numeric?
-                             char-lower-case?
-                             char-upper-case?
-                             char-alphabetic?
-                             write
-                             display
-                             char-ready?
-                             read-char
-                             write-char
-                             newline))))
-
 (define-structure scsh-here-string-hax (export)
   (open reading
         receiving
@@ -990,5 +968,32 @@
 
 (define-structure scsh-user (export)
   (open floatnums
-        scheme-with-scsh
-        scsh-top-package))
+        srfi-1
+        srfi-13
+        srfi-14
+        scsh-top-package
+        scsh
+        (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             open-input-file
+                             open-output-file
+                             char-whitespace?
+                             char-numeric?
+                             char-lower-case?
+                             char-upper-case?
+                             char-alphabetic?
+                             write
+                             display
+                             char-ready?
+                             read-char
+                             write-char
+                             newline
+                             map
+                             string-fill!
+                             member
+                             assoc
+                             string-copy
+                             string->list
+                             for-each))))

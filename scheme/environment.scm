@@ -181,9 +181,6 @@
 (define (with-total-env* alist thunk)
   (really-with-env* (make-env #f alist) thunk))
 
-(define (alist-delete key alist)
-  (filter (lambda (key/val) (not (equal? key (car key/val)))) alist))
-
 (define (alist-update key val alist)
   (cons (cons key val)
         (alist-delete key alist)))
