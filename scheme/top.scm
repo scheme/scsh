@@ -315,16 +315,16 @@
    (lambda ()
      (init-home-directory
       (cond ((getenv "HOME") => ensure-file-name-is-nondirectory)
-              ;; loosing at this point would be really bad, so some
-              ;; paranoia comes in order
-              (else (call-with-current-continuation
-                     (lambda (k)
-                       (with-handler
-                        (lambda (condition more)
-                          (warn "Starting up with no home directory ($HOME).")
-                          (k "/"))
-                        (lambda ()
-                          (user-info:home-dir (user-info (user-uid))))))))))
+            ;; loosing at this point would be really bad, so some
+            ;; paranoia comes in order
+            (else (call-with-current-continuation
+                   (lambda (k)
+                     (with-handler
+                      (lambda (condition more)
+                        (warn "Starting up with no home directory ($HOME).")
+                        (k "/"))
+                      (lambda ()
+                        (user-info:home-dir (user-info (user-uid))))))))))
      (init-exec-path-list)
      (thunk))))
 
