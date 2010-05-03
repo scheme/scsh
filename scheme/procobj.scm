@@ -283,24 +283,16 @@
          (win (lambda (status)
                 (waited-by-wait proc status)
                 status)))
-    ;; save the event before we check for finished
-    (let ((pre-event (most-recent-sigevent)))
-      (with-lock
-       wait-lock
-       (lambda ()
-         (cond ((atomic-wait proc (bitwise-ior flags wait/poll)) => win)
-
-               ((zero? (bitwise-and flags wait/poll))
-                ;; we have to block and hence use the event system
-                (let lp ((pre-event pre-event))
-                  (cond ((atomic-wait proc (bitwise-ior flags wait/poll))
-                         => win)
-                        (else
-                         (release-lock wait-lock)
-                         (let ((next-event (next-sigevent pre-event (signal chld))))
-                           (obtain-lock wait-lock)
-                           (lp next-event))))))
-               (else #f)))))))
+    (with-lock
+     wait-lock
+     (lambda ()
+       (cond ((atomic-wait proc (bitwise-ior flags wait/poll)) => win)
+             ((zero? (bitwise-and flags wait/poll))
+              (let ((process-id (integer->process-id (proc:pid proc))))
+                (wait-for-child-process process-id)
+                (or (process-id-exit-status process-id)
+                    (process-id-terminating-signal process-id))))
+             (else #f))))))
 
 
 ;;; -> process-object proc status/#f

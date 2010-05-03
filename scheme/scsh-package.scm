@@ -365,7 +365,10 @@
         define-record-types
         (subset posix-processes (signal
                                  process-id-exit-status
-                                 integer->process-id))
+                                 integer->process-id
+                                 wait-for-child-process
+                                 process-id-exit-status
+                                 process-id-terminating-signal))
         (subset threads-internal (spawn-on-root))
 	(subset primitives (add-finalizer!))
 	(subset srfi-1 (delete filter))
