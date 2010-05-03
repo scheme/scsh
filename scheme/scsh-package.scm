@@ -966,7 +966,13 @@
         (subset srfi-1 (any)))
   (files lib-dirs))
 
-(define-structure scsh-user (export)
+(define-structure scsh-user
+  (compound-interface (interface-of floatnums)
+                      (interface-of srfi-1)
+                      (interface-of srfi-13)
+                      (interface-of srfi-14)
+                      (interface-of scsh)
+                      (interface-of scheme))
   (open floatnums
         srfi-1
         srfi-13
