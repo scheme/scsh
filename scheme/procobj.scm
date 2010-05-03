@@ -114,29 +114,29 @@
 
 (define *autoreap-policy* #f) ; Not exported from this module.
 
-(define (autoreap-policy . maybe-policy)
-  (let ((old-policy *autoreap-policy*))
-    (if (pair? maybe-policy)
-        (let ((new-policy (car maybe-policy)))
-          (cond ((pair? (cdr maybe-policy))
-                 (error "Too many args to autoreap-policy" maybe-policy))
-                ((not (memq new-policy '(early late #f)))
-                 (error "Illegal autoreap policy." new-policy))
-                (else (set! *autoreap-policy* new-policy)
-                      (cond ((eq? new-policy 'early)
-                             (set-sigchld-handler! early-sigchld-handler)
-                             (set-post/gc-handler! reap-need-reaping))
+;; (define (autoreap-policy . maybe-policy)
+;;   (let ((old-policy *autoreap-policy*))
+;;     (if (pair? maybe-policy)
+;;         (let ((new-policy (car maybe-policy)))
+;;           (cond ((pair? (cdr maybe-policy))
+;;                  (error "Too many args to autoreap-policy" maybe-policy))
+;;                 ((not (memq new-policy '(early late #f)))
+;;                  (error "Illegal autoreap policy." new-policy))
+;;                 (else (set! *autoreap-policy* new-policy)
+;;                       (cond ((eq? new-policy 'early)
+;;                              (set-sigchld-handler! early-sigchld-handler)
+;;                              (set-post/gc-handler! reap-need-reaping))
 
-                            ((eq? new-policy 'late)
-                             (set-sigchld-handler! late-sigchld-handler)
-                             (set-post/gc-handler! reap-need-reaping))
+;;                             ((eq? new-policy 'late)
+;;                              (set-sigchld-handler! late-sigchld-handler)
+;;                              (set-post/gc-handler! reap-need-reaping))
 
-                            (else
-                             (set-sigchld-handler! noauto-sigchld-handler)
-                             (set-post/gc-handler!
-                              (lambda ()
-                                #f))))))))
-    old-policy))
+;;                             (else
+;;                              (set-sigchld-handler! noauto-sigchld-handler)
+;;                              (set-post/gc-handler!
+;;                               (lambda ()
+;;                                 #f))))))))
+;;     old-policy))
 
 
 ;;; we don't register the post/gc-handler until the first police change
@@ -144,37 +144,37 @@
 (define *post/gc-handler*
   (lambda () (error "*post/gc-handler* was not defined")))
 
-(define (really-set-post/gc-handler! handler)
-   (set! *post/gc-handler* handler))
+;; (define (really-set-post/gc-handler! handler)
+;;    (set! *post/gc-handler* handler))
 
-(define (start-set-post/gc-handler! handler)
-  (set! set-post/gc-handler! really-set-post/gc-handler!)
-  (set-post/gc-handler! handler)
-  (spawn (lambda ()
-           (let lp ((event (most-recent-sigevent)))
-             (let ((next-event (next-sigevent event interrupt/post-gc)))
-               (*post/gc-handler*)
-               (lp next-event))))
-         '*post/gc-handler*-thread))
+;; (define (start-set-post/gc-handler! handler)
+;;   (set! set-post/gc-handler! really-set-post/gc-handler!)
+;;   (set-post/gc-handler! handler)
+;;   (spawn (lambda ()
+;;            (let lp ((event (most-recent-sigevent)))
+;;              (let ((next-event (next-sigevent event interrupt/post-gc)))
+;;                (*post/gc-handler*)
+;;                (lp next-event))))
+;;          '*post/gc-handler*-thread))
 
-(define set-post/gc-handler! start-set-post/gc-handler!)
+;; (define set-post/gc-handler! start-set-post/gc-handler!)
 
 
 (define (*sigchld-handler*) (early-sigchld-handler))
 (define (set-sigchld-handler! handler)
   (set! *sigchld-handler* handler))
 
-(define (with-autoreaping thunk)
-  (set! *autoreap-policy* 'early)
-  (run-as-long-as
-   (lambda ()
-     (let lp ((event (most-recent-sigevent)))
-       (let ((next-event (next-sigevent event (signal chld))))
-         (*sigchld-handler*)
-         (lp next-event))))
-   thunk
-   spawn-on-root
-   'auto-reaping))
+;; (define (with-autoreaping thunk)
+;;   (set! *autoreap-policy* 'early)
+;;   (run-as-long-as
+;;    (lambda ()
+;;      (let lp ((event (most-recent-sigevent)))
+;;        (let ((next-event (next-sigevent event (signal chld))))
+;;          (*sigchld-handler*)
+;;          (lp next-event))))
+;;    thunk
+;;    spawn-on-root
+;;    'auto-reaping))
 
 ;;; This list contains pids whose proc-obj were gc'd before they died
 ;;; We try to reap them after every gc and maybe on every SIGCHLD
@@ -411,32 +411,32 @@
 ;;; early autoreaping, since the reaper loses process-group information.
 ;;; (I'm working on it -df)
 
-(define (wait-process-group . args)
-  (let-optionals args ((proc-group 0) (flags 0))
-    (let ((proc-group (cond ((integer? proc-group) proc-group)
-                             ((proc? proc-group)    (proc:pid proc-group))
-                             (else (error "Illegal argument" wait-process-group
-                                          proc-group))))
-          (win (lambda (pid status)
-                 (let ((proc (pid->proc pid 'create)))
-                   (if proc (waited-by-wait proc status))
-                   (values proc status)))))
-      ;; save the event before we check for finished
-      (let ((pre-event (most-recent-sigevent)))
-        (receive (pid status)
-          (%wait-process-group proc-group (bitwise-ior flags wait/poll))
-          (cond (pid
-                 (win pid status))
-                ((zero? (bitwise-and flags wait/poll))
-                 ;; we have to block and hence use the event system
-                 (let lp ((pre-event pre-event))
-                   (receive (pid status)
-                      (%wait-process-group proc-group (bitwise-ior flags wait/poll))
-                      (if pid
-                          (win pid status)
-                          (lp (next-sigevent pre-event (signal chld)))))))
-                (else
-                 (values #f status))))))))
+;; (define (wait-process-group . args)
+;;   (let-optionals args ((proc-group 0) (flags 0))
+;;     (let ((proc-group (cond ((integer? proc-group) proc-group)
+;;                              ((proc? proc-group)    (proc:pid proc-group))
+;;                              (else (error "Illegal argument" wait-process-group
+;;                                           proc-group))))
+;;           (win (lambda (pid status)
+;;                  (let ((proc (pid->proc pid 'create)))
+;;                    (if proc (waited-by-wait proc status))
+;;                    (values proc status)))))
+;;       ;; save the event before we check for finished
+;;       (let ((pre-event (most-recent-sigevent)))
+;;         (receive (pid status)
+;;           (%wait-process-group proc-group (bitwise-ior flags wait/poll))
+;;           (cond (pid
+;;                  (win pid status))
+;;                 ((zero? (bitwise-and flags wait/poll))
+;;                  ;; we have to block and hence use the event system
+;;                  (let lp ((pre-event pre-event))
+;;                    (receive (pid status)
+;;                       (%wait-process-group proc-group (bitwise-ior flags wait/poll))
+;;                       (if pid
+;;                           (win pid status)
+;;                           (lp (next-sigevent pre-event (signal chld)))))))
+;;                 (else
+;;                  (values #f status))))))))
 
 
 

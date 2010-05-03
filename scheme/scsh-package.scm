@@ -355,7 +355,7 @@
 	threads
 	locks
         placeholders
-        sigevents
+        ;; sigevents
 	bitwise
 	tables
         weak-tables
@@ -672,7 +672,7 @@
         scsh-utilities
         interrupts
         low-interrupt
-        sigevents
+        ;; sigevents
         (modify primitives (hide wait
                                  write-char
                                  read-char))
@@ -712,7 +712,7 @@
         extended-ports
         fluids
         interfaces
-        sigevents
+        ;; sigevents
         scsh-reader
         low-interrupt wind
         fluids-internal            ; JMG: get-dynamic-env
@@ -879,33 +879,33 @@
                              write-char)))
   (files here))
 
-(define-structure sigevents sigevents-interface
-   (open scsh-level-0
-         (modify scheme (hide write
-                              display
-                              char-ready?
-                              read-char
-                              write-char
-                              newline))
-         low-interrupt
-         define-record-types
-         threads
-         (subset srfi-1 (filter))
-         (subset scsh-utilities (run-as-long-as))
-         (subset signals (error))
-         (subset queues (make-queue))
-         (subset proposals (with-new-proposal))
-         (subset threads-internal (maybe-commit-and-make-ready
-                                   maybe-commit-and-block-on-queue
-                                   maybe-dequeue-thread!
-                                   thread-queue-empty?))
-         (subset interrupts (with-interrupts-inhibited))
-         (subset posix-processes (name->signal
-                                  signal-os-number
-                                  make-signal-queue
-                                  dequeue-signal!
-                                  signal=?)))
-   (files event))
+;; (define-structure sigevents sigevents-interface
+;;    (open scsh-level-0
+;;          (modify scheme (hide write
+;;                               display
+;;                               char-ready?
+;;                               read-char
+;;                               write-char
+;;                               newline))
+;;          low-interrupt
+;;          define-record-types
+;;          threads
+;;          (subset srfi-1 (filter))
+;;          (subset scsh-utilities (run-as-long-as))
+;;          (subset signals (error))
+;;          (subset queues (make-queue))
+;;          (subset proposals (with-new-proposal))
+;;          (subset threads-internal (maybe-commit-and-make-ready
+;;                                    maybe-commit-and-block-on-queue
+;;                                    maybe-dequeue-thread!
+;;                                    thread-queue-empty?))
+;;          (subset interrupts (with-interrupts-inhibited))
+;;          (subset posix-processes (name->signal
+;;                                   signal-os-number
+;;                                   make-signal-queue
+;;                                   dequeue-signal!
+;;                                   signal=?)))
+;;    (files event))
 
 (define-structure simple-syntax (export define-simple-syntax)
   (open scheme)

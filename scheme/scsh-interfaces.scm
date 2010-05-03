@@ -306,12 +306,12 @@
   (export proc?
           proc:pid
           pid->proc
-          autoreap-policy
-          with-autoreaping
+          ;; autoreap-policy
+          ;; with-autoreaping
           reap-zombies
           wait
           wait-any
-          wait-process-group
+          ;; wait-process-group
           status:exit-val
           status:stop-sig
           status:term-sig
@@ -889,13 +889,13 @@ argv))
 	  tty-name->pty-name
 	  make-pty-generator))
 
-(define-interface sigevents-interface
-  (export most-recent-sigevent
-          sigevent?
-          next-sigevent
-          next-sigevent/no-wait
-          with-sigevents
-          sigevent-type))
+;; (define-interface sigevents-interface
+;;   (export most-recent-sigevent
+;;           sigevent?
+;;           next-sigevent
+;;           next-sigevent/no-wait
+;;           with-sigevents
+;;           sigevent-type))
 
 (define-interface low-interrupt-interface
   (export number-of-interrupts
