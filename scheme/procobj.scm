@@ -334,7 +334,8 @@
 
 ;;; All you have to do, if a wait on proc was successful
 (define (waited-by-wait proc status)
-  (if (not (status:stop-sig status))
+  (if (and (not (status:stop-sig status))
+           (proc:zombie proc))
       (begin
         (obituary proc status)
         (mark-proc-waited! proc))))
