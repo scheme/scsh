@@ -4,7 +4,8 @@
 ;; %%exec/errno directly  F*&% *P
 
 (define (%exec prog arg-list env)
-  (let ((env (if env (alist->env-list env) env)))
+  (let ((arg-list (map stringify arg-list))
+        (env (if env (alist->env-list env) env)))
     (exec-with-alias prog #f env arg-list)))
 
 
@@ -93,14 +94,12 @@
            (%exec prog (cons prog arglist) env)
 
            ;; Try each directory in PATH-LIST.
-           (for-each
-            (lambda (dir)
-              (let ((binary (string-append dir "/" prog)))
-                (with-handler (lambda (condition more) #f)
-                              (lambda ()
-                                (exec-with-alias binary #f env (cons prog arglist))))))
-            (thread-fluid exec-path-list))))
-
+           (let ((arglist (cons prog (map stringify arglist))))
+             (for-each (lambda (dir)
+                         (let ((binary (string-append dir "/" prog)))
+                           (with-handler (lambda (c m) #f)
+                                         (lambda () (exec-with-alias binary #f env arglist)))))
+                       (thread-fluid exec-path-list)))))
      (error "No executable found." prog arglist))))
 
 (define (exec-path prog . arglist)
