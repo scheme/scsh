@@ -19,6 +19,7 @@
         number-i/o
         i/o-internal    ;input-port-option
         ascii           ;for dispatch table
+        unicode
         signals         ;warn, signal-condition, make-condition
         conditions      ;define-condition-type
         primitives      ;make-immutable!
@@ -257,6 +258,36 @@
 (define-sharp-macro #\t
   (lambda (c port) (read-char port) #t))
 
+; Don't use non-R5RS char literals to avoid bootstrap circularities
+
+(define *nul* (scalar-value->char 0))
+(define *alarm* (scalar-value->char 7))
+(define *backspace* (scalar-value->char 8))
+(define *tab* (scalar-value->char 9))
+(define *linefeed* (scalar-value->char 10))
+(define *vtab* (scalar-value->char 11))
+(define *page* (scalar-value->char 12))
+(define *return* (scalar-value->char 13))
+(define *escape* (scalar-value->char 27))
+(define *rubout* (scalar-value->char 127))
+
+(define *char-name-table*
+  (list
+   (cons 'space #\space)
+   (cons 'newline #\newline)
+   (cons 'nul *nul*)
+   (cons 'alarm *alarm*)
+   (cons 'backspace *backspace*)
+   (cons 'tab *tab*)
+   (cons 'linefeed *linefeed*)
+   (cons 'vtab *vtab*)
+   (cons 'page *page*)
+   (cons 'return *return*)
+   (cons 'escape *escape*)
+   (cons 'rubout *rubout*)
+   (cons 'delete *rubout*)
+   (cons 'del *rubout*)))
+
 (define-sharp-macro #\\
   (lambda (c port)
     (read-char port)
@@ -267,9 +298,8 @@
              (let ((name (sub-read-carefully port)))
                (cond ((= (string-length (symbol->string name)) 1)
                       c)
-                     ((assq name '((space   #\space)
-                                   (newline #\newline)))
-                      => cadr)
+                     ((assq name *char-name-table*)
+                      => cdr)
                      (else
                       (reading-error port "unknown #\\ name" name)))))
             (else
