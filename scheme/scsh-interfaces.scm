@@ -131,7 +131,7 @@
                               dup->inport
                               dup->outport
                               dup->fdes
-                              open-file
+
                               force-output
                               set-port-buffering
                               bufpol/block
@@ -213,7 +213,9 @@
 
 
 (define-interface scsh-file-interface
-  (export create-directory
+  (export open-file
+          file-options
+          create-directory
           create-fifo
           create-hard-link
           create-symlink
