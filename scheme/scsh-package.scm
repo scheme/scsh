@@ -210,15 +210,20 @@
                                (display      s48-display)
                                (newline      s48-newline)
                                (write        s48-write)
-                               (write-char   s48-write-char)))
-	define-record-types
-	bitwise
-	ascii
-	tables weak-tables
-	enumerated
-	byte-vectors
-	fluids
-	placeholders
+                               (write-char   s48-write-char))
+                       (hide open-input-file
+                             open-output-file))
+	(subset tables (table-set!
+                        table-ref
+                        make-integer-table))
+        (subset weak (make-weak-pointer
+                      weak-pointer?
+                      weak-pointer-ref))
+	(subset enumerated (enum))
+	(subset byte-vectors (byte-vector-length))
+	(subset placeholders (make-placeholder
+                              placeholder-set!
+                              placeholder-value))
 	receiving
 	let-opt
 	(modify i/o (hide force-output
@@ -229,10 +234,22 @@
                     (rename (force-output s48-force-output)))
         (modify formats (rename (format s48-format))
                         (expose format))
-        i/o-internal channels channel-i/o ports
+        i/o-internal
+        channels
+        channel-i/o
+        (subset channel-ports (input-channel+closer->port
+                               output-channel+closer->port
+                               port->channel))
+        ports
         (subset threads-internal (thread-continuation))
-        (subset posix-i/o (fd-port? port->fd))
-        (subset posix-files (open-file))
+        (subset posix-i/o (fd-port?
+                           port->fd
+                           dup))
+        (modify posix-files (rename (open-file s48-open-file))
+                            (expose open-file
+                                    file-options
+                                    file-options-union
+                                    integer->file-mode))
 	(subset architecture (channel-status-option))
 	(subset primitives (add-pending-channel copy-bytes!))
 	(subset interrupts (enable-interrupts!
@@ -257,7 +274,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
 	bitwise
         define-record-types
 	let-opt
@@ -288,7 +307,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
 	receiving
 	let-opt
 	bitwise
@@ -334,7 +355,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
 	bitwise
 	(subset primitives (copy-bytes!))
 	let-opt
@@ -387,7 +410,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
 	signals
 	bitwise
         (subset posix-files (file-options integer->file-mode))
@@ -411,7 +436,9 @@
                              newline
                              write-char
                              char-ready?
-                             read-char))
+                             read-char
+                             open-input-file
+                             open-output-file))
 	(modify i/o (hide force-output
                           newline
                           write-char
@@ -463,7 +490,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
 	(subset i/o (current-error-port))
 	(subset scsh-utilities (define-simple-syntax))
 	scsh-fdports
@@ -522,7 +551,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
 	signals
 	receiving
 	let-opt
@@ -590,7 +621,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
         formats
         string-collectors
         extended-ports
@@ -700,7 +733,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
         (modify command-processor (hide y-or-n?))
         command-levels          ; with-new-session
         conditions
@@ -830,7 +865,9 @@
                              char-upper-case?
                              char-alphabetic?
                              char-numeric?
-                             char-whitespace?))
+                             char-whitespace?
+                             open-input-file
+                             open-output-file))
         re-exports
         scsh-startup-package
         awk-package
@@ -854,7 +891,9 @@
                              newline
                              read-char
                              display
-                             write-char)))
+                             write-char
+                             open-input-file
+                             open-output-file)))
   (files here))
 
 ;; (define-structure sigevents sigevents-interface
@@ -959,7 +998,9 @@
                              char-ready?
                              read-char
                              write-char
-                             newline))
+                             newline
+                             open-input-file
+                             open-output-file))
         handle
         scsh-utilities
         (subset signals (error))

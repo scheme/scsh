@@ -44,7 +44,6 @@
   (export call/fdes
 	  sleazy-call/fdes
 	  fdes->inport
-	  set-port-buffering
 	  fdes->outport
 	  evict-ports
 	  fdport?
@@ -53,11 +52,8 @@
 	  make-input-fdport
 	  make-output-fdport
 	  open-fdes
-	  fdport-data:fd
 	  close
-	  fdport-data
 	  select
-	  fdport-data:channel
 	  seek/set
 	  open-file
 	  pipe
@@ -95,7 +91,8 @@
 	  open-input-file
 	  with-output-to-file with-input-from-file
 	  call-with-input-file call-with-output-file
-	  open-output-file))
+	  open-output-file
+          init-fdports!))
 
 (define-interface scsh-read/write-interface
   (export read-string/partial
@@ -133,7 +130,6 @@
                               dup->fdes
 
                               force-output
-                              set-port-buffering
                               bufpol/block
                               bufpol/line
                               bufpol/none
@@ -168,6 +164,8 @@
                               ;; pty-name->tty-name
                               ;; tty-name->pty-name
                               ;; make-pty-generator
+
+                              init-fdports!
 
                               with-current-input-port*
                               (with-current-input-port :syntax)

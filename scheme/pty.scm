@@ -27,12 +27,9 @@
 			      (dup->outport tty-in 1)
 			      (dup->outport tty-in 2)
                               (make-pty-a-tty! (current-input-port))
-;			      (set-port-buffering (dup->outport tty 2)
-;						  bufpol/none))
                               (with-stdio-ports* thunk))))
              (pty-out (dup->outport pty-in)))
         (close-input-port tty-in)
-;      (set-port-buffering pty-out bufpol/none)
         (make-pty-a-tty! pty-in)
         (values process pty-in pty-out ttyname)))))
 

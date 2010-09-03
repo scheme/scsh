@@ -15,7 +15,6 @@
 
     (cond ((integer? fd/port)
 	   (let ((port (fdes->inport fd/port)))
-	     (set-port-buffering port bufpol/none)
 	     (read-string!/partial s port start end)))
 
           ((open-input-port? fd/port)
@@ -50,7 +49,6 @@
   (let* ((fd/port (:optional maybe-fd/port (current-input-port))))
     (cond ((integer? fd/port)
 	   (let ((port (fdes->inport fd/port)))
-	     (set-port-buffering port bufpol/none)
 	     (read-string/partial len port)))
 
 	  ((open-input-port? fd/port)
@@ -79,7 +77,6 @@
 
     (cond ((integer? fd/port)
 	   (let ((port (fdes->inport fd/port)))
-	     (set-port-buffering port bufpol/block (- end start))
 	     (read-string! port start end)))
 
 	  (else ; no differnce between fd/port and s48 ports
@@ -110,7 +107,6 @@
 
     (cond ((integer? fd/port)
 	   (let ((port (fdes->outport fd/port)))
-	     (set-port-buffering port bufpol/block (- end start))
 	     (write-string/partial s port start end)))
 	  (else
 	   ;; the only way to implement this, would be to use
@@ -132,6 +128,5 @@ See the RELEASE file for details")))))
 
     (cond ((integer? fd/port)
 	   (let ((port (fdes->outport fd/port)))
-	     (set-port-buffering port bufpol/block (- end start))
 	     (write-string s port start end)))
 	  (else (write-block (string->os-byte-vector s) start (- end start) fd/port)))))
