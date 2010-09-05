@@ -159,11 +159,11 @@
                               open-output-file
                               format
 
-                              ;; fork-pty-session
-                              ;; open-pty
-                              ;; pty-name->tty-name
-                              ;; tty-name->pty-name
-                              ;; make-pty-generator
+                              fork-pty-session
+                              open-pty
+                              pty-name->tty-name
+                              tty-name->pty-name
+                              make-pty-generator
 
                               init-fdports!
 

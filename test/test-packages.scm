@@ -111,5 +111,6 @@
         file-name-maniplation-test
         read-delimited-strings-test
         bitwise-ops-test
-        user-and-group-db-access-test))
+        user-and-group-db-access-test
+        terminal-device-control-test))
 

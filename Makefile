@@ -39,6 +39,7 @@ test: enough
 	$(srcdir)/build/test.sh $(srcdir)
 
 C = c/syscalls.o \
+    c/tty.o \
     c/cstuff.o \
     c/scsh.o
 

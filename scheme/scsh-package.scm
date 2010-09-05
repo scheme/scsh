@@ -470,9 +470,21 @@
   (files process))
 
 (define-structure scsh-tty scsh-tty-interface
-  (open scheme
+  (open (modify scheme (hide write
+                             display
+                             char-ready?
+                             read-char
+                             write-char
+                             newline
+                             open-input-file
+                             open-output-file))
+        (modify i/o (hide write-string
+                          force-output
+                          newline
+                          write-char
+                          char-ready?
+                          read-char))
 	ascii
-	i/o
 	signals
 	bitwise
 	let-opt
@@ -480,6 +492,8 @@
 	tty-flags scsh-internal-tty-flags
         (subset posix-files (file-options file-options-on?))
         (subset external-calls (import-lambda-definition-2))
+        (subset os-strings (string->os-string
+                            os-string->byte-vector))
 	scsh-newports
 	scsh-process-objects)
   (files tty))
@@ -500,12 +514,21 @@
   (files stdio))
 
 (define-structure scsh-ptys scsh-ptys-interface
-  (open scheme
+  (open (modify scheme (hide write
+                             display
+                             char-ready?
+                             read-char
+                             write-char
+                             newline
+                             open-input-file
+                             open-output-file))
 	receiving
 	scsh-processes
 	scsh-fdports
 	(subset signals (error))
         (subset external-calls (import-lambda-definition-2))
+        (subset posix-files (file-options))
+        (subset scsh-errnos (with-errno-handler))
 	scsh-newports
 	scsh-stdio
 	scsh-tty
@@ -601,7 +624,7 @@
                         scsh-file-names-interface
                         scsh-misc-interface
                         scsh-high-level-process-interface
-                        ;; scsh-tty-interface ; new in 0.4
+                        scsh-tty-interface ; new in 0.4
                         scsh-version-interface
                         scsh-file-names-system-interface
                         (interface-of srfi-14) ;; export this here for
@@ -635,8 +658,8 @@
         srfi-14
         scsh-version
         (subset i/o (current-error-port))
-        ;; tty-flags
-        ;; scsh-internal-tty-flags
+        tty-flags
+        scsh-internal-tty-flags
         scsh-continuations
  	scsh-file-syscalls
  	scsh-resources
@@ -655,9 +678,9 @@
  	scsh-processes
  	scsh-fdports
  	scsh-signals
- 	;; scsh-tty
+ 	scsh-tty
  	scsh-stdio
- 	;; scsh-ptys
+ 	scsh-ptys
  	scsh-system
  	scsh-file-names-system
  	scsh-high-level-processes
