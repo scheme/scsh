@@ -144,7 +144,7 @@ dirs:
 	}								\
 	done
 
-install: dirs install-scsh-image install-scsh
+install: enough dirs install-scsh-image install-scsh
 
 install-scsh: scsh
         #install runner
