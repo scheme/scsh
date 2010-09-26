@@ -157,13 +157,9 @@ install-scsh: scsh install-scsh-image # install-stripped-scsh-image
 	for f in $(srcdir)/scheme/*.scm $(srcdir)/scheme/*/*.scm; \
 	    do $(INSTALL_DATA) $$f $(DESTDIR)$(SHARE)/; done
 
-install-scsh-image: scsh.image
-	(	echo ',translate =scshexternal/ $(LIB)/)'; \
-		echo ',in lib-dirs (set-default-lib-dirs! (quote $(lib_dirs_list)))'; \
-		echo ',user'; \
-		echo '(dump-scsh "$(DESTDIR)$(LIB)/scsh.image")';	\
-		echo ',exit';						\
-	) | $(SCHEME48) -h 0 -i scsh.image -a batch
+install-scsh-image:
+	$(srcdir)/build/build-image.sh $(srcdir) \
+		"$(LIB)/" '$(DESTDIR)$(LIB)/scsh.image' '$(SCHEME48) -h 0' '$(LOADS)'
 
 clean:
 	$(RM) c/*.o c/*.so scsh.image scsh go
