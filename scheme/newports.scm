@@ -84,6 +84,7 @@
 
 ;;; All these revealed-count-hacking procs have atomicity problems.
 ;;; They need to run uninterrupted.
+;;; FIXME
 
 (define (increment-revealed-count port delta)
   (let* ((count (fdport:revealed port))
