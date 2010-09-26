@@ -144,9 +144,9 @@ dirs:
 	}								\
 	done
 
-install: dirs install-scsh
+install: dirs install-scsh-image install-scsh
 
-install-scsh: scsh install-scsh-image # install-stripped-scsh-image
+install-scsh: scsh
         #install runner
 	$(RM) $(DESTDIR)$(bindir)/$(RUNNABLE)
 	$(INSTALL_PROGRAM) scsh $(DESTDIR)$(bindir)/$(RUNNABLE)
@@ -157,7 +157,7 @@ install-scsh: scsh install-scsh-image # install-stripped-scsh-image
 	for f in $(srcdir)/scheme/*.scm $(srcdir)/scheme/*/*.scm; \
 	    do $(INSTALL_DATA) $$f $(DESTDIR)$(SHARE)/; done
 
-install-scsh-image:
+install-scsh-image: install-scsh
 	$(srcdir)/build/build-image.sh $(srcdir) \
 		"$(LIB)/" '$(DESTDIR)$(LIB)/scsh.image' '$(SCHEME48) -h 0' '$(LOADS)'
 
