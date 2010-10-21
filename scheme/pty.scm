@@ -64,7 +64,7 @@
   (let ((pty-fd.tty-name (allocate-pty)))
     (if pty-fd.tty-name
         (values (make-input-fdport (car pty-fd.tty-name) 0)
-                (cdr pty-fd.tty-name))
+                (byte-vector->string (cdr pty-fd.tty-name)))
         (open-pty-from-devname))))
 
 ;;; The following code may in fact be system dependent.

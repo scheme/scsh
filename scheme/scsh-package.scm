@@ -529,6 +529,7 @@
         (subset external-calls (import-lambda-definition-2))
         (subset posix-files (file-options))
         (subset scsh-errnos (with-errno-handler))
+        (subset scsh-syscall-support (byte-vector->string))
 	scsh-newports
 	scsh-stdio
 	scsh-tty
