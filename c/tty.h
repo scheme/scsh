@@ -1,4 +1,4 @@
-/* Exports from tty1.c. */
+/* Exports from tty.c. */
 
 s48_ref_t scheme_tcgetattr(s48_call_t call, s48_ref_t sch_fd,s48_ref_t sch_control_chars);
 
