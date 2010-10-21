@@ -10,6 +10,7 @@
  * Copyright (c) 1995 by Brian D. Carlstrom
  * Re-written by Olin.
  */
+#include "config.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>	/* ctermid decl */

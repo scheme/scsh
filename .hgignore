@@ -1,5 +1,11 @@
 syntax: regexp
 .*\.(o|so)$
-go
-scsh.image
-scsh
+^go$
+^scsh.image$
+^scsh$
+^c/config\.h(\.in)?$
+^autom4te\.cache
+^config\.status$
+^config\.log$
+^configure$
+^Makefile$
