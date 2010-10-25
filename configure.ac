@@ -1,7 +1,6 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
 AC_INIT([scsh], [0.7], [roderyc@gmail.com])
 AC_CONFIG_HEADERS([c/config.h])
 AC_CANONICAL_HOST
