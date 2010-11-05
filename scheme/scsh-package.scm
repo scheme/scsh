@@ -902,22 +902,9 @@
 (define-structure scsh-here-string-hax (export)
   (open reading
         receiving
-        scsh            ; Just need the delimited readers.
+        scheme-with-scsh            ; Just need the delimited readers.
         (subset features (make-immutable))
-        (subset srfi-14 (char-set))
-        (modify scheme (hide char-ready?
-                             char-whitespace?
-                             char-numeric?
-                             char-lower-case?
-                             char-upper-case?
-                             char-alphabetic?
-                             write
-                             newline
-                             read-char
-                             display
-                             write-char
-                             open-input-file
-                             open-output-file)))
+        (subset srfi-14 (char-set)))
   (files here))
 
 ;; (define-structure sigevents sigevents-interface
@@ -1068,3 +1055,25 @@
                              string-copy
                              string->list
                              for-each))))
+
+(define-structure scheme-with-scsh
+  (compound-interface (interface-of scsh)
+                      (interface-of scheme))
+  (open scsh
+        (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             open-input-file
+                             open-output-file
+                             char-ready?
+                             char-whitespace?
+                             char-numeric?
+                             char-lower-case?
+                             char-upper-case?
+                             char-alphabetic?
+                             write
+                             newline
+                             read-char
+                             display
+                             write-char))))
