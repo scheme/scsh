@@ -13,6 +13,12 @@
   (for-syntax (open scheme let-opt-expanders))
   (files let-opt))
 
+(define-structure functional-search-trees functional-search-trees-interface
+  (open scheme-level-2
+        exceptions
+        define-record-types)
+  (files functional-search-tree))
+
 (define-structure scsh-utilities scsh-utilities-interface
   (open (subset srfi-1 (fold delete))
         (subset define-record-types (define-record-discloser))
@@ -255,7 +261,15 @@
 	(subset interrupts (enable-interrupts!
                             disable-interrupts!
                             with-interrupts-inhibited))
-        (subset proposals (with-new-proposal))
+        (subset proposals (with-new-proposal
+                           atomically!
+                           provisional-cell-ref
+                           provisional-cell-set!))
+        cells
+        (subset functional-search-trees (make-search-tree
+                                         search-tree-insert
+                                         search-tree-delete
+                                         search-tree-ref))
         (subset condvars (make-condvar condvar-value))
 	extended-ports
 	scsh-utilities buffered-io-flags

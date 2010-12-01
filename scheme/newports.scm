@@ -2,26 +2,60 @@
 ;;; We use S48 extensible ports.
 ;;; Copyright (c) 1993 by Olin Shivers.
 
-(define *fdports* (make-integer-table))
 
-(define (install-fdport port revealed)
-  (let ((fd (port->fd port)))
-    (if (not (zero? revealed))
-        (begin (table-set! *fdports* fd (cons port revealed))
-               (%set-cloexec fd #f))
-        (begin
-          (table-set! *fdports* fd (cons (make-weak-pointer port) revealed))
-          (%set-cloexec fd #t)))))
+;;; A functional search tree mapping integer file descriptors to ports. I'm
+;;; putting it all in a cell so that reffing and setting can be done provisionally
+;;; and be protected by optimistic concurrency.
+(define *fdports* (make-cell (make-search-tree = <)))
 
-(define (maybe-fdes->port fdes)
-  (let ((ref (table-ref *fdports* fdes)))
-    (and ref (if (weak-pointer? (car ref))
-                 (let ((val (weak-pointer-ref (car ref))))
-                   (if val
-                       val
-                       (begin (table-set! *fdports* fdes #f)
-                              #f)))
-                 (car ref)))))
+;;; Sets the port and reveal count for fd, and always replaces if fd was already
+;;; in the table.
+(define (set-fdport! fd port revealed)
+  (atomically!
+   (delete-fdport! fd)
+   (let ((ports-table (provisional-cell-ref *fdports*)))
+     (if (not (zero? revealed))
+         (begin (provisional-cell-set! *fdports* (search-tree-insert ports-table fd (cons port revealed)))
+                (%set-cloexec fd #f))
+         (begin
+           (provisional-cell-set! *fdports* (search-tree-insert ports-table fd (cons (make-weak-pointer port) revealed)))
+           (%set-cloexec fd #t))))))
+
+;;; Removes fd from the table if it was installed.
+(define (delete-fdport! fd)
+  (atomically!
+   (provisional-cell-set!
+    *fdports* (search-tree-delete (provisional-cell-ref *fdports*) fd))))
+
+;;; Returns the port and revealed count for fd in a cons cell (port . revealed).
+;;; Returns #f if fd wasn't installed.
+(define (maybe-ref-fdport fd)
+  (atomically!
+   (let* ((ports-table (provisional-cell-ref *fdports*))
+          (ref (search-tree-ref ports-table fd)))
+     (and ref (if (weak-pointer? (car ref))
+                  (let ((val (weak-pointer-ref (car ref))))
+                    (if val
+                        val
+                        (begin (provisional-cell-set! *fdports* (search-tree-delete ports-table fd))
+                               #f)))
+                  ref)))))
+
+;;; Uses reffer to get a desired value from the cons pair returned by
+;;; (maybe-ref-fdport fd)
+(define (maybe-ref-fdport-* reffer fd)
+  (let ((ref (maybe-ref-fdport)))
+    (if ref
+        (reffer ref)
+        ref)))
+
+;;; Returns the port mapped to fd, or #f if it wasn't installed.
+(define (maybe-ref-fdport-port fd)
+  (maybe-ref-fdport-* car fd))
+
+;;; Returns fd's revealed count, or #f if it wasn't installed.
+(define (maybe-ref-fdport-revealed fd)
+  (maybe-ref-fdport-* cdr fd))
 
 (define (make-input-channel fd)
   (open-channel fd "input" (enum channel-status-option input) #t))
@@ -30,17 +64,17 @@
   (open-channel fd "output" (enum channel-status-option output) #t))
 
 (define (close-fdport-channel channel)
-  (table-set! *fdports* (channel-os-index channel) #f)
+  (delete-fdport! (channel-os-index channel))
   (close-channel channel))
 
 (define (make-input-fdport fd revealed)
   (let ((port (input-channel+closer->port (make-input-channel fd) close-fdport-channel)))
-    (install-fdport port revealed)
+    (set-fdport! fd port revealed)
     port))
 
 (define (make-output-fdport fd revealed)
   (let ((port (output-channel+closer->port (make-output-channel fd) close-fdport-channel)))
-    (install-fdport port revealed)
+    (set-fdport! fd port revealed)
     port))
 
 ;;; This is now really just a check if x is a channel port, and is
@@ -48,16 +82,16 @@
 (define (fdport? x)
   (and (or (input-port? x) (output-port? x))
        (fd-port? x)                     ;from posix-i/o
-       (table-ref *fdports* (port->fd x))
+       (maybe-ref-fdport (port->fd x))
        #t))
 
 (define (fdport:revealed fdport)
   (check-arg fdport? fdport fdport:revealed)
-  (cdr (table-ref *fdports* (port->fd fdport))))
+  (maybe-ref-fdport-revealed (port->fd fdport)))
 
 (define (set-fdport:revealed! fdport revealed)
   (check-arg fdport? fdport set-fdport:revealed!)
-  (install-fdport fdport revealed))
+  (set-fdport! (port->fd fdport) fdport revealed))
 
 (define (fdport-channel-ready? fdport)
   (channel-ready? (port->channel fdport)))
@@ -68,7 +102,7 @@
 (define (open-file fname flags . maybe-mode)
   (let ((port (s48-open-file fname flags
                              (:optional maybe-mode (integer->file-mode #o666)))))
-    (install-fdport port 0)
+    (set-fdport! (port->fd port) port 0)
     port))
 
 (define (open-input-file fname . maybe-flags)
@@ -82,28 +116,26 @@
 	 (flags (file-options-union flags (file-options write-only))))
     (apply open-file fname flags maybe-mode)))
 
-;;; All these revealed-count-hacking procs have atomicity problems.
-;;; They need to run uninterrupted.
-;;; FIXME
-
 (define (increment-revealed-count port delta)
-  (let* ((count (fdport:revealed port))
-         (newcount (+ count delta)))
-    (set-fdport:revealed! port newcount)))
+  (atomically!
+   (let* ((count (fdport:revealed port))
+          (newcount (+ count delta)))
+     (set-fdport:revealed! port newcount))))
 
 (define (release-port-handle port)
   (check-arg fdport? port release-port-handle)
-  (let ((rev (fdport:revealed port)))
-    (if (not (zero? rev))
-        (let ((new-rev (- rev 1)))
-          (set-fdport:revealed! port new-rev)))))
+  (atomically!
+   (let ((rev (fdport:revealed port)))
+     (if (not (zero? rev))
+         (let ((new-rev (- rev 1)))
+           (set-fdport:revealed! port new-rev))))))
 
 (define (port-revealed port)
   (let ((count (fdport:revealed (check-arg fdport? port port-revealed))))
     (and (not (zero? count)) count)))
 
 (define (fdes->port fd port-maker) ; local proc.
-  (cond  ((maybe-fdes->port fd) =>
+  (cond  ((maybe-ref-fdport-port fd) =>
           (lambda (p)
             (increment-revealed-count p 1)
             p))
@@ -168,9 +200,9 @@
 
 
 (define (init-fdports!)
-  (install-fdport (current-input-port) 1)
-  (install-fdport (current-output-port) 1)
-  (install-fdport (current-error-port) 1))
+  (set-fdport! (port->fd (current-input-port)) (current-input-port) 1)
+  (set-fdport! (port->fd (current-output-port)) (current-output-port) 1)
+  (set-fdport! (port->fd (current-error-port)) (current-error-port) 1))
 
 ;;; Generic port operations
 ;;; -----------------------
@@ -194,15 +226,15 @@
 ;;; move it to a new fd, freeing this one up.
 
 (define (evict-ports fd)
-  (cond ((maybe-fdes->port fd) =>       ; Shouldn't bump the revealed count.
+  (cond ((maybe-ref-fdport-port fd) =>       ; Shouldn't bump the revealed count.
          (lambda (port)
              (%move-fdport (port->fd (dup port)) port 0)  ;s48's dup modifies port's channel for us
              #t))
         (else #f)))
 
 (define (%move-fdport old-fd port new-revealed)
-  (table-set! *fdports* old-fd #f)
-  (install-fdport port new-revealed)
+  (delete-fdport! old-fd)
+  (set-fdport! (port->fd port) port new-revealed)
   #f)  ; JMG: It used to return #f on succes in 0.5.1, so we do the same
 
 (define (close-fdes fd)

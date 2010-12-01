@@ -11,6 +11,12 @@
           (let-optionals* :syntax)
           (:optional      :syntax)))
 
+(define-interface functional-search-trees-interface
+  (export make-search-tree search-tree?
+	  search-tree-insert search-tree-ref
+	  search-tree-delete
+	  search-tree-walk))
+
 (define-interface scsh-errors-interface
   (export errno-error
           error
