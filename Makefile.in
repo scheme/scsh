@@ -4,13 +4,13 @@ CC = @CC@
 LD = ${CC}
 DEFS = @DEFS@
 LIBS = @LIBS@
-CFLAGS = @CFLAGS@
+CFLAGS = @CFLAGS@ @DYNAMIC_EXTERNALS_CFLAGS@
 CPPFLAGS = @CPPFLAGS@
 INSTALL = @INSTALL@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_DATA = @INSTALL_DATA@
 
-LDFLAGS = @LDFLAGS@
+LDFLAGS = @LDFLAGS@ @DYNAMIC_EXTERNALS_LDFLAGS@
 
 
 prefix = @prefix@
@@ -24,10 +24,6 @@ mandir = @mandir@/man$(manext)
 docdir = @docdir@
 datarootdir = @datarootdir@
 datadir = @datadir@
-
-DYNAMIC_EXTERNALS_CFLAGS=@DYNAMIC_EXTERNALS_CFLAGS@
-DYNAMIC_EXTERNALS_LDFLAGS=@DYNAMIC_EXTERNALS_LDFLAGS@
-DYNAMIC_EXTERNALS_LDFLAGS_IN_PLACE=@DYNAMIC_EXTERNALS_LDFLAGS_IN_PLACE@
 
 VERSION = 0.7
 RUNNABLE = scsh
@@ -49,7 +45,7 @@ C = c/syscalls.o \
     c/scsh.o
 
 c/scsh.so: $(C)
-	$(LD) -o $@ $(C) $(DYNAMIC_EXTERNALS_LDFLAGS_IN_PLACE) $(LIBS)
+	$(LD) -o $@ $(C) $(LDFLAGS) $(LIBS)
 
 # not a complete list yet.
 SCHEME = scheme/command-line.scm \

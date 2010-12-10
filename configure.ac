@@ -35,6 +35,7 @@ if test "$have_openpty" = "yes"; then
     LIBS="${LIBS} -lutil"
   fi
 fi
+S48_PIC_OPTION_NAME
 S48_LDFLAGS
 S48_DYNAMIC_EXTERNALS
 AC_SUBST(CFLAGS)
