@@ -30,7 +30,7 @@
 ;;; Returns the port and revealed count for fd in a cons cell (port . revealed).
 ;;; Returns #f if fd wasn't installed.
 (define (maybe-ref-fdport fd)
-  (atomically!
+  (atomically
    (let* ((ports-table (provisional-cell-ref *fdports*))
           (ref (search-tree-ref ports-table fd)))
      (and ref (if (weak-pointer? (car ref))

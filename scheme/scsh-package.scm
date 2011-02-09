@@ -263,6 +263,7 @@
                             with-interrupts-inhibited))
         (subset proposals (with-new-proposal
                            atomically!
+                           atomically
                            provisional-cell-ref
                            provisional-cell-set!))
         cells
