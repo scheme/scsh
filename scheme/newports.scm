@@ -44,7 +44,7 @@
 ;;; Uses reffer to get a desired value from the cons pair returned by
 ;;; (maybe-ref-fdport fd)
 (define (maybe-ref-fdport-* reffer fd)
-  (let ((ref (maybe-ref-fdport)))
+  (let ((ref (maybe-ref-fdport fd)))
     (if ref
         (reffer ref)
         ref)))
