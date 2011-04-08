@@ -200,7 +200,6 @@
         (cond (proc             ; Parent
                (close w)
                (move->fdes r 0))
-               ;; (set-current-input-port! r)
               (else             ; Child
                (close r)
                (move->fdes w 1)
@@ -208,7 +207,6 @@
                    (with-current-output-port
                     w
                     (call-terminally maybe-thunk)))))
-                   ;; (set-current-output-port! w)
         proc))))
 
 
