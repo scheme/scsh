@@ -1,6 +1,0 @@
--*- outline -*-
-
-Listing of some problems shown by tests.
-
-file-type-symlink seems to break only in the test suite.
-The same code runs fine outside of test-all.
