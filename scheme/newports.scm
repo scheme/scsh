@@ -36,7 +36,7 @@
      (and ref (if (weak-pointer? (car ref))
                   (let ((val (weak-pointer-ref (car ref))))
                     (if val
-                        val
+                        (cons val (cdr ref))
                         (begin (provisional-cell-set! *fdports* (search-tree-delete ports-table fd))
                                #f)))
                   ref)))))
