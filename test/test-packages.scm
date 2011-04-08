@@ -102,15 +102,14 @@
 (define-structure test-all
   (export test-all)
   (open scheme
-	test-base
-	file-system-test
-	process-state-test
-	add-env-test
-	system-parameter-tests
-	strings-and-chars-test
+        test-base
+        file-system-test
+        process-state-test
+        add-env-test
+        system-parameter-tests
+        strings-and-chars-test
         file-name-maniplation-test
         read-delimited-strings-test
         bitwise-ops-test
-        user-and-group-db-access-test
-        terminal-device-control-test))
+        user-and-group-db-access-test))
 
