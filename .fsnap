@@ -1,9 +1,0 @@
-[tree1]
-root = .
-revision = tip
-
-[tree2]
-root = rx
-revision = tip
-path.default = http://ccs.neu.edu/home/roderic/arbeit/rx
-
