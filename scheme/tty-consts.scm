@@ -1,129 +1,106 @@
 ;;; Constant definitions for tty control code (POSIX termios).
 ;;; Copyright (c) 1995 by Brian Carlstrom. See file COPYING.
 ;;; Largely rehacked by Olin.
-
-;;; These constants are for Solaris 2.x, 
-;;; and are taken from /usr/include/sys/termio.h
-;;; 		   and /usr/include/sys/termios.h.
+;;; Rerehacked by Roderic.
 
 ;;; Non-standard (POSIX, SVR4, 4.3+BSD) things:
 ;;; - Some of the baud rates.
 
-
-;;; Special Control Characters 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Special Control Characters
 ;;;  Indices into the c_cc[] character array.
-
-;;;	Name	     		Subscript	Enabled by 
-;;;     ----         		---------	----------
-;;;  POSIX
-(define ttychar/eof		4)		; ^d icanon
-(define ttychar/eol		11)		;    icanon
-(define ttychar/delete-char	2)		; ^? icanon
-(define ttychar/delete-line	3)		; ^u icanon
-(define ttychar/interrupt	0)		; ^c isig
-(define ttychar/quit		1)		; ^\ isig
-(define ttychar/suspend		10)		; ^z isig
-(define ttychar/start		8)		; ^q ixon, ixoff
-(define ttychar/stop		9)		; ^s ixon, ixoff
-(define ttychar/min		6)		;    !icanon	; Not exported
-(define ttychar/time		5)		;    !icanon	; Not exported
-
-;;; SVR4 & 4.3+BSD
-(define ttychar/delete-word	14)		; ^w icanon
-(define ttychar/reprint 	12)		; ^r icanon
-(define ttychar/literal-next	15)		; ^v iexten
-(define ttychar/discard		13)		; ^o iexten
-(define ttychar/delayed-suspend	#f)		; ^y isig
-(define ttychar/eol2		16)		;    icanon
-
-;;; 4.3+BSD
-(define ttychar/status		#f)		; ^t icanon 
-
-;;; Length of control-char string -- *Not Exported*
-(define	num-ttychars		32)
+(define-constance tty-control-chars-info
+  (termios.h)                           ; Enabled by:
+  ((ttychar/eof VEOF)                   ; ^d icanon
+   (ttychar/eol VEOL)                   ;    icanon
+   (ttychar/delete-char VERASE)         ; ^? icanon
+   (ttychar/delete-line VKILL)          ; ^u icanon
+   (ttychar/interrupt VINTR)            ; ^c isig
+   (ttychar/quit VQUIT)                 ; ^\ isig
+   (ttychar/suspend VSUSP)              ; ^z isig
+   (ttychar/start VSTART)               ; ^q ixon, ixoff
+   (ttychar/stop VSTOP)                 ; ^s ixon, ixoff
+   (ttychar/min VMIN)                   ;    !icanon	; Not exported
+   (ttychar/time VTIME)                 ;    !icanon	; Not exported
+   ;; SVR4 & 4.3+BSD
+   (ttychar/delete-world VWERASE)       ; ^w icanon
+   (ttychar/reprint VREPRINT)           ; ^r icanon
+   (ttychar/literal-next VLNEXT)        ; ^v iexten
+   (ttychar/discard VDISCARD)           ; ^o iexten
+   (ttychar/delayed-suspend VDSUSP)     ; ^y isig
+   (ttychar/eol2 VEOL2)                 ;    icanon
+   ;; 4.3+BSD
+   (ttychar/status VSTATUS)             ; ^t icanon
+   ;; Length of control-char string. Not Exported.
+   (num-ttychars NCCS)))
 
 ;;; Magic "disable feature" tty character
 (define disable-tty-char (ascii->char #x00))	; _POSIX_VDISABLE
 
 ;;; Flags controllling input processing
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;  POSIX
-(define ttyin/ignore-break		#o00001)	; ignbrk
-(define ttyin/interrupt-on-break	#o00002)	; brkint
-(define ttyin/ignore-bad-parity-chars	#o00004)	; ignpar
-(define ttyin/mark-parity-errors	#o00010)	; parmrk
-(define ttyin/check-parity		#o00020)	; inpck
-(define ttyin/7bits			#o00040)	; istrip
-(define ttyin/nl->cr			#o00100)	; inlcr
-(define ttyin/ignore-cr			#o00200)	; igncr
-(define ttyin/cr->nl			#o00400)	; icrnl
-(define ttyin/output-flow-ctl		#o02000)	; ixon
-(define ttyin/input-flow-ctl		#o10000)	; ixoff
-
-;;; SVR4 & 4.3+BSD
-(define ttyin/xon-any	       #o4000)	; ixany: Any char restarts after stop
-(define ttyin/beep-on-overflow #o20000)	; imaxbel: queue full => ring bell
-
-;;; SVR4
-(define ttyin/lowercase	       #o1000)	; iuclc: Map upper-case to lower case
-
+(define-constance tty-input-flags
+  (termios.h)
+  ;; POSIX
+  ((ttyin/ignore-break IGNBRK)
+   (ttyin/interrupt-on-break BRKINT)
+   (ttyin/mark-parity-errors IGNPAR)
+   (ttyin/check-parity INPCK)
+   (ttyin/7bits ISTRIP)
+   (ttyin/nl->cr INLCR)
+   (ttyin/ignore-cr IGNCR)
+   (ttyin/cr->nl ICRNL)
+   (ttyin/output-flow-ctl IXON)
+   (ttyin/input-flow-ctl IXOFF)
+   ;; SVR4 & 4.3+BSD
+   (ttyin/xon-any IXANY)
+   (ttyin/beep-on-overflow IMAXBEL)
+   ;; SVR4
+   (ttyin/lowercase IUCLC)))
 
 ;;; Flags controlling output processing
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;  POSIX 
-(define	ttyout/enable		 #o000001)  ; opost: enable output processing
-
-;;; SVR4 & 4.3+BSD
-(define ttyout/nl->crnl		 #o000004)	; onlcr: map nl to cr-nl
-
-;;; 4.3+BSD
-(define ttyout/discard-eot	 #f)		; onoeot
-(define ttyout/expand-tabs	 #f)		; oxtabs (NOT xtabs)
-
-;;; SVR4
-(define ttyout/cr->nl		 #o000010)	; ocrnl
-(define ttyout/fill-w/del	 #o000200)	; ofdel
-(define ttyout/delay-w/fill-char #o000100)	; ofill
-(define ttyout/uppercase	 #o000002)	; olcuc
-(define ttyout/nl-does-cr	 #o000040)	; onlret
-(define ttyout/no-col0-cr	 #o000020)	; onocr
-
-;;; Newline delay
-(define	ttyout/nl-delay		#o000400)	; mask (nldly)
-(define	 ttyout/nl-delay0	#o000000)
-(define	 ttyout/nl-delay1	#o000400)	; tty 37 
-
-;;; Horizontal-tab delay
-(define	ttyout/tab-delay	#o014000)	; mask (tabdly)
-(define	 ttyout/tab-delay0	#o000000)
-(define	 ttyout/tab-delay1	#o004000)	; tty 37 
-(define	 ttyout/tab-delay2	#o010000)
-(define	 ttyout/tab-delayx	#o014000)	; Expand tabs (xtabs, tab3)
-
-;;; Carriage-return delay
-(define	ttyout/cr-delay		#o003000)	; mask (crdly)
-(define	 ttyout/cr-delay0	#o000000)
-(define	 ttyout/cr-delay1	#o001000)	; tn 300 
-(define	 ttyout/cr-delay2	#o002000)	; tty 37 
-(define	 ttyout/cr-delay3	#o003000)	; concept 100 
-
-;;; Vertical tab delay 
-(define	ttyout/vtab-delay	#o040000)	; mask (vtdly)
-(define	 ttyout/vtab-delay0	#o000000)
-(define	 ttyout/vtab-delay1	#o040000)	; tty 37 
-
-;;; Backspace delay
-(define	ttyout/bs-delay		#o020000)	; mask (bsdly)
-(define	 ttyout/bs-delay0	#o000000)
-(define	 ttyout/bs-delay1	#o020000)
-
-;;; Form-feed delay
-(define ttyout/ff-delay		#o100000)	; mask (ffdly)
-(define	 ttyout/ff-delay0	#o000000)
-(define	 ttyout/ff-delay1	#o100000)
+(define-constance tty-output-flags
+  (termios.h)
+  ;; POSIX
+  ((ttyout/enable OPOST)                ; enable output processing
+   ;; SVR4 & 4.3+BSD
+   (ttyout/nl->crnl OPOST)              ; map nl to cr-nl
+   ;; 4.3+BSD
+   (ttyout/discard-eot ONOEOT)
+   (ttyout/expand-tabs OXTABS)
+   ;; SVR4
+   (ttyout/cr->nl OCRNL)
+   (ttyout/fill-w/del OFDEL)
+   (ttyout/delay-w/fill-char OFILL)
+   (ttyout/uppercase OLCUC)
+   (ttyout/nl-does-cr ONLRET)
+   (ttyout/no-col0-cr ONOCR)
+   ;; Newline delay
+   (ttyout/nl-delay NLDLY)              ; mask
+   (ttyout/nl-delay0 NL0)
+   (ttyout/nl-delay1 NL1)               ; tty 37
+   ;; Horizontal-tab delay
+   (ttyout/tab-delay TABDLY)            ; mask
+   (ttyout/tab-delay0 TAB0)
+   (ttyout/tab-delay1 TAB1)             ; tty 37
+   (ttyout/tab-delay2 TAB2)
+   (ttyout/tab-delayx TAB3)             ; expand tabs
+   ;; Carriage-return delay
+   (ttyout/cr-delay CRDLY)              ; mask
+   (ttyout/cr-delay0 CR0)
+   (ttyout/cr-delay1 CR1)               ; tn 300
+   (ttyout/cr-delay2 CR2)               ; tty 37
+   (ttyout/cr-delay3 CR3)               ; concept 100
+   ;; Vertical tab delay
+   (ttyout/vtab-delay VTDLY)            ; mask
+   (ttyout/vtab-delay0 VT0)
+   (ttyout/vtab-delay1 VT1)             ; tty 37
+   ;; Backspace delay
+   (ttyout/bs-delay BSDLY)              ; mask
+   (ttyout/bs-delay0 BS0)
+   (ttyout/bs-delay1 BS1)
+   ;; Form-feed delay
+   (ttyout/ff-delay FFDLY)              ; mask
+   (ttyout/ff-delay0 FF0)
+   (ttyout/ff-delay1 FF1)))
 
 (define	ttyout/all-delay
   (bitwise-ior (bitwise-ior (bitwise-ior ttyout/nl-delay ttyout/tab-delay)
@@ -132,84 +109,99 @@
 
 
 ;;; Control flags - hacking the serial-line.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;  POSIX
-(define ttyc/char-size		#o00060)	; csize: character size mask 
-(define  ttyc/char-size5	#o00000)	; 5 bits (cs5)
-(define  ttyc/char-size6	#o00020)	; 6 bits (cs6)
-(define  ttyc/char-size7	#o00040)	; 7 bits (cs7)
-(define  ttyc/char-size8	#o00060)	; 8 bits (cs8)
-(define ttyc/2-stop-bits	#o00100)	; cstopb: Send 2 stop bits.
-(define ttyc/enable-read	#o00200)	; cread: Enable receiver.
-(define ttyc/enable-parity	#o00400)	; parenb
-(define ttyc/odd-parity		#o01000)	; parodd
-(define ttyc/hup-on-close	#o02000)	; hupcl: Hang up on last close.
-(define ttyc/no-modem-sync	#o04000)	; clocal: Ignore modem lines.
-
-;;;  4.3+BSD
-(define	ttyc/ignore-flags	 #f)	; cignore: ignore control flags 
-(define ttyc/CTS-output-flow-ctl #f)	; ccts_oflow: CTS flow control of output
-(define ttyc/RTS-input-flow-ctl  #f)	; crts_iflow: RTS flow control of input
-(define ttyc/carrier-flow-ctl	 #f)	; mdmbuf
+(define-constance tty-control-flags
+  (termios.h)
+  ;; POSIX
+  ((ttyc/char-size CSIZE)               ; character size mask
+   (ttyc/char-size5 CS5)                ; 5 bits
+   (ttyc/char-size6 CS6)                ; 6 bits
+   (ttyc/char-size7 CS7)                ; 7 bits
+   (ttyc/char-size8 CS8)                ; 8 bits
+   (ttyc/2-stop-bits CSTOPB)            ; send 2 stop bits
+   (ttyc/enable-read CREAD)             ; enable receiver
+   (ttyc/enable-parity PARENB)
+   (ttyc/odd-parity PARODD)
+   (ttyc/hup-on-close HUPCL)            ; hang up on last close
+   (ttyc/no-modem-sync CLOCAL)          ; ignore modem lines
+   ;; 4.3+BSD
+   (ttyc/ignore-flags CIGNORE)          ; ignore control flagsp
+   (ttyc/CTS-output-flow-ctl CCTS_OFLOW) ; CTS flow control of output
+   (ttyc/RTS-input-flow-ctl CRTS_IFLOW) ; RTS flow control of input
+   (ttyc/carrier-flow-ctl MDMBUF)))
 
 ;;; Local flags -- hacking the tty driver / user interface.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(define-constance tty-local-flags
+  (termios.h)
+  ((ttyl/visual-delete ECHOE)           ; visually erase chars
+   (ttyl/echo-delete-line ECHOK)        ; echo nl after line kill
+   (ttyl/echo ECHO)                     ; enable echoing
+   (ttyl/echo-nl ECHONL)                ; echo nl even if echo is ooff
+   (ttyl/canonical ICANON)              ; canonicalize input
+   (ttyl/enable-signals ISIG)           ; enable ^c, ^z signalling
+   (ttyl/extended IEXTEN)               ; enable extensions
+   (ttyl/ttou-signal TOSTOP)            ; SIGTTOU on background output
+   (ttyl/no-flush-on-interrupt NOFLSH)
+   ;; SVR4 & 4.3+BSD
+   (ttyl/visual-delete-line ECHOKE)     ; visually erase a line-kill
+   (ttyl/hardcopy-delete ECHOPRT)       ; visual erase for hardcopy
+   (ttyl/echo-ctl ECHOCLT)              ; echo control chars as "^X"
+   (ttyl/flush-output FLUSHO)           ; output is being flushed
+   (ttyl/reprint-unread-chars PENDIN)   ; retype pending input
+   ;; 4.3+BSD
+   (ttyl/alt-delete-word ALTWERASE)
+   (ttyl/no-kernel-status NOKERNINFO)   ; no kernel status on ^T
+   ;; SVR4
+   (ttyl/case-map XCASE)))              ; canonical upper/lower presentation
 
-;;;  POSIX
-(define ttyl/visual-delete    #o020)	; echoe: Visually erase chars
-(define ttyl/echo-delete-line #o040)	; echok: Echo nl after line kill
-(define ttyl/echo	      #o010)	; echo:  Enable echoing
-(define ttyl/echo-nl	      #o100)	; echonl: Echo nl even if echo is off
-(define ttyl/canonical	      #o002)	; icanon: Canonicalize input
-(define ttyl/enable-signals   #o001)	; isig: Enable ^c, ^z signalling
-(define ttyl/extended	   #o100000)	; iexten:  Enable extensions
-(define ttyl/ttou-signal      #o400)	; tostop: SIGTTOU on background output
-(define ttyl/no-flush-on-interrupt #o200) ; noflsh
+;;; Baud rate flags -- The codes corresponding to baud rates. Not the rates
+;;; themselves.
+(define-constance tty-baud-rate-flags
+  (termios.h)
+  (ttyb/0 B0)
+  (ttyb/50 B50)
+  (ttyb/75 B75)
+  (ttyb/110 B110)
+  (ttyb/134 B134)
+  (ttyb/150 B150)
+  (ttyb/200 B200)
+  (ttyb/300 B300)
+  (ttyb/600 B600)
+  (ttyb/1200 B1200)
+  (ttyb/1800 B1800)
+  (ttyb/2400 B2400)
+  (ttyb/4800 B4800)
+  (ttyb/9600 B9600)
+  (ttyb/19200 B19200)
+  (ttyb/38400 B38400)
+  (ttyb/exta EXTA)
+  (ttyb/extb EXTB))
 
-;;; SVR4 & 4.3+BSD
-(define ttyl/visual-delete-line #o04000); echoke: visually erase a line-kill 
-(define ttyl/hardcopy-delete	#o02000); echoprt: visual erase for hardcopy 
-(define ttyl/echo-ctl		#o01000); echoctl: echo control chars as "^X" 
-(define ttyl/flush-output	#o10000); flusho: output is being flushed
-(define ttyl/reprint-unread-chars #o40000); pendin: retype pending input
-
-;;; 4.3+BSD
-(define ttyl/alt-delete-word	#f)	; altwerase
-(define ttyl/no-kernel-status	#f)	; nokerninfo: no kernel status on ^T
-
-;;; SVR4
-(define ttyl/case-map #o4)	; xcase: canonical upper/lower presentation
-
-;;; Vector of (speed . code) pairs.
-
-(define baud-rates '#((0  . 0)		(1  . 50)	(2  .    75)
-		      (3  . 110)	(4  . 134)	(5  .   150)
-		      (6  . 200)	(7  . 300)	(8  .   600)
-		      (9  . 1200)	(10 . 1800)     (11 .  2400)	
-		      (12 . 4800)       (13 . 9600)	(14 .  19200)
-		      (15 . 38400)	(14 . exta)     (15 .  extb)))
+;;; Vector of (code . speed) pairs.
+(define baud-rates '#((ttyb/0 . 0)         (ttyb/50 . 50)     (ttyb/75 . 75)
+		      (ttyb/110 . 110)     (ttyb/134 . 134)   (ttyb/150 . 150)
+		      (ttyb/200 . 200)     (ttyb/300 . 300)   (ttyb/600 . 600)
+		      (ttyb/1200 . 1200)   (ttyb/1800 . 1800) (ttyb/2400 . 2400)
+		      (ttyb/4800 . 4800)   (ttyb/9600 . 9600) (ttyb/19200 . 19200)
+		      (ttyb/38400 . 38400) (ttyb/exta . exta) (ttyb/extb . extb)))
 
 ;;; tcflush() constants
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define %flush-tty/input  0)	; TCIFLUSH
-(define %flush-tty/output 1)	; TCOFLUSH
-(define %flush-tty/both	  2)	; TCIOFLUSH
-
+(define-constance tty-tcflush-flags
+  (termios.h)
+  ((%flush-tty/input TCIFLUSH)
+   (%flush-tty/output TCOFLUSH)
+   (%flush-tty/both TCIOFLUSH)))
 
 ;;; tcflow() constants
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define %tcflow/start-out 1)	; TCOON
-(define %tcflow/stop-out  0)	; TCOOFF
-(define %tcflow/start-in  3)	; TCION
-(define %tcflow/stop-in   2)	; TCIOFF
-
+(define-constance tty-tcflow-flags
+  (termios.h)
+  ((%tcflow/start-out TCOON)
+   (%tcflow/stop-out TCOOFF)
+   (%tcflow/start-in TCION)
+   (%tcflow/stop-in TCIOFF)))
 
 ;;; tcsetattr() constants
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(define %set-tty-info/now	0)	; TCSANOW   Make change immediately.
-(define %set-tty-info/drain	1)	; TCSADRAIN Drain output, then change.
-(define %set-tty-info/flush	2)	; TCSAFLUSH Drain output, flush input.
+(define-constance tty-tcsetattr-flags
+  (termios.h)
+  ((%set-tty-info/now TCSANOW)          ; make change immediately.
+   (%set-tty-info/drain TCSADRIAN)      ; drain output, then change.
+   (%set-tty-info/flush TCSAFLUSH)))    ; drain output, flush input.
