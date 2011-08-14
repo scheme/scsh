@@ -7,3 +7,4 @@ scsh.image
 scsh
 autom4te.cache
 Makefile
+*.dSYM
