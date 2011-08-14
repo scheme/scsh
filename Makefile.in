@@ -95,6 +95,7 @@ SCHEME = scheme/command-line.scm \
 	 scheme/temp-file.scm \
 	 scheme/top.scm \
 	 scheme/tty.scm \
+	 scheme/tty-consts.scm \
 	 scheme/user-group.scm \
 	 scheme/utilities.scm \
 	 scheme/weaktables.scm \
