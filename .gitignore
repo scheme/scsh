@@ -8,3 +8,4 @@ scsh
 autom4te.cache
 Makefile
 *.dSYM
+*.sexpr
