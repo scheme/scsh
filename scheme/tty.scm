@@ -269,16 +269,17 @@
 
 (define (encode-baud-rate speed)	; 9600 -> value of BAUD/9600
   (do ((i (- (vector-length baud-rates) 1) (- i 1)))
-      ((eqv? (cdr (vector-ref baud-rates i)) speed)
-       (car (vector-ref baud-rates i)))
-    (if (< i 0) (error "Unknown baud rate." speed))))
+      ((if (< i 0) 
+           (error "Unknown baud rate." speed)
+           (eqv? (cdr (vector-ref baud-rates i)) speed))
+       (car (vector-ref baud-rates i)))))
 
 (define (decode-baud-rate code)		; BAUD/9600 -> 9600
   (do ((i (- (vector-length baud-rates) 1) (- i 1)))
-      ((eqv? (car (vector-ref baud-rates i)) code)
-       (cdr (vector-ref baud-rates i)))
-    (if (< i 0) (error "Unknown baud rate code." code))))
-
+      ((if (< i 0) 
+           (error "Unknown baud rate code." code)
+           (eqv? (car (vector-ref baud-rates i)) code))
+       (cdr (vector-ref baud-rates i)))))
 
 ;;; Set/Get tty process group
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
