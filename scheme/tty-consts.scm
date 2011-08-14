@@ -22,7 +22,7 @@
    (ttychar/min VMIN)                   ;    !icanon	; Not exported
    (ttychar/time VTIME)                 ;    !icanon	; Not exported
    ;; SVR4 & 4.3+BSD
-   (ttychar/delete-world VWERASE)       ; ^w icanon
+   (ttychar/delete-word VWERASE)       ; ^w icanon
    (ttychar/reprint VREPRINT)           ; ^r icanon
    (ttychar/literal-next VLNEXT)        ; ^v iexten
    (ttychar/discard VDISCARD)           ; ^o iexten
