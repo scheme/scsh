@@ -178,12 +178,12 @@
    (ttyb/extb EXTB)))
 
 ;;; Vector of (code . speed) pairs.
-(define baud-rates '#((ttyb/0 . 0)         (ttyb/50 . 50)     (ttyb/75 . 75)
-		      (ttyb/110 . 110)     (ttyb/134 . 134)   (ttyb/150 . 150)
-		      (ttyb/200 . 200)     (ttyb/300 . 300)   (ttyb/600 . 600)
-		      (ttyb/1200 . 1200)   (ttyb/1800 . 1800) (ttyb/2400 . 2400)
-		      (ttyb/4800 . 4800)   (ttyb/9600 . 9600) (ttyb/19200 . 19200)
-		      (ttyb/38400 . 38400) (ttyb/exta . exta) (ttyb/extb . extb)))
+(define baud-rates `#((,ttyb/0 . 0)         (,ttyb/50 . 50)     (,ttyb/75 . 75)
+                      (,ttyb/110 . 110)     (,ttyb/134 . 134)   (,ttyb/150 . 150)
+                      (,ttyb/200 . 200)     (,ttyb/300 . 300)   (,ttyb/600 . 600)
+                      (,ttyb/1200 . 1200)   (,ttyb/1800 . 1800) (,ttyb/2400 . 2400)
+                      (,ttyb/4800 . 4800)   (,ttyb/9600 . 9600) (,ttyb/19200 . 19200)
+                      (,ttyb/38400 . 38400) (,ttyb/exta . exta) (,ttyb/extb . extb)))
 
 ;;; tcflush() constants
 (define-constance tty-tcflush-flags
