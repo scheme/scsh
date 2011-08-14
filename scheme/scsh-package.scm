@@ -94,7 +94,7 @@
 
 (define-structures ((tty-flags tty-flags-interface)
                     (scsh-internal-tty-flags scsh-internal-tty-flags-interface))
-  (open scheme ascii bitwise)
+  (open scheme ascii bitwise constance)
   (files tty-consts))
 
 (define-structure scsh-continuations scsh-continuations-interface
