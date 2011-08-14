@@ -47,7 +47,6 @@ C = c/syscalls.o \
 c/scsh.so: $(C)
 	$(LD) -o $@ $(C) $(LDFLAGS) $(LIBS)
 
-# not a complete list yet.
 SCHEME = scheme/command-line.scm \
 	 scheme/condition-handler.scm \
 	 scheme/continuation.scm \
