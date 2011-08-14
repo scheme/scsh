@@ -111,7 +111,10 @@ SCHEME = scheme/command-line.scm \
 	 rx/re.scm \
 	 rx/re-high.scm \
 	 rx/re-low.scm \
-	 rx/regress.scm
+	 rx/regress.scm \
+	 constance/packages.scm \
+	 constance/constance.scm \
+	 constance/constance-syntax-help.scm
 
 go: c/scsh-tramp.c
 	$(CC) -o $@ $(CFLAGS) \
@@ -127,6 +130,7 @@ scsh: c/scsh-tramp.c
 
 LOADS = $(srcdir)/rx/interfaces.scm \
 	$(srcdir)/rx/packages.scm \
+	$(srcdir)/constance/packages.scm \
 	$(srcdir)/scheme/scsh-interfaces.scm \
 	$(srcdir)/scheme/scsh-package.scm \
 	$(srcdir)/scheme/lib/ccp-pack.scm \
