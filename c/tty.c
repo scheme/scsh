@@ -133,7 +133,7 @@ s48_ref_t scheme_tcsetattr(s48_call_t call, s48_ref_t sch_fd, s48_ref_t sch_opti
 			   s48_ref_t sch_min, s48_ref_t sch_time) {
     struct termios t;
 
-    memcpy(t.c_cc, s48_extract_byte_vector_2(call, sch_control_chars), NCCS);
+    memcpy(t.c_cc, s48_extract_latin_1_from_string_2(call, sch_control_chars), NCCS);
 
     /* This first clause of this conditional test will hopefully
     ** resolve the branch at compile time. However, since VMIN/VEOF
