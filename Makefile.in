@@ -166,4 +166,4 @@ install-scsh-image: install-scsh
 		"$(LIB)/" '$(DESTDIR)$(LIB)/scsh.image' '$(SCHEME48) -h 0' '$(LOADS)'
 
 clean:
-	$(RM) c/*.o c/*.so scsh.image scsh go
+	$(RM) c/*.o c/*.so *.sexpr scsh.image scsh go
