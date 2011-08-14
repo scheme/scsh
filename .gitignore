@@ -1,0 +1,9 @@
+*.so
+*.o
+go
+configure
+config.*
+scsh.image
+scsh
+autom4te.cache
+Makefile
