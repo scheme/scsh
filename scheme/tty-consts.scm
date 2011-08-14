@@ -42,7 +42,8 @@
   ;; POSIX
   ((ttyin/ignore-break IGNBRK)
    (ttyin/interrupt-on-break BRKINT)
-   (ttyin/mark-parity-errors IGNPAR)
+   (ttyin/ignore-bad-parity-chars IGNPAR)
+   (ttyin/mark-parity-errors PARMRK)
    (ttyin/check-parity INPCK)
    (ttyin/7bits ISTRIP)
    (ttyin/nl->cr INLCR)
