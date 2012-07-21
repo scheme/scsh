@@ -499,6 +499,7 @@
                           write-char
                           char-ready?
                           read-char))
+        (subset scsh-syscall-support (byte-vector->string))
 	ascii
 	signals
 	bitwise

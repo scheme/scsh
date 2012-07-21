@@ -19,6 +19,7 @@
 ;;; MAKE-TTY-INFO procedure. Ech. I oughta have a lower-level record macro
 ;;; for this kind of thing.
 
+;;; TODO: all these sets should end in !
 (define-record-type :tty-info
   (really-make-tty-info control-chars input-flags output-flags control-flags
                         local-flags input-speed input-speed-code output-speed
@@ -333,6 +334,8 @@
 
 (import-lambda-definition-2 %tty-file-name (fd) "sch_ttyname")
 
-(define (tty-file-name fd/port) (sleazy-call/fdes fd/port %tty-file-name))
+(define (tty-file-name fd/port) (byte-vector->string (sleazy-call/fdes fd/port %tty-file-name)))
 
-(import-lambda-definition-2 control-tty-file-name () "scm_ctermid")
+(import-lambda-definition-2 %control-tty-file-name () "scm_ctermid")
+
+(define (control-tty-file-name) (byte-vector->string (%control-tty-file-name)))
