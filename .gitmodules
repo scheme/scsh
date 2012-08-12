@@ -1,6 +1,3 @@
 [submodule "rx"]
 	path = rx
 	url = git://github.com/scheme/rx.git
-[submodule "constance"]
-	path = constance
-	url = git://github.com/scheme/constance.git
