@@ -149,27 +149,6 @@
 	(subset srfi-13 (string-index string-index-right)))
   (files fname))
 
-(define-structure scsh-directories scsh-directories-interface
-  (open scheme
-	(subset primitives (add-finalizer!))
-	(subset srfi-1 (filter))
-	(subset srfi-13 (string<=))
-	(subset scsh-utilities (check-arg))
-        (subset sort (sort-list!))
-	define-record-types records
-	let-opt
-        (subset os-strings (os-string->string))
-        (modify posix-files (rename (read-directory-stream
-                                     s48-read-directory-stream))
-                            (expose open-directory-stream
-                                    close-directory-stream
-                                    read-directory-stream
-                                    list-directory))
-	scsh-file-names
-	scsh-resources
-	scsh-process-state)
-  (files directory))
-
 (define-structure scsh-user/group-db scsh-user/group-db-interface
   (open scheme
         define-record-types
@@ -539,7 +518,6 @@
                         scsh-file-interface
                         scsh-read/write-interface
                         scsh-temp-files-interface
-                        scsh-directories-interface
                         scsh-process-state-interface
                         scsh-process-objects-interface
                         scsh-process-interface
@@ -586,7 +564,6 @@
  	scsh-resources
  	scsh-environment
  	scsh-file-names
- 	scsh-directories
  	scsh-user/group-db
  	scsh-process-state
  	scsh-newports
