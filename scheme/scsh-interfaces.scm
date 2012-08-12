@@ -599,7 +599,6 @@ argv))
           %read-delimited!
           skip-char-set))
 
-
 (define-interface scsh-stdio-interface
   (export stdports->stdio
           with-stdio-ports*

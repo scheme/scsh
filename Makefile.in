@@ -61,7 +61,6 @@ SCHEME = scheme/command-line.scm \
 	 scheme/fname.scm \
 	 scheme/fname-system.scm \
 	 scheme/glob.scm \
-	 scheme/dot-locking.scm \
 	 scheme/libscsh.scm \
 	 scheme/low-interrupt.scm \
 	 scheme/meta-arg.scm \
