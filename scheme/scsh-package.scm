@@ -774,20 +774,6 @@
 	(subset thread-fluids    (fork-thread)))
   (files threads))
 
-(define-structure libscsh (export dump-libscsh-image)
-  (open scheme
-        external-calls
-        (subset i/o (current-error-port))
-        (subset extended-ports (make-string-input-port))
-        (subset handle (with-handler))
-        (subset escapes (with-continuation))
-        (subset environments (with-interaction-environment))
-        (subset package-commands-internal (user-environment))
-        (subset command-levels (user-context start-new-session))
-        (subset command-processor (user-command-environment))
-        (subset scsh-startup-package (dump-scsh-program)))
-  (files libscsh))
-
 (define-structure scsh-user
   (compound-interface (interface-of floatnums)
                       (interface-of srfi-1)
