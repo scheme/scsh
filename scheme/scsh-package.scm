@@ -263,7 +263,7 @@
                                          search-tree-ref))
         (subset condvars (make-condvar condvar-value))
 	extended-ports
-	scsh-utilities buffered-io-flags
+	scsh-utilities
 	signals
 	threads
 	(subset srfi-1 (any filter))
@@ -344,7 +344,6 @@
 	let-opt
 	signals
 	scsh-newports
-	buffered-io-flags
         (subset os-strings (string->os-byte-vector))
         (subset posix-i/o (i/o-flags))
         (subset posix-files (file-options file-options-on?))
@@ -359,7 +358,6 @@
 	threads
 	locks
         placeholders
-        ;; sigevents
 	bitwise
 	tables
         weak-tables
@@ -579,7 +577,6 @@
         receiving
         bitwise
         delimited-readers
-        buffered-io-flags		; stdio dependent
         ascii
         srfi-14
         scsh-version
@@ -648,7 +645,6 @@
         scsh-utilities
         interrupts
         low-interrupt
-        ;; sigevents
         (modify primitives (hide wait
                                  write-char
                                  read-char))
@@ -690,7 +686,6 @@
         extended-ports
         fluids
         interfaces
-        ;; sigevents
         scsh-reader
         low-interrupt wind
         fluids-internal            ; JMG: get-dynamic-env

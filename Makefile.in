@@ -52,7 +52,6 @@ SCHEME = scheme/command-line.scm \
 	 scheme/directory.scm \
 	 scheme/enumconst.scm \
 	 scheme/environment.scm \
-	 scheme/event.scm \
 	 scheme/fdports.scm \
 	 scheme/file.scm \
 	 scheme/fileinfo.scm \

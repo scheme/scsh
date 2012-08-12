@@ -120,8 +120,7 @@
 	  (with-region-lock :syntax)))
 
 (define-interface scsh-io-interface
-  (compound-interface buffered-io-flags-interface
-                      (export close
+  (compound-interface (export close
                               close-after
                               current-error-port
                               error-output-port
