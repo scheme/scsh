@@ -56,11 +56,9 @@ SCHEME = scheme/command-line.scm \
 	 scheme/fdports.scm \
 	 scheme/file.scm \
 	 scheme/fileinfo.scm \
-	 scheme/filemtch.scm \
 	 scheme/filesys.scm \
 	 scheme/fname.scm \
 	 scheme/fname-system.scm \
-	 scheme/glob.scm \
 	 scheme/libscsh.scm \
 	 scheme/low-interrupt.scm \
 	 scheme/meta-arg.scm \
