@@ -605,45 +605,6 @@ argv))
           %read-delimited!
           skip-char-set))
 
-(define-interface scsh-dbm-interface
-  (export dbm-open
-          dbm-close
-          dbm-delete
-          dbm-fetch
-          dbm-insert
-          dbm-replace
-          dbm-firstkey
-          dbm-nextkey
-          dbm-record?
-          dbm-record:open?
-          btree/method
-          btree-info:flags
-          btree-info:cachesize
-          btree-info:maxkeypage
-          btree-info:minkeypage
-          btree-info:psize
-          btree-info:lorder
-          btree-info?
-          make-btree-info
-          hash/method
-          hash-info:bsize
-          hash-info:ffactor
-          hash-info:nelem
-          hash-info:cachesize
-          hash-info:lorder
-          hash-info?
-          make-hash-info
-          recno/method
-          recno-info:flags
-          recno-info:cachesize
-          recno-info:psize
-          recno-info:lorder
-          recno-info:reclen
-          recno-info:bval
-          recno-info:bfname
-          recno-info?
-          make-recno-info))
-
 ;;; Magic flags for SCSH-TTY-INTERFACE.
 (define-interface tty-flags-interface
   (export
