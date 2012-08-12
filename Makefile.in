@@ -49,7 +49,6 @@ c/scsh.so: $(C)
 SCHEME = scheme/command-line.scm \
 	 scheme/condition-handler.scm \
 	 scheme/continuation.scm \
-	 scheme/enumconst.scm \
 	 scheme/environment.scm \
 	 scheme/fdports.scm \
 	 scheme/file.scm \

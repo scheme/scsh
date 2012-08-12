@@ -584,16 +584,6 @@
     ;; work around for SRFI 14 naming fuckage
     (define ->char-set x->char-set)))
 
-
-(define-structure defenum-package (export (define-enum-constant  :syntax)
-                                          (define-enum-constants :syntax)
-                                          (define-enum-constants-from-zero
-                                            :syntax))
-  (open scheme)
-  (files enumconst)
-;  (optimize auto-integrate)
-  )
-
 ;;; This code opens so many modules of gruesome, low-level S48 internals
 ;;; that these two modules are segregated into separate packages, each
 ;;; exporting just two definitions.
