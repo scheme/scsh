@@ -41,11 +41,6 @@
 	  %stat-file %stat-fdes
 	  %sync-file %sync-file-system))
 
-(define buffered-io-flags-interface
-  (export ((bufpol/block
-            bufpol/line
-            bufpol/none) :number)))
-
 (define-interface scsh-newports-interface
   (export call/fdes
 	  sleazy-call/fdes
@@ -136,9 +131,6 @@
                               dup->fdes
 
                               force-output
-                              bufpol/block
-                              bufpol/line
-                              bufpol/none
 
                               seek
                               tell

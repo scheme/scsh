@@ -78,11 +78,6 @@
         scheme)
   (files syntax-helpers))
 
-;;; The bufpol/{block, line, none} values
-(define-structure buffered-io-flags buffered-io-flags-interface
-  (open defenum-package scheme)
-  (files bufpol))
-
 (define-structure waitcodes
   (export wait/poll
           wait/stopped-children
