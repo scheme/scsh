@@ -808,8 +808,6 @@
                                 ; with-current-output-port exit
         scsh-level-0-internals  ; set-command-line-args! init-scsh-vars
         threads
-        lib-dirs
-        lib-dirs-internal
         (subset srfi-14 (char-set
                          char-set-complement!
                          char-set-contains?
@@ -831,68 +829,9 @@
       (call-exit-hooks!)
       (thunk))))
 
-
-(define-structure field-reader-package scsh-field-reader-interface
-  (open receiving             ; receive
-        scsh-utilities          ; deprecated-proc
-        (subset signals (error warn))           ; error
-        (subset srfi-13 (string-join))
-        (subset srfi-14 (char-set?
-                         char-set:whitespace
-                         char-set
-                         x->char-set
-                         char-set-complement))
-        delimited-readers
-        re-exports
-        let-opt                 ; optional-arg parsing & defaulting
-        scheme
-        )
-  (files fr)
-  ;; Handle a little bit of backwards compatibility.
-  (begin (define join-strings (deprecated-proc string-join 'join-strings
-                                               "Use SRFI-13 STRING-JOIN.")))
-  )
-
-
-(define-structures
-  ((awk-expander-package (export expand-awk expand-awk/obsolete))
-   (awk-support-package (export next-range next-:range
-                                next-range: next-:range:)))
-  (open receiving               ; receive
-        ;; scsh-utilities
-        (subset srfi-1 (any filter))
-        (subset signals (error))
-        sre-syntax-tools
-        scheme
-        )
-  (files awk)
-;  (optimize auto-integrate)
-)
-
-
-(define-structure awk-package awk-interface
-  (open awk-support-package     ; These packages provide all the stuff
-        re-exports              ; that appears in the code produced by
-        receiving               ; an awk expansion.
-        scheme)
-  (for-syntax (open awk-expander-package scheme))
-  (begin (define-syntax awk expand-awk)
-         (define-syntax awk/posix-string expand-awk/obsolete)))
-
-;;; Exports an AWK macro that is just AWK/POSIX-STRING.
-(define-structure obsolete-awk-package (export (awk :syntax))
-  (open awk-package)
-  (begin (define-syntax awk
-           (syntax-rules () ((awk body ...) (awk/posix-string body ....))))))
-
 (define-structure scsh
   (compound-interface (interface-of scsh-level-0)
-                      (interface-of scsh-startup-package)
-                      re-exports-interface
-                      scsh-field-reader-interface       ; new in 0.3
-                      awk-interface
-                      char-predicates-interface; Urk -- Some of this is R5RS!
-                      lib-dirs-interface)
+                      (interface-of scsh-startup-package))
   (open scsh-level-0
         scsh-level-0-internals
         (modify scheme (hide write
@@ -908,48 +847,8 @@
                              char-whitespace?
                              open-input-file
                              open-output-file))
-        re-exports
-        scsh-startup-package
-        awk-package
-        field-reader-package
-        char-predicates-lib     ; Urk -- Some of this is R5RS!
-        lib-dirs))
+        scsh-startup-package))
 
-(define-structure scsh-here-string-hax (export)
-  (open reading
-        receiving
-        scheme-with-scsh            ; Just need the delimited readers.
-        (subset features (make-immutable))
-        (subset srfi-14 (char-set)))
-  (files here))
-
-;; (define-structure sigevents sigevents-interface
-;;    (open scsh-level-0
-;;          (modify scheme (hide write
-;;                               display
-;;                               char-ready?
-;;                               read-char
-;;                               write-char
-;;                               newline))
-;;          low-interrupt
-;;          define-record-types
-;;          threads
-;;          (subset srfi-1 (filter))
-;;          (subset scsh-utilities (run-as-long-as))
-;;          (subset signals (error))
-;;          (subset queues (make-queue))
-;;          (subset proposals (with-new-proposal))
-;;          (subset threads-internal (maybe-commit-and-make-ready
-;;                                    maybe-commit-and-block-on-queue
-;;                                    maybe-dequeue-thread!
-;;                                    thread-queue-empty?))
-;;          (subset interrupts (with-interrupts-inhibited))
-;;          (subset posix-processes (name->signal
-;;                                   signal-os-number
-;;                                   make-signal-queue
-;;                                   dequeue-signal!
-;;                                   signal=?)))
-;;    (files event))
 
 (define-structure simple-syntax (export define-simple-syntax)
   (open scheme)
@@ -999,41 +898,6 @@
         (subset scsh-startup-package (dump-scsh-program)))
   (files libscsh))
 
-(define-structure md5 md5-interface
-  (open scheme
-        ascii
-        define-record-types
-        srfi-9
-        bitwise
-        (subset i/o (read-block))
-        (subset srfi-13 (string-fold-right))
-        (subset signals (error warn))
-        external-calls)
-  (files md5))
-
-;; (define-structure configure configure-interface
-;;   (open scheme
-;;         re-level-0 rx-syntax
-;;         (subset srfi-13 (string-join)))
-;;   (files configure))
-
-(define-structures ((lib-dirs lib-dirs-interface)
-                    (lib-dirs-internal lib-dirs-internal-interface))
-  (open scsh-level-0
-        (modify scheme (hide write
-                             display
-                             char-ready?
-                             read-char
-                             write-char
-                             newline
-                             open-input-file
-                             open-output-file))
-        handle
-        scsh-utilities
-        (subset signals (error))
-        (subset srfi-1 (any)))
-  (files lib-dirs))
-
 (define-structure scsh-user
   (compound-interface (interface-of floatnums)
                       (interface-of srfi-1)
@@ -1053,11 +917,6 @@
                              with-output-to-file
                              open-input-file
                              open-output-file
-                             char-whitespace?
-                             char-numeric?
-                             char-lower-case?
-                             char-upper-case?
-                             char-alphabetic?
                              write
                              display
                              char-ready?

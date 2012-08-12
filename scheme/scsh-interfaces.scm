@@ -598,22 +598,12 @@ argv))
   (export make-weak-table weak-table-set! weak-table-ref weak-table-walk
           strengthen-weak-table-ref weaken-weak-table-ref))
 
-(define-interface scsh-field-reader-interface
-  (export join-strings
-          field-splitter infix-splitter suffix-splitter sloppy-suffix-splitter
-          record-reader
-          field-reader))
-
 (define-interface scsh-delimited-readers-interface
   (export read-line
           read-paragraph
           read-delimited read-delimited!
           %read-delimited!
           skip-char-set))
-
-(define-interface awk-interface
-  (export (awk :syntax)
-          (awk/posix-string :syntax)))
 
 (define-interface scsh-dbm-interface
   (export dbm-open
@@ -895,14 +885,6 @@ argv))
 	  tty-name->pty-name
 	  make-pty-generator))
 
-;; (define-interface sigevents-interface
-;;   (export most-recent-sigevent
-;;           sigevent?
-;;           next-sigevent
-;;           next-sigevent/no-wait
-;;           with-sigevents
-;;           sigevent-type))
-
 (define-interface low-interrupt-interface
   (export number-of-interrupts
           interrupt/alrm interrupt/alarm
@@ -933,12 +915,6 @@ argv))
           remove-interrupt
           full-interrupt-set))
 
-;; (define-interface dot-locking-interface
-;;   (export obtain-dot-lock release-dot-lock
-;;           break-dot-lock
-;;           (with-dot-lock :syntax)
-;;           with-dot-lock*))
-
 (define-interface uname-interface
   (export uname
           uname:os-name
@@ -947,52 +923,3 @@ argv))
           uname:version
           uname:machine
           :uname))
-
-(define-interface md5-interface
-  (export make-md5-context
-          md5-context?
-          update-md5-context!
-          md5-context->md5-digest
-
-          md5-digest?
-
-          md5-digest->number
-          number->md5-digest
-
-          md5-digest-for-string
-          md5-digest-for-port))
-
-;; (define-interface configure-interface
-;;   (export host
-;;           machine
-;;           vendor
-;;           os
-;;           prefix
-;;           exec-prefix
-;;           bin-dir
-;;           lib-dir
-;;           include-dir
-;;           man-dir
-;;           lib-dirs-list
-;;           libs
-;;           defs
-;;           cflags
-;;           cppflags
-;;           ldflags
-;;           linker-flags
-;;           compiler-flags))
-
-(define-interface lib-dirs-interface
-  (export lib-dirs
-          find-library-file
-          default-lib-dirs
-
-          lib-dirs-append-script-dir!
-          lib-dirs-prepend-script-dir!
-          reset-lib-dirs!
-          clear-lib-dirs!
-          lib-dirs-prepend!
-          lib-dirs-append!))
-
-(define-interface lib-dirs-internal-interface
-  (export expand-lib-dir))

@@ -35,18 +35,6 @@
   (silently (lambda ()
 	       (apply ensure-loaded structs))))
 
-(define (load-library-file file lib-dirs script-file package)
-; (format (error-output-port) "Load-library-file: ~a ~s\n" file lib-dirs)
-  (cond ((file-name-absolute? file)
-         (load-quietly file package))
-
-	;; Search library dirs for FILE.
-	((find-library-file file lib-dirs script-file) =>
-	 (lambda (file)
-           (load-quietly file package)))  ; Load it.
-
-	(else (error "Couldn't find library file" file lib-dirs))))
-
 ;;; The switches:
 ;;; 	-o <struct>		Open the structure in current package.
 ;;; 	-n <package>		Create new package, make it current package.
@@ -55,8 +43,6 @@
 ;;; 	-l  <file>		Load <file> into current package.
 ;;;	-lm <file>		Load <file> into config package.
 ;;;     -le <file>              Load <file> into exec package.
-;;;	-ll <file>		As in -lm, but search the library path list.
-;;;     -lel <file>             As in -le, but search the library path list.
 ;;;
 ;;;	+lp <dir>		Add <dir> onto start of library path list.
 ;;;	lp+ <dir>		Add <dir> onto end of library path list.
@@ -142,8 +128,6 @@
 		((or (string=? arg "-l")
 		     (string=? arg "-lm")
 		     (string=? arg "-le")
-		     (string=? arg "-ll")
-		     (string=? arg "-lel")
 		     (string=? arg "lp+")
 		     (string=? arg "+lp")
 		     (string=? arg "lpe+")
@@ -208,22 +192,6 @@
 ;	     (format #t "loaded exec ~s~%" script-file)
 	     (lp switches #t))
 
-	    ((equal? switch "-lp-clear")
-             (clear-lib-dirs!)
-	     (lp switches script-loaded?))
-
-	    ((equal? switch "-lp-default")
-             (reset-lib-dirs!)
-	     (lp switches script-loaded?))
-
-	    ((equal? switch "+lpsd")
-             (lib-dirs-prepend-script-dir!)
-	     (lp switches script-loaded?))
-
-	    ((equal? switch "lpsd+")
-             (lib-dirs-append-script-dir!)
-	     (lp switches script-loaded?))
-
 	    ((string=? (car switch) "-l")
 ;	     (format #t "loading file ~s~%" (cdr switch))
 	     (load-quietly (cdr switch) env)
@@ -240,34 +208,6 @@
                (load-quietly (cdr switch) (user-command-environment))
                (set-interaction-environment! current-package)
                (lp switches script-loaded?)))
-
-	    ((string=? (car switch) "-ll")
-	     (load-library-file (cdr switch) (lib-dirs) script-file
-                                (config-package))
-	     (lp switches script-loaded?))
-
-	    ((string=? (car switch) "-lel")
-             (let ((current-package env))
-               (load-library-file (cdr switch) (lib-dirs) script-file
-                                  (user-command-environment))
-               (set-interaction-environment! current-package)
-               (lp switches script-loaded?)))
-
-	    ((string=? (car switch) "+lp")
-             (lib-dirs-prepend! (cdr switch))
-	     (lp switches script-loaded?))
-
-	    ((string=? (car switch) "lp+")
-             (lib-dirs-append! (cdr switch))
-	     (lp switches script-loaded?))
-
-	    ((string=? (car switch) "+lpe")
-             (lib-dirs-prepend! (expand-lib-dir (cdr switch)))
-	     (lp switches script-loaded?))
-
-	    ((string=? (car switch) "lpe+")
-             (lib-dirs-append! (expand-lib-dir (cdr switch)))
-	     (lp switches script-loaded?))
 
 	    ((string=? (car switch) "-o")
 	     (let ((struct-name (cdr switch)))
@@ -426,8 +366,6 @@ switch:	-e <entry-point>	Specify top-level entry point.
         -le <exec-file-name>    Load file into exec package.
 	-l  <file-name>		Load file into current package.
 
-	-ll <module-file-name>  As in -lm, but search the library path list.
-	-lel <exec-file-name>   As in -le, but search the library path list.
 	+lp  <dir>		Add <dir> to front of library path list.
 	lp+  <dir>		Add <dir> to end of library path list.
 	+lpe <dir>		+lp, with env var and ~user expansion.

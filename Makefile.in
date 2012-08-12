@@ -61,14 +61,10 @@ SCHEME = scheme/command-line.scm \
 	 scheme/filesys.scm \
 	 scheme/fname.scm \
 	 scheme/fname-system.scm \
-	 scheme/fr.scm \
 	 scheme/glob.scm \
 	 scheme/dot-locking.scm \
-	 scheme/here.scm \
-	 scheme/lib-dirs.scm \
 	 scheme/libscsh.scm \
 	 scheme/low-interrupt.scm \
-	 scheme/md5.scm \
 	 scheme/meta-arg.scm \
 	 scheme/newports.scm \
 	 scheme/port-collect.scm \
@@ -133,9 +129,7 @@ LOADS = $(srcdir)/rx/interfaces.scm \
 	$(srcdir)/rx/packages.scm \
 	$(srcdir)/constance/packages.scm \
 	$(srcdir)/scheme/scsh-interfaces.scm \
-	$(srcdir)/scheme/scsh-package.scm \
-	$(srcdir)/scheme/lib/ccp-pack.scm \
-	$(srcdir)/scheme/lib/char-package.scm
+	$(srcdir)/scheme/scsh-package.scm
 
 scsh.image: $(SCHEME)
 	$(srcdir)/build/build-image.sh $(srcdir) \
