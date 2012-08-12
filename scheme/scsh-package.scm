@@ -92,11 +92,6 @@
   (open scheme bitwise)
   (files waitcodes))
 
-(define-structures ((tty-flags tty-flags-interface)
-                    (scsh-internal-tty-flags scsh-internal-tty-flags-interface))
-  (open scheme ascii bitwise constance)
-  (files tty-consts))
-
 (define-structure scsh-continuations scsh-continuations-interface
   (open scheme
 	escapes)
@@ -484,36 +479,6 @@
 	scsh-signals)
   (files process))
 
-(define-structure scsh-tty scsh-tty-interface
-  (open (modify scheme (hide write
-                             display
-                             char-ready?
-                             read-char
-                             write-char
-                             newline
-                             open-input-file
-                             open-output-file))
-        (modify i/o (hide write-string
-                          force-output
-                          newline
-                          write-char
-                          char-ready?
-                          read-char))
-        (subset scsh-syscall-support (byte-vector->string))
-	ascii
-	signals
-	bitwise
-	let-opt
-        define-record-types
-	tty-flags scsh-internal-tty-flags
-        (subset posix-files (file-options file-options-on?))
-        (subset external-calls (import-lambda-definition-2))
-        (subset os-strings (string->os-string
-                            os-string->byte-vector))
-	scsh-newports
-	scsh-process-objects)
-  (files tty))
-
 (define-structure scsh-stdio scsh-stdio-interface
   (open (modify scheme (hide write
                              display
@@ -528,29 +493,6 @@
 	scsh-fdports
 	scsh-newports)
   (files stdio))
-
-(define-structure scsh-ptys scsh-ptys-interface
-  (open (modify scheme (hide write
-                             display
-                             char-ready?
-                             read-char
-                             write-char
-                             newline
-                             open-input-file
-                             open-output-file))
-	receiving
-	scsh-processes
-	scsh-fdports
-	(subset signals (error))
-        (subset external-calls (import-lambda-definition-2))
-        (subset posix-files (file-options))
-        (subset scsh-errnos (with-errno-handler))
-        (subset scsh-syscall-support (byte-vector->string))
-	scsh-newports
-	scsh-stdio
-	scsh-tty
-	scsh-process-state)
-  (files pty))
 
 (define-structure scsh-system (compound-interface uname-interface
 						  (export system-name)) ; ####
@@ -626,11 +568,11 @@
     (compound-interface scsh-delimited-readers-interface
                         scsh-io-interface
                         scsh-file-interface
-			scsh-read/write-interface
-			scsh-globbing-interface
-			scsh-file-matching-interface
-			scsh-temp-files-interface
-			scsh-directories-interface
+                        scsh-read/write-interface
+                        scsh-globbing-interface
+                        scsh-file-matching-interface
+                        scsh-temp-files-interface
+                        scsh-directories-interface
                         scsh-process-state-interface
                         scsh-process-objects-interface
                         scsh-process-interface
@@ -641,11 +583,9 @@
                         scsh-file-names-interface
                         scsh-misc-interface
                         scsh-high-level-process-interface
-                        scsh-tty-interface ; new in 0.4
                         scsh-version-interface
                         scsh-file-names-system-interface
                         (interface-of srfi-14) ;; export this here for
-                        (export ->char-set)    ;; this kludge
                         (export system-name) ; #### has nowhere else to go for now
                         ;; This stuff would probably be better off kept
                         ;; in separate modules, but we'll toss it in for now.
@@ -675,8 +615,6 @@
         srfi-14
         scsh-version
         (subset i/o (current-error-port))
-        tty-flags
-        scsh-internal-tty-flags
         scsh-continuations
  	scsh-file-syscalls
  	scsh-resources
@@ -695,9 +633,7 @@
  	scsh-processes
  	scsh-fdports
  	scsh-signals
- 	scsh-tty
  	scsh-stdio
- 	scsh-ptys
  	scsh-system
  	scsh-file-names-system
  	scsh-high-level-processes
@@ -875,14 +811,6 @@
 	(subset threads-internal (wait-for-event))
 	(subset thread-fluids    (fork-thread)))
   (files threads))
-
-;; (define-structure dot-locking dot-locking-interface
-;;   (open scsh-level-0
-;;         scheme
-;;         let-opt
-;;         threads  ; sleep
-;;         random)
-;;   (files dot-locking))
 
 (define-structure libscsh (export dump-libscsh-image)
   (open scheme

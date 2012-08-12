@@ -40,7 +40,6 @@ test: enough
 	$(srcdir)/build/test.sh $(srcdir)
 
 C = c/syscalls.o \
-    c/tty.o \
     c/cstuff.o \
     c/scsh.o
 
@@ -72,7 +71,6 @@ SCHEME = scheme/command-line.scm \
 	 scheme/process-state.scm \
 	 scheme/process.scm \
 	 scheme/procobj.scm \
-	 scheme/pty.scm \
 	 scheme/rdelim.scm \
 	 scheme/resource.scm \
 	 scheme/rw.scm \
@@ -90,8 +88,6 @@ SCHEME = scheme/command-line.scm \
 	 scheme/system.scm \
 	 scheme/temp-file.scm \
 	 scheme/top.scm \
-	 scheme/tty.scm \
-	 scheme/tty-consts.scm \
 	 scheme/user-group.scm \
 	 scheme/utilities.scm \
 	 scheme/weaktables.scm \
