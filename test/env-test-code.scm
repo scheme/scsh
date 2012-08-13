@@ -31,32 +31,6 @@
 	 (equal? (cdr (assoc var alist))
 		 val))))                           ; previously set variable correctly present
 
-; checks if alist->enc really sets a new environment
-; by this way, it checks if a string list is transformed correctly to a colon list, too
-
-; COMMENTED OUT BECAUSE STRING-TOKENIZE IS MISSING (WILL BE FIXED)
-; OK
-(define (alist->env-test alist)
-  (let ((old-env (env->alist)))       ; save old environment
-    (alist->env alist)                ; set new environment
-    (let (            		; compare values of alist with values of the environment
-	  (result (every
-		   (lambda (var-pair)
-		     (let ((var-pair-value (cdr var-pair))
-			   (env-var-value (getenv (car var-pair))))
-;		       (begin (display var-pair) (newline)
-;			      (display var-pair-value) (newline)
-;			      (display env-var-value) (newline)
-;			      (display "---------------------") (newline))
-		       (if (string-list? var-pair-value)
-			   (equal? var-pair-value
-				   (string-tokenize env-var-value #\:))
-			   (equal? var-pair-value env-var-value))))
-		   (alist-compress alist))))
-      (alist->env old-env)       ; restore old environment
-      result)))
-
-
 ; NOTE: since alist-bla works only on alists, string-list / colon-list-conversion is not implemented
 ; OK 2001-04-09 16:21
 (define (alist-delete-test key alist)
@@ -277,19 +251,3 @@
 (define	equal-to-current-env?
   (lambda (old-env-alist)
     (list-equal? old-env-alist (env->alist))))
-
-; tokenizes a string
-; example:
-; (string-tokenize "Tokenize this here" #\space) => ("Tokenize" "this" "here")
-
-(define (string-tokenize string character)
-  (let ((char-list (string->list string)))
-    (let loop ((liste char-list)
-               (word '())
-               (result '()))
-      (if (null? liste)
-          (append result (list (list->string word)))
-          (if (equal? (car liste) character)
-              (loop (cdr liste) '() (append result (list  (list->string word))))
-              (loop (cdr liste) (append word (list (car liste))) result))))))
-

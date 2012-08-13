@@ -561,16 +561,6 @@
 			 (equal? result 'search-denied))))
 	   "file" "dir/")
 
-;; --- directory-files ---
-
-(add-test-multiple! 'directory-files 'file-system
-		    (lambda (fname dotfiles?)
-		      (with-cwd (create-temp-dir)
-				(create-file fname)
-				(or (and (string-ref fname 0) (not dotfiles?))
-				    (member fname (directory-files (cwd) dotfiles?)))))
-		    '("file" ".file") '(#t #f))
-
 ;; --- create-temp-file ---
 
 (add-test! 'create-temp-file 'file-system

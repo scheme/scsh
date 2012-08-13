@@ -34,7 +34,6 @@
    setenv-test
    getenv-test
    env->alist-test
-   alist->env-test
    alist-delete-test
    alist-update-test
    alist-compress-test
@@ -88,11 +87,6 @@
   (open scsh-user
         test-base)
   (files bitwise-ops-test))
-
-(define-structure terminal-device-control-test (export)
-  (open scsh-user
-        test-base)
-  (files terminal-device-control-test))
 
 (define-structure user-and-group-db-access-test (export)
   (open scsh-user
