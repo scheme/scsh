@@ -360,18 +360,6 @@
 ;		 (equal? result 'socket))))
 ;	   "socket")
 
-(add-test! 'file-type-symlink 'file-system
-	   (lambda (fname linkname)
-	     (create-file fname)
-	     (create-symlink fname linkname)
-	     (let ((result (file-type linkname #f))
-		   (result-2 (file-type linkname #t)))
-	       (delete-filesys-object linkname)
-	       (delete-filesys-object fname)
-	       (and (equal? result 'symlink)
-		    (equal? result-2 'regular))))
-	   "file" "symlink")
-
 ;; --- file-inode ---
 ;; only check for overrun (problem on AFS according to Martin)
 (add-test/fname/fd/port! 'file-inode
@@ -585,3 +573,15 @@
 		   (delete-filesys-object file-2)
 		   result)))))
 
+
+(add-test! 'file-type-symlink 'file-system
+           (lambda (fname linkname)
+             (create-file fname)
+             (create-symlink fname linkname)
+             (let ((result (file-type linkname #f))
+                   (result-2 (file-type linkname #t)))
+               (delete-filesys-object linkname)
+               (delete-filesys-object fname)
+               (and (equal? result 'symlink)
+                    (equal? result-2 'regular))))
+           "file" "symlink")

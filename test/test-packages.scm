@@ -103,7 +103,6 @@
   (export test-all)
   (open scheme
         test-base
-        file-system-test
         process-state-test
         add-env-test
         system-parameter-tests
@@ -111,5 +110,6 @@
         file-name-maniplation-test
         read-delimited-strings-test
         bitwise-ops-test
-        user-and-group-db-access-test))
+        user-and-group-db-access-test
+        file-system-test))
 
