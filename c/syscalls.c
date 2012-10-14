@@ -123,12 +123,13 @@ s48_ref_t scsh_fork(s48_call_t call)
 /* Returns (r w) */
 s48_ref_t scheme_pipe(s48_call_t call)
 {
-  int fds[2];
+  int fds[2], status;
   s48_ref_t sch_retval = s48_unspecific_2(call);
 
   if(pipe(fds) == -1)
     s48_os_error_2(call, "scheme_pipe", errno, 0);
   else {
+    RETRY_OR_RAISE_NEG(status, fcntl(fds[1], F_SETFL, O_NONBLOCK), "scheme_pipe");
     sch_retval = s48_cons_2(call, s48_enter_long_2(call, fds[0]),
                             s48_cons_2(call, s48_enter_long_2(call, fds[1]),
                                        s48_null_2(call)));
