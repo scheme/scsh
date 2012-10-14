@@ -585,12 +585,13 @@
 
 (define-structure scsh-collect-ports scsh-collect-ports-interface
   (open scheme
-	let-opt
-	(subset scsh-utilities (deprecated-proc))
-	(subset srfi-1 (reverse!))
-	scsh-read/write
-	delimited-readers
-	string-collectors)
+        let-opt
+        reduce
+        (subset scsh-utilities (deprecated-proc))
+        (subset srfi-1 (reverse!))
+        scsh-read/write
+        delimited-readers
+        string-collectors)
   (files port-collect))
 
 (define-structure scsh-high-level-processes scsh-high-level-process-interface

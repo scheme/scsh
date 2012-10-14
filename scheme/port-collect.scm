@@ -1,14 +1,10 @@
 ;;; Read characters from PORT until EOF, collect into a string.
 
 (define (port->string port)
-  (let ((sc (make-string-collector)))
-    (letrec ((lp (lambda ()
-                   (cond ((read-string 1024 port) =>
-                          (lambda (s)
-                            (collect-string! sc s)
-                            (lp)))
-                         (else (string-collector->string sc))))))
-      (lp))))
+  (reduce ((input* char port read-char))
+          ((sc (make-string-collector)))
+    (collect-char! sc char)
+    (string-collector->string sc)))
 
 ;;; (loop (initial (sc (make-string-collector)))
 ;;;       (bind (s (read-string 1024 port)))

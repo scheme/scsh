@@ -543,6 +543,7 @@ argv))
 (define-interface string-collectors-interface
   (export make-string-collector
           collect-string!
+          collect-char!
           clear-string-collector!
           string-collector->string))
 
