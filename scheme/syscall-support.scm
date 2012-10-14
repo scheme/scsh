@@ -1,4 +1,4 @@
-(import-dynamic-externals "=scshexternal/scsh")
+(import-dynamic-externals "=scshexternal/syscalls")
 
 (define (byte-vector->string bytev)
   (os-string->string (byte-vector->os-string bytev)))

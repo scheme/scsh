@@ -1,0 +1,45 @@
+#! /usr/bin/env chibi-scheme
+
+;;; Just a hack to save me some time, for now. -Roderic
+
+(import (scheme) (only (scheme base) flush-output-port) (chibi match)
+        (chibi loop))
+
+(define (display-usage program)
+  (display (string-append "Usage: " program " <file-with-constance-defs> <output-dir>"))
+  (newline))
+
+(define (gen-constance-c-file file-name c-names)
+  (with-output-to-file file-name
+    (lambda ()
+      (display "#include <scheme48.h>") (newline)
+      (display "#include <termios.h>") (newline) (newline) ; TODO: parameterize external includes
+      (display "void s48_on_load(void) {") (newline)
+      (for-each (lambda (c-name)
+                  (display "#ifdef ") (display c-name) (newline)
+                  (display "s48_define_exported_binding(\"") (display c-name)
+                  (display "\", s48_enter_fixnum(") (display c-name) (display "));") (newline)
+                  (display "#else") (newline)
+                  (display "s48_define_exported_binding(\"") (display c-name)
+                  (display "\", S48_FALSE);") (newline)
+                  (display "#endif") (newline)) c-names)
+      (display "}")
+      (newline))))
+
+(define (gen-constance-c-files output-dir)
+  (loop ((for form (in-port (current-input-port) read)))
+    (match form
+      (('define-direct-constance constance-name _ _
+         ((_ c-names) ...))
+       (gen-constance-c-file (string-append output-dir "/" (symbol->string constance-name) ".c")
+                             c-names))
+      (_))))
+
+(define (main args)
+  (match args
+    ((program input-file output-dir)
+     (with-input-from-file input-file
+       (lambda ()
+         (gen-constance-c-files output-dir)
+         (flush-output-port))))
+    ((program . _) (display-usage program))))

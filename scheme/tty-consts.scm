@@ -8,8 +8,9 @@
 
 ;;; Special Control Characters
 ;;;  Indices into the c_cc[] character array.
-(define-constance tty-control-chars-info
-  (termios.h)                           ; Enabled by:
+(define-direct-constance tty-control-chars-info
+  initialize-tty-control-chars-info
+  reinitialize-tty-control-chars-info
   ((ttychar/eof VEOF)                   ; ^d icanon
    (ttychar/eol VEOL)                   ;    icanon
    (ttychar/delete-char VERASE)         ; ^? icanon
@@ -37,8 +38,9 @@
 (define disable-tty-char (ascii->char #x00))	; _POSIX_VDISABLE
 
 ;;; Flags controllling input processing
-(define-constance tty-input-flags
-  (termios.h)
+(define-direct-constance tty-input-flags
+  initialize-tty-input-flags
+  reinitialize-tty-input-flags
   ;; POSIX
   ((ttyin/ignore-break IGNBRK)
    (ttyin/interrupt-on-break BRKINT)
@@ -58,8 +60,9 @@
    (ttyin/lowercase IUCLC)))
 
 ;;; Flags controlling output processing
-(define-constance tty-output-flags
-  (termios.h)
+(define-direct-constance tty-output-flags
+  initialize-tty-output-flags
+  reinitialize-tty-output-flags
   ;; POSIX
   ((ttyout/enable OPOST)                ; enable output processing
    ;; SVR4 & 4.3+BSD
@@ -110,8 +113,9 @@
 
 
 ;;; Control flags - hacking the serial-line.
-(define-constance tty-control-flags
-  (termios.h)
+(define-direct-constance tty-control-flags
+  initialize-tty-control-flags
+  reinitialize-tty-control-flags
   ;; POSIX
   ((ttyc/char-size CSIZE)               ; character size mask
    (ttyc/char-size5 CS5)                ; 5 bits
@@ -131,8 +135,9 @@
    (ttyc/carrier-flow-ctl MDMBUF)))
 
 ;;; Local flags -- hacking the tty driver / user interface.
-(define-constance tty-local-flags
-  (termios.h)
+(define-direct-constance tty-local-flags
+  initialize-tty-local-flags
+  reinitialize-tty-local-flags
   ((ttyl/visual-delete ECHOE)           ; visually erase chars
    (ttyl/echo-delete-line ECHOK)        ; echo nl after line kill
    (ttyl/echo ECHO)                     ; enable echoing
@@ -156,8 +161,9 @@
 
 ;;; Baud rate flags -- The codes corresponding to baud rates. Not the rates
 ;;; themselves.
-(define-constance tty-baud-rate-flags
-  (termios.h)
+(define-direct-constance tty-baud-rate-flags
+  initialize-tty-baud-rate-flags
+  reinitialize-tty-baud-rate-flags
   ((ttyb/0 B0)
    (ttyb/50 B50)
    (ttyb/75 B75)
@@ -186,23 +192,26 @@
                       (,ttyb/38400 . 38400) (,ttyb/exta . exta) (,ttyb/extb . extb)))
 
 ;;; tcflush() constants
-(define-constance tty-tcflush-flags
-  (termios.h)
+(define-direct-constance tty-tcflush-flags
+  initialize-tty-tcflush-flags
+  reinitialize-tty-tcflush-flags
   ((%flush-tty/input TCIFLUSH)
    (%flush-tty/output TCOFLUSH)
    (%flush-tty/both TCIOFLUSH)))
 
 ;;; tcflow() constants
-(define-constance tty-tcflow-flags
-  (termios.h)
+(define-direct-constance tty-tcflow-flags
+  initialize-tty-tcflow-flags
+  reinitialize-tty-tcflow-flags
   ((%tcflow/start-out TCOON)
    (%tcflow/stop-out TCOOFF)
    (%tcflow/start-in TCION)
    (%tcflow/stop-in TCIOFF)))
 
 ;;; tcsetattr() constants
-(define-constance tty-tcsetattr-flags
-  (termios.h)
+(define-direct-constance tty-tcsetattr-flags
+  initialize-tty-tcsetattr-flags
+  reinitialize-tty-tcsetattr-flags
   ((%set-tty-info/now TCSANOW)          ; make change immediately.
    (%set-tty-info/drain TCSADRIAN)      ; drain output, then change.
    (%set-tty-info/flush TCSAFLUSH)))    ; drain output, flush input.

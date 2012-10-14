@@ -19,6 +19,8 @@
 ;;; MAKE-TTY-INFO procedure. Ech. I oughta have a lower-level record macro
 ;;; for this kind of thing.
 
+(import-dynamic-externals "=scshexternal/tty")
+
 ;;; TODO: all these sets should end in !
 (define-record-type :tty-info
   (really-make-tty-info control-chars input-flags output-flags control-flags

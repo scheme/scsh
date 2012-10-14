@@ -34,21 +34,30 @@ lib_dirs_list = ("${prefix}/lib/scsh/modules" "${prefix}/lib/scsh/modules/${VERS
 SCHEME48VM = /usr/local/lib/scheme48-1.9t/scheme48vm
 SCHEME48 = /usr/local/bin/scheme48
 
-enough: c/scsh.so scsh scsh.image go
+COMPILED_LIBS = c/syscalls.so \
+	c/tty.so \
+	c/syscalls.so \
+	c/tty-baud-rate-flags.so \
+	c/tty-control-chars-info.so \
+	c/tty-control-flags.so \
+	c/tty-input-flags.so \
+	c/tty-local-flags.so \
+	c/tty-output-flags.so \
+	c/tty-tcflow-flags.so \
+	c/tty-tcflush-flags.so \
+	c/tty-tcsetattr-flags.so
+
+enough: scsh scsh.image go
 
 test: enough
 	$(srcdir)/build/test.sh $(srcdir)
 
-C = c/syscalls.o \
-    c/tty.o \
-    c/cstuff.o \
-    c/scsh.o
-
-c/scsh.so: $(C)
-	$(LD) -o $@ $(C) $(LDFLAGS) $(LIBS)
+c/%.so: c/%.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
 
 SCHEME = scheme/command-line.scm \
 	 scheme/condition-handler.scm \
+	 scheme/constance.scm \
 	 scheme/continuation.scm \
 	 scheme/directory.scm \
 	 scheme/enumconst.scm \
@@ -112,10 +121,7 @@ SCHEME = scheme/command-line.scm \
 	 rx/re.scm \
 	 rx/re-high.scm \
 	 rx/re-low.scm \
-	 rx/regress.scm \
-	 constance/packages.scm \
-	 constance/constance.scm \
-	 constance/constance-syntax-help.scm
+	 rx/regress.scm
 
 go: c/scsh-tramp.c
 	$(CC) -o $@ $(CFLAGS) \
@@ -131,13 +137,12 @@ scsh: c/scsh-tramp.c
 
 LOADS = $(srcdir)/rx/interfaces.scm \
 	$(srcdir)/rx/packages.scm \
-	$(srcdir)/constance/packages.scm \
 	$(srcdir)/scheme/scsh-interfaces.scm \
 	$(srcdir)/scheme/scsh-package.scm \
 	$(srcdir)/scheme/lib/ccp-pack.scm \
 	$(srcdir)/scheme/lib/char-package.scm
 
-scsh.image: $(SCHEME)
+scsh.image: $(SCHEME) $(COMPILED_LIBS)
 	$(srcdir)/build/build-image.sh $(srcdir) \
 		"`pwd`/c/" '$@' '$(SCHEME48) -h 0' '$(LOADS)'
 
@@ -155,9 +160,10 @@ install-scsh: scsh
         #install runner
 	$(RM) $(DESTDIR)$(bindir)/$(RUNNABLE)
 	$(INSTALL_PROGRAM) scsh $(DESTDIR)$(bindir)/$(RUNNABLE)
-        #install scsh.so
-	$(RM) $(DESTDIR)$(LIB)/scsh.so
-	$(INSTALL_DATA) c/scsh.so $(DESTDIR)$(LIB)
+
+	for file in $(patsubst c/%,%,$(COMPILED_LIBS)) ; do \
+	$(INSTALL) c/$$file $(DESTDIR)$(LIB)/$$file ; \
+	done
         #install scheme source files
 	for f in $(srcdir)/scheme/*.scm $(srcdir)/scheme/*/*.scm; \
 	    do $(INSTALL_DATA) $$f $(DESTDIR)$(SHARE)/; done
@@ -167,4 +173,4 @@ install-scsh-image: install-scsh
 		"$(LIB)/" '$(DESTDIR)$(LIB)/scsh.image' '$(SCHEME48) -h 0' '$(LOADS)'
 
 clean:
-	rm -rf c/*.o c/*.so *.sexpr scsh.image scsh go *.dSYM
+	rm -rf c/*.o c/*.so c/*.dSYM *.sexpr scsh.image scsh go *.dSYM

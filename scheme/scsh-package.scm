@@ -4,6 +4,14 @@
 ;;; Note: field-reader package (fr.scm) and here docs use READ-LINE.
 ;;; It is defined in rdelim.scm.
 
+(define-structure constance (export (define-constance :syntax)
+                                    (define-direct-constance :syntax))
+  (open scheme reinitializers
+        (subset shared-bindings (lookup-imported-binding shared-binding-ref))
+        (subset load-dynamic-externals (import-dynamic-externals)))
+  (for-syntax (open scheme srfi-9))
+  (files constance))
+
 (define-structure let-opt-expanders let-opt-expanders-interface
   (open scheme (subset signals (error warn)) srfi-8)
   (files let-opt-expanders))
@@ -500,6 +508,7 @@
                           char-ready?
                           read-char))
         (subset scsh-syscall-support (byte-vector->string))
+        (subset load-dynamic-externals (import-dynamic-externals))
 	ascii
 	signals
 	bitwise

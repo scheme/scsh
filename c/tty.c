@@ -456,20 +456,20 @@ static const char* allocate_slave_name(int master_fd, const char* clone) {
     return NULL;
 }
 
-void scsh_init_tty() {
-    S48_EXPORT_FUNCTION(scheme_tcgetattr);
-    S48_EXPORT_FUNCTION(scheme_tcsetattr);
-    S48_EXPORT_FUNCTION(sch_tcsendbreak);
-    S48_EXPORT_FUNCTION(sch_tcdrain);
-    S48_EXPORT_FUNCTION(sch_tcflush);
-    S48_EXPORT_FUNCTION(sch_tcflow);
-    S48_EXPORT_FUNCTION(sch_tcsetpgrp);
-    S48_EXPORT_FUNCTION(sch_tcgetpgrp);
-    S48_EXPORT_FUNCTION(open_ctty);
-    S48_EXPORT_FUNCTION(make_ctty);
-    S48_EXPORT_FUNCTION(pty2tty);
-    S48_EXPORT_FUNCTION(sch_isatty);
-    S48_EXPORT_FUNCTION(sch_ttyname);
-    S48_EXPORT_FUNCTION(scm_ctermid);
-    S48_EXPORT_FUNCTION(allocate_pty);
+void s48_on_load(void) {
+  S48_EXPORT_FUNCTION(scheme_tcgetattr);
+  S48_EXPORT_FUNCTION(scheme_tcsetattr);
+  S48_EXPORT_FUNCTION(sch_tcsendbreak);
+  S48_EXPORT_FUNCTION(sch_tcdrain);
+  S48_EXPORT_FUNCTION(sch_tcflush);
+  S48_EXPORT_FUNCTION(sch_tcflow);
+  S48_EXPORT_FUNCTION(sch_tcsetpgrp);
+  S48_EXPORT_FUNCTION(sch_tcgetpgrp);
+  S48_EXPORT_FUNCTION(open_ctty);
+  S48_EXPORT_FUNCTION(make_ctty);
+  S48_EXPORT_FUNCTION(pty2tty);
+  S48_EXPORT_FUNCTION(sch_isatty);
+  S48_EXPORT_FUNCTION(sch_ttyname);
+  S48_EXPORT_FUNCTION(scm_ctermid);
+  S48_EXPORT_FUNCTION(allocate_pty);
 }
