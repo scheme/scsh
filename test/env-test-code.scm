@@ -277,19 +277,3 @@
 (define	equal-to-current-env?
   (lambda (old-env-alist)
     (list-equal? old-env-alist (env->alist))))
-
-; tokenizes a string
-; example:
-; (string-tokenize "Tokenize this here" #\space) => ("Tokenize" "this" "here")
-
-(define (string-tokenize string character)
-  (let ((char-list (string->list string)))
-    (let loop ((liste char-list)
-               (word '())
-               (result '()))
-      (if (null? liste)
-          (append result (list (list->string word)))
-          (if (equal? (car liste) character)
-              (loop (cdr liste) '() (append result (list  (list->string word))))
-              (loop (cdr liste) (append word (list (car liste))) result))))))
-
