@@ -105,11 +105,6 @@
   (open scheme ascii bitwise constance)
   (files tty-consts))
 
-(define-structure scsh-continuations scsh-continuations-interface
-  (open scheme
-	escapes)
-  (files continuation))
-
 (define-structure scsh-errnos
   (export with-errno-handler*
           errno-error
@@ -397,17 +392,17 @@
 
 (define-structure scsh-process-objects scsh-process-objects-interface
   (open scheme
-	receiving
-	threads
-	locks
+        receiving
+        threads
+        locks
         placeholders
         ;; sigevents
-	bitwise
-	tables
+        bitwise
+        tables
         weak-tables
-	weak
+        weak
         waitcodes
-	let-opt
+        let-opt
         define-record-types
         (subset posix-processes (signal
                                  process-id-exit-status
@@ -416,15 +411,15 @@
                                  process-id-exit-status
                                  process-id-terminating-signal))
         (subset threads-internal (spawn-on-root))
-	(subset primitives (add-finalizer!))
-	(subset srfi-1 (delete filter))
-	(subset scsh-utilities (make-reinitializer
-				with-lock run-as-long-as))
-	low-interrupt
+        (subset primitives (add-finalizer!))
+        (subset srfi-1 (delete filter))
+        (subset scsh-utilities (make-reinitializer
+                                with-lock run-as-long-as))
+        low-interrupt
         (subset external-calls (import-lambda-definition-2))
         scsh-errnos
-	scsh-file-names
-	(subset signals (error)))
+        scsh-file-names
+        (subset signals (error)))
   (files procobj))
 
 (define-structure scsh-fdports scsh-fdports-interface
@@ -462,35 +457,35 @@
                              read-char
                              open-input-file
                              open-output-file))
-	(modify i/o (hide force-output
+        (modify i/o (hide force-output
                           newline
                           write-char
                           char-ready?
                           read-char))
-	receiving
-	let-opt
-	threads
+        escapes
+        receiving
+        let-opt
+        threads
         thread-fluids
         handle
-	(subset signals (error warn))
-	(subset srfi-13 (string-index))
-	(subset command-levels (session-started? set-batch-mode?!))
-	(subset scsh-utilities (mapv! stringify))
-	(subset scsh-environment (alist->env-list getenv environ-resource))
+        (subset signals (error warn))
+        (subset srfi-13 (string-index))
+        (subset command-levels (session-started? set-batch-mode?!))
+        (subset scsh-utilities (mapv! stringify))
+        (subset scsh-environment (alist->env-list getenv environ-resource))
         (subset external-calls (import-lambda-definition-2))
         (subset posix-processes (signal exec-with-alias))
         (subset interrupts (with-interrupts-inhibited))
-	scsh-continuations
-	scsh-resources
-	scsh-process-state
-	scsh-process-objects
-	scsh-file-names
-	scsh-newports
-	scsh-file
-	scsh-fdports
-	exit-hooks
-	scsh-signals)
-  (files process))
+        scsh-resources
+        scsh-process-state
+        scsh-process-objects
+        scsh-file-names
+        scsh-newports
+        scsh-file
+        scsh-fdports
+        exit-hooks
+        scsh-signals)
+  (files process continuation))
 
 (define-structure scsh-tty scsh-tty-interface
   (open (modify scheme (hide write
@@ -687,7 +682,6 @@
         (subset i/o (current-error-port))
         tty-flags
         scsh-internal-tty-flags
-        scsh-continuations
  	scsh-file-syscalls
  	scsh-resources
  	scsh-environment

@@ -25,9 +25,6 @@
                                      :values))
           (with-errno-handler :syntax)))
 
-(define-interface scsh-continuations-interface
-  (export call-terminally))
-
 (define-interface scsh-file-syscalls-interface
   (export %set-cloexec
 	  %open %close-fdes %dup %dup2 %pipe-fdes
