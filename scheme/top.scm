@@ -308,12 +308,14 @@
            (parse-scsh-args (cdr all-args))
     (with-handler
       (lambda (cond more)
-        (with-handler
-          (lambda (c m)
-            (scheme-exit-now 1))
-          (lambda ()
-            (display-condition cond (current-error-port))
-            (scsh-exit-now 1))))
+        (if (error? cond)
+            (with-handler
+             (lambda (c m)
+               (scheme-exit-now 1))
+             (lambda ()
+               (display-condition cond (current-error-port))
+               (scsh-exit-now 1)))
+            (more)))
      (lambda ()
        (with-scsh-initialized
          (lambda ()
