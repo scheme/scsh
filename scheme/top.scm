@@ -77,7 +77,7 @@
 ;;; -lp-clear   Clear library path list to ().
 ;;; -lp-default   Reset library path list to system default.
 ;;;
-;;;                             These two require a terminating -s or -sfd arg:
+;;;                             These two require a terminating -s arg:
 ;;;   -ds     Load terminating script into current package.
 ;;;   -dm     Load terminating script into config package.
 ;;;     -de                     Load terminating script into exec package.
@@ -87,7 +87,6 @@
 ;;;       Terminating switches:
 ;;;   -c <exp>    Eval <exp>, then exit.
 ;;;   -s <script>   Specify <script> to be loaded by a -ds, -dm, or -de.
-;;; -sfd <num>    Script is on file descriptor <num>.
 ;;;   --        Interactive scsh.
 
 
@@ -96,10 +95,10 @@
 ;;; - We first expand out any initial \ <filename> meta-arg.
 ;;; - A switch-list elt is either "-ds", "-dm", "-de", or a (switch . arg) pair
 ;;;   for a -o, -n, -m, -l, or -lm switch.
-;;; - Terminating switch is one of {s, c, #f} for -s or -sfd, -c,
+;;; - Terminating switch is one of {s, c, #f} for -s, -c,
 ;;;   and -- respectively.
 ;;; - Terminating arg is the <exp> arg to -c, the <script> arg to -s,
-;;;   the input port for -sfd, otw #f.
+;;;   otherwise #f.
 ;;; - top-entry is the <entry> arg to a -e; #f if none.
 ;;; - command-line args are what's left over after picking off the scsh
 ;;;   switches.
@@ -124,16 +123,6 @@
                      (bad-arg "-s switch requires argument")
                      (values (reverse switches) 's (car args)
                              top-entry (cdr args))))
-
-                ;; -sfd <num>
-                ((string=? arg "-sfd")
-                 (if (not (pair? args))
-                     (bad-arg "-sfd switch requires argument")
-                     (let* ((fd (string->number (car args)))
-                            (p (fdes->inport fd)))
-                       (release-port-handle p)  ; Unreveal the port.
-                       (values (reverse switches) 'sfd p
-                               top-entry (cdr args)))))
 
                 ((string=? arg "--")
                  (if need-script?
@@ -333,9 +322,7 @@
            (set-command-line-args!
             (cons (if (eq? term-switch 's)
                       term-val  ; Script file.
-                      (if (eq? term-val 'sfd)
-                          "file-descriptor-script" ; -sfd <num>
-                          (car all-args))) ;we don't get arg0..
+                      (car all-args)) ;we don't get arg0..
                   args))
 
            (receive (interaction-env script-loaded?)
@@ -343,9 +330,7 @@
              (if (not script-loaded?) ; There wasn't a -ds, -dm, or -de,
                  (if (eq? term-switch 's) ; but there is a script,
                      (load-quietly term-val; so load it now.
-                                   interaction-env)
-                     (if (eq? term-switch 'sfd)
-                         (load-port-quietly term-val interaction-env))))
+                                   interaction-env)))
 
              (cond ((not term-switch) ; -- interactive
                     (scsh-exit-now       ;; TODO: ,exit will bypass this
@@ -426,7 +411,6 @@ switch: -e <entry-point>  Specify top-level entry point.
   -de     Do script exec.
 
 end-option: -s <script> Specify script.
-    -sfd <num>  Script is on file descriptor <num>.
     -c <exp>  Evaluate expression.
     --    Interactive session.
 " (current-error-port)))
