@@ -337,20 +337,20 @@
              (cond ((not term-switch) ; -- interactive
                     (scsh-exit-now       ;; TODO: ,exit will bypass this
                      (with-interaction-environment commands-env
-                                                   (lambda ()
-                                                     (restart-command-processor
-                                                      args
-                                                      context
-                                                      (lambda ()
-                                                        (display (string-append
-                                                                  "Welcome to scsh "
-                                                                  scsh-version-string)
-                                                                 (current-output-port))
-                                                        (newline (current-output-port))
-                                                        (display "Type ,? for help."
-                                                                 (current-output-port))
-                                                        (newline (current-output-port)))
-                                                      values)))))
+                       (lambda ()
+                         (restart-command-processor
+                          args
+                          context
+                          (lambda ()
+                            (display (string-append
+                                      "Welcome to scsh "
+                                      scsh-version-string)
+                                     (current-output-port))
+                            (newline (current-output-port))
+                            (display "Type ,? for help."
+                                     (current-output-port))
+                            (newline (current-output-port)))
+                          values)))))
 
                    ((eq? term-switch 'c)
                     (let ((result (eval (read-exactly-one-sexp-from-string term-val)
