@@ -782,6 +782,7 @@
                              open-output-file))
         (modify command-processor (hide y-or-n?))
         command-levels          ; with-new-session
+        (subset exceptions (assertion-violation))
         conditions
         display-conditions
         ensures-loaded
