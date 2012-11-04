@@ -39,9 +39,6 @@
       (error "not a string in load-quietly" filename))
   (silently (lambda () (load-into filename p))))
 
-(define (load-port-quietly port p)
-  (silently (lambda () (load-port port p))))
-
 (define (really-ensure-loaded noise . structs)
   (silently (lambda ()
               (apply ensure-loaded structs))))
