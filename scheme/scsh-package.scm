@@ -475,7 +475,9 @@
         (subset scsh-environment (alist->env-list getenv environ-resource))
         (subset external-calls (import-lambda-definition-2))
         (subset posix-processes (signal exec-with-alias))
+        (subset posix-time (current-time time-seconds))
         (subset interrupts (with-interrupts-inhibited))
+        (subset display-conditions (display-condition))
         scsh-resources
         scsh-process-state
         scsh-process-objects
@@ -784,7 +786,7 @@
         command-levels          ; with-new-session
         (subset exceptions (assertion-violation))
         conditions
-        display-conditions
+        (subset display-conditions (display-condition))
         ensures-loaded
         environments
         (subset compiler-envs (comp-env-macro-eval))

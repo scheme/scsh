@@ -290,14 +290,9 @@
 
 ;;; Miscellaneous
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; usleep(3): Try to sleep for USECS microseconds.
 ;;; sleep(3):  Try to sleep for SECS seconds.
 
-; De-released -- not POSIX and not on SGI systems.
-; (define-foreign usleep (usleep (integer usecs)) integer)
-
-(define (process-sleep secs) (process-sleep-until (+ secs (time))))
+(define (process-sleep secs) (process-sleep-until (+ secs (time-seconds (current-time)))))
 
 (define (process-sleep-until when)
   (let* ((when (floor when))    ; Painful to do real->int in Scheme.
