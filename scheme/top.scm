@@ -333,7 +333,7 @@
 
              (cond ((not term-switch) ; -- interactive
                     (scsh-exit-now       ;; TODO: ,exit will bypass this
-                     (with-interaction-environment commands-env
+                     (with-interaction-environment interaction-env
                        (lambda ()
                          (restart-command-processor
                           args
