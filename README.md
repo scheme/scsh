@@ -32,7 +32,7 @@ system, the source distribution and installation instructions are available here
 
 Two different versions of scheme48 can't be installed to the same prefix without file conflicts. To
 avoid this problem, either install the development version to a different prefix than the latest
-released version, or uninstall that version right before you execute the `make install` step bellow.
+released version, or uninstall that version right before you execute the `make install` step below.
 If you choose the former method, make sure the chosen prefix's bin directory comes before the latest
 released version's prefix's bin directory in your PATH variable. This way, the command `scheme48`
 will be resolved to the development version.
