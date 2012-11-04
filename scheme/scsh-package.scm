@@ -786,6 +786,7 @@
         display-conditions
         ensures-loaded
         environments
+        (subset compiler-envs (comp-env-macro-eval))
         (subset signals (error warn))
         evaluation
         extended-ports

@@ -8,13 +8,14 @@
 (define (make-scsh-starter)
   (let ((context (user-context))
         (commands-env (environment-for-commands))
-        (int-env (interaction-environment)))
+        (int-env (interaction-environment))
+        (config-env (config-package)))
     (for-each (lambda (env)
                 (set-reader! env scsh-read)
                 (set-package-reader! env scsh-read))
               (list commands-env int-env))
     (lambda (args)
-      (parse-switches-and-execute args context commands-env int-env))))
+      (parse-switches-and-execute args context commands-env int-env config-env))))
 
 
 ;;; Had to define these as the ones in s48's build.scm do not properly
