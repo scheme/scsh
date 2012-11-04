@@ -37,10 +37,10 @@
 
 (define-structure scsh-resources scsh-resources-interface
   (open scheme
-	define-record-types
-	handle
-	locks
-	(subset scsh-utilities (obtain-all-or-none)))
+        define-record-types
+        handle
+        locks
+        (subset scsh-utilities (obtain-all-or-none)))
   (files resource))
 
 (define-structure weak-tables weak-tables-interface
@@ -137,79 +137,79 @@
 
 (define-structure scsh-environment scsh-environment-interface
   (open scheme
-	locks thread-fluids
+        locks thread-fluids
         define-record-types
         (subset os-strings (string->os-byte-vector))
         (subset record-types (define-record-resumer))
-	(subset primitives (add-finalizer!))
-	records
-	(subset signals (error))
-	(subset srfi-1 (fold filter alist-delete))
-	(subset srfi-13 (string-index string-join))
-	(subset scsh-utilities
-		(with-lock make-reinitializer define-simple-syntax))
+        (subset primitives (add-finalizer!))
+        records
+        (subset signals (error))
+        (subset srfi-1 (fold filter alist-delete))
+        (subset srfi-13 (string-index string-join))
+        (subset scsh-utilities
+                (with-lock make-reinitializer define-simple-syntax))
         (subset external-calls (import-lambda-definition-2))
-	shared-bindings
-	scsh-resources)
+        shared-bindings
+        scsh-resources)
   (files environment))
 
 (define-structure scsh-file-names scsh-file-names-interface
   (open scheme
-	receiving
-	let-opt
-	signals
-	(subset srfi-1 (reverse!))
-	(subset srfi-13 (string-index string-index-right)))
+        receiving
+        let-opt
+        signals
+        (subset srfi-1 (reverse!))
+        (subset srfi-13 (string-index string-index-right)))
   (files fname))
 
 (define-structure scsh-directories scsh-directories-interface
   (open scheme
-	(subset primitives (add-finalizer!))
-	(subset srfi-1 (filter))
-	(subset srfi-13 (string<=))
-	(subset scsh-utilities (check-arg))
+        (subset primitives (add-finalizer!))
+        (subset srfi-1 (filter))
+        (subset srfi-13 (string<=))
+        (subset scsh-utilities (check-arg))
         (subset sort (sort-list!))
-	define-record-types records
-	let-opt
+        define-record-types records
+        let-opt
         (subset os-strings (os-string->string))
         (modify posix-files (rename (read-directory-stream
                                      s48-read-directory-stream))
-                            (expose open-directory-stream
-                                    close-directory-stream
-                                    read-directory-stream
-                                    list-directory))
-	scsh-file-names
-	scsh-resources
-	scsh-process-state)
+                (expose open-directory-stream
+                        close-directory-stream
+                        read-directory-stream
+                        list-directory))
+        scsh-file-names
+        scsh-resources
+        scsh-process-state)
   (files directory))
 
 (define-structure scsh-user/group-db scsh-user/group-db-interface
   (open scheme
         define-record-types
-	receiving
-	handle (subset signals (error))
+        receiving
+        handle (subset signals (error))
         posix-users
         os-strings
-	scsh-file-names
-	scsh-environment)
+        scsh-file-names
+        scsh-environment)
   (files user-group))
 
 (define-structure scsh-process-state scsh-process-state-interface
   (open scheme
-	receiving
-	let-opt
-	locks thread-fluids
+        receiving
+        let-opt
+        locks thread-fluids
         posix-process-data
         posix-files
         posix-users
         (subset posix-processes (process-id->integer))
         os-strings
-	(subset channels (set-with-fs-context-aligned*!))
-	(subset signals (error))
-	(subset scsh-utilities (with-lock make-reinitializer define-simple-syntax))
-	scsh-resources
-	scsh-file-names
-	scsh-user/group-db
+        (subset channels (set-with-fs-context-aligned*!))
+        (subset signals (error))
+        (subset scsh-utilities (with-lock make-reinitializer define-simple-syntax))
+        scsh-resources
+        scsh-file-names
+        scsh-user/group-db
         (subset external-calls (import-lambda-definition-2)))
   (files process-state))
 
@@ -220,29 +220,29 @@
                                (newline      s48-newline)
                                (write        s48-write)
                                (write-char   s48-write-char))
-                       (hide open-input-file
-                             open-output-file))
-	(subset tables (table-set!
+                (hide open-input-file
+                      open-output-file))
+        (subset tables (table-set!
                         table-ref
                         make-integer-table))
         (subset weak (make-weak-pointer
                       weak-pointer?
                       weak-pointer-ref))
-	(subset enumerated (enum))
-	(subset byte-vectors (byte-vector-length))
-	(subset placeholders (make-placeholder
+        (subset enumerated (enum))
+        (subset byte-vectors (byte-vector-length))
+        (subset placeholders (make-placeholder
                               placeholder-set!
                               placeholder-value))
-	receiving
-	let-opt
-	(modify i/o (hide force-output
+        receiving
+        let-opt
+        (modify i/o (hide force-output
                           char-ready?
                           read-char
                           newline
                           write-char)
-                    (rename (force-output s48-force-output)))
+                (rename (force-output s48-force-output)))
         (modify formats (rename (format s48-format))
-                        (expose format))
+                (expose format))
         i/o-internal
         channels
         channel-i/o
@@ -255,12 +255,12 @@
                            port->fd
                            dup))
         (modify posix-files (rename (open-file s48-open-file))
-                            (expose open-file
-                                    file-options
-                                    file-options-union
-                                    integer->file-mode))
-	(subset architecture (channel-status-option))
-	(subset interrupts (enable-interrupts!
+                (expose open-file
+                        file-options
+                        file-options-union
+                        integer->file-mode))
+        (subset architecture (channel-status-option))
+        (subset interrupts (enable-interrupts!
                             disable-interrupts!
                             with-interrupts-inhibited))
         (subset proposals (with-new-proposal
@@ -274,14 +274,14 @@
                                          search-tree-delete
                                          search-tree-ref))
         (subset condvars (make-condvar condvar-value))
-	extended-ports
-	scsh-utilities buffered-io-flags
-	signals
-	threads
-	(subset srfi-1 (any filter))
-	scsh-file-syscalls
-	scsh-resources
-	scsh-process-state
+        extended-ports
+        scsh-utilities buffered-io-flags
+        signals
+        threads
+        (subset srfi-1 (any filter))
+        scsh-file-syscalls
+        scsh-resources
+        scsh-process-state
         (subset external-calls (import-lambda-definition-2)))
   (files newports))
 
@@ -294,10 +294,10 @@
                              newline
                              open-input-file
                              open-output-file))
-	bitwise
+        bitwise
         define-record-types
-	let-opt
-	(modify i/o (hide force-output
+        let-opt
+        (modify i/o (hide force-output
                           newline
                           write-char
                           char-ready?
@@ -306,17 +306,17 @@
                                   file-type
                                   file-info?))
         (subset os-strings (os-string->string))
-	(subset scsh-utilities (define-simple-syntax deprecated-proc real->exact-integer))
-	(subset signals (error))
+        (subset scsh-utilities (define-simple-syntax deprecated-proc real->exact-integer))
+        (subset signals (error))
         scsh-errnos
-	scsh-file-syscalls
-	scsh-file-names
-	scsh-process-state
-	delimited-readers
-	scsh-newports)
+        scsh-file-syscalls
+        scsh-file-names
+        scsh-process-state
+        delimited-readers
+        scsh-newports)
   (files fileinfo
-	 file
-	 filesys))
+         file
+         filesys))
 
 (define-structure scsh-temp-files scsh-temp-files-interface
   (open (modify scheme (hide write
@@ -327,43 +327,43 @@
                              newline
                              open-input-file
                              open-output-file))
-	receiving
-	let-opt
-	bitwise
-	formats
-	fluids
-	(subset scsh-utilities (make-reinitializer))
-	(subset signals (error))
+        receiving
+        let-opt
+        bitwise
+        formats
+        fluids
+        (subset scsh-utilities (make-reinitializer))
+        (subset signals (error))
         (subset posix-files (integer->file-mode file-options))
-	scsh-environment
+        scsh-environment
         scsh-errnos
-	scsh-process-state
-	scsh-file
-	scsh-newports)
+        scsh-process-state
+        scsh-file
+        scsh-newports)
   (files temp-file))
 
 (define-structure scsh-globbing scsh-globbing-interface
   (open scheme
-	ascii
-	receiving
-	(subset srfi-1 (filter fold))
-	srfi-14
-	re-level-0
-	(subset signals (error))
+        ascii
+        receiving
+        (subset srfi-1 (filter fold))
+        srfi-14
+        re-level-0
+        (subset signals (error))
         scsh-errnos
-	scsh-file-names
-	scsh-file
-	scsh-directories)
+        scsh-file-names
+        scsh-file
+        scsh-directories)
   (files glob))
 
 (define-structure scsh-file-matching scsh-file-matching-interface
   (open scheme
-	re-level-0
-	signals handle conditions
-	(subset srfi-1 (filter))
-	(subset srfi-13 (string-index-right))
-	scsh-file-names
-	scsh-globbing)
+        re-level-0
+        signals handle conditions
+        (subset srfi-1 (filter))
+        (subset srfi-13 (string-index-right))
+        scsh-file-names
+        scsh-globbing)
   (files filemtch))
 
 (define-structure scsh-read/write scsh-read/write-interface
@@ -375,18 +375,18 @@
                              newline
                              open-input-file
                              open-output-file))
-	bitwise
-	(subset primitives (copy-bytes!))
-	let-opt
-	signals
-	scsh-newports
-	buffered-io-flags
+        bitwise
+        (subset primitives (copy-bytes!))
+        let-opt
+        signals
+        scsh-newports
+        buffered-io-flags
         (subset os-strings (string->os-byte-vector))
         (subset posix-i/o (i/o-flags))
         (subset posix-files (file-options file-options-on?))
-	(subset scsh-utilities (bogus-substring-spec?))
-	(subset i/o (read-block write-block))
-	(subset i/o-internal (open-input-port?)))
+        (subset scsh-utilities (bogus-substring-spec?))
+        (subset i/o (read-block write-block))
+        (subset i/o-internal (open-input-port?)))
   (files rw))
 
 (define-structure scsh-process-objects scsh-process-objects-interface
@@ -430,21 +430,21 @@
                              newline
                              open-input-file
                              open-output-file))
-	signals
-	bitwise
+        signals
+        bitwise
         (subset posix-files (file-options integer->file-mode))
         (subset posix-i/o (dup2))
-	(subset scsh-utilities (check-arg stringify))
-	scsh-file-syscalls
-	scsh-newports)
+        (subset scsh-utilities (check-arg stringify))
+        scsh-file-syscalls
+        scsh-newports)
   (files fdports))
 
 (define-structure scsh-signals scsh-signals-interface
   (open scheme
-	(subset signals (error))
+        (subset signals (error))
         (subset external-calls (import-lambda-definition-2))
         (subset posix-processes (signal-os-number signal))
-	scsh-process-objects)
+        scsh-process-objects)
   (files signal))
 
 (define-structure scsh-processes scsh-process-interface
@@ -505,18 +505,18 @@
                           read-char))
         (subset scsh-syscall-support (byte-vector->string))
         (subset load-dynamic-externals (import-dynamic-externals))
-	ascii
-	signals
-	bitwise
-	let-opt
+        ascii
+        signals
+        bitwise
+        let-opt
         define-record-types
-	tty-flags scsh-internal-tty-flags
+        tty-flags scsh-internal-tty-flags
         (subset posix-files (file-options file-options-on?))
         (subset external-calls (import-lambda-definition-2))
         (subset os-strings (string->os-string
                             os-string->byte-vector))
-	scsh-newports
-	scsh-process-objects)
+        scsh-newports
+        scsh-process-objects)
   (files tty))
 
 (define-structure scsh-stdio scsh-stdio-interface
@@ -528,10 +528,10 @@
                              newline
                              open-input-file
                              open-output-file))
-	(subset i/o (current-error-port))
-	(subset scsh-utilities (define-simple-syntax))
-	scsh-fdports
-	scsh-newports)
+        (subset i/o (current-error-port))
+        (subset scsh-utilities (define-simple-syntax))
+        scsh-fdports
+        scsh-newports)
   (files stdio))
 
 (define-structure scsh-ptys scsh-ptys-interface
@@ -543,25 +543,25 @@
                              newline
                              open-input-file
                              open-output-file))
-	receiving
-	scsh-processes
-	scsh-fdports
-	(subset signals (error))
+        receiving
+        scsh-processes
+        scsh-fdports
+        (subset signals (error))
         (subset external-calls (import-lambda-definition-2))
         (subset posix-files (file-options))
         (subset scsh-errnos (with-errno-handler))
         (subset scsh-syscall-support (byte-vector->string))
-	scsh-newports
-	scsh-stdio
-	scsh-tty
-	scsh-process-state)
+        scsh-newports
+        scsh-stdio
+        scsh-tty
+        scsh-process-state)
   (files pty))
 
 (define-structure scsh-system (compound-interface uname-interface
-						  (export system-name)) ; ####
+                                                  (export system-name))
   (open scheme
         define-record-types
-	shared-bindings
+        shared-bindings
         (subset scsh-syscall-support (byte-vector->string))
         (subset external-calls (import-lambda-definition-2))
         posix-platform-names)
@@ -569,14 +569,14 @@
 
 (define-structure scsh-file-names-system scsh-file-names-system-interface
   (open scheme
-	signals
-	let-opt
-	(subset srfi-1 (reverse!))
-	(subset srfi-13 (string-index))
-	scsh-file-names
-	scsh-environment
-	scsh-user/group-db
-	scsh-process-state)
+        signals
+        let-opt
+        (subset srfi-1 (reverse!))
+        (subset srfi-13 (string-index))
+        scsh-file-names
+        scsh-environment
+        scsh-user/group-db
+        scsh-process-state)
   (files fname-system))
 
 (define-structure scsh-collect-ports scsh-collect-ports-interface
@@ -600,24 +600,24 @@
                              newline
                              open-input-file
                              open-output-file))
-	signals
-	receiving
-	let-opt
-	(subset scsh-utilities (define-simple-syntax))
-	(subset srfi-1 (fold))
+        signals
+        receiving
+        let-opt
+        (subset scsh-utilities (define-simple-syntax))
+        (subset srfi-1 (fold))
         (subset posix-i/o (dup2 open-pipe))
-	scsh-temp-files
-	scsh-processes scsh-process-objects
-	scsh-stdio
-	scsh-newports
-	scsh-fdports
-	scsh-collect-ports)
+        scsh-temp-files
+        scsh-processes scsh-process-objects
+        scsh-stdio
+        scsh-newports
+        scsh-fdports
+        scsh-collect-ports)
   (files syntax
-	 process-high-level))
+         process-high-level))
 
 (define-structure scsh-command-line scsh-command-line-interface
   (open scheme
-	(subset signals (error)))
+        (subset signals (error)))
   (files command-line))
 
 ;;; The scsh-level-0 package is for implementation convenience.
@@ -632,11 +632,11 @@
     (compound-interface scsh-delimited-readers-interface
                         scsh-io-interface
                         scsh-file-interface
-			scsh-read/write-interface
-			scsh-globbing-interface
-			scsh-file-matching-interface
-			scsh-temp-files-interface
-			scsh-directories-interface
+                        scsh-read/write-interface
+                        scsh-globbing-interface
+                        scsh-file-matching-interface
+                        scsh-temp-files-interface
+                        scsh-directories-interface
                         scsh-process-state-interface
                         scsh-process-objects-interface
                         scsh-process-interface
@@ -660,7 +660,7 @@
                         uname-interface))
    (scsh-level-0-internals (export set-command-line-args!
                                    init-home-directory
-				   init-exec-path-list)))
+                                   init-exec-path-list)))
   (for-syntax (open scsh-syntax-helpers scheme))
   (open (modify scheme (hide write
                              display
@@ -676,51 +676,48 @@
         receiving
         bitwise
         delimited-readers
-        buffered-io-flags		; stdio dependent
+        buffered-io-flags   ; stdio dependent
         ascii
         srfi-14
         scsh-version
         (subset i/o (current-error-port))
         tty-flags
         scsh-internal-tty-flags
- 	scsh-file-syscalls
- 	scsh-resources
- 	scsh-environment
- 	scsh-file-names
- 	scsh-directories
- 	scsh-user/group-db
- 	scsh-process-state
- 	scsh-newports
- 	scsh-file
- 	scsh-read/write
- 	scsh-temp-files
- 	scsh-globbing
- 	scsh-file-matching
- 	scsh-process-objects
- 	scsh-processes
- 	scsh-fdports
- 	scsh-signals
- 	scsh-tty
- 	scsh-stdio
- 	scsh-ptys
- 	scsh-system
- 	scsh-file-names-system
- 	scsh-high-level-processes
- 	scsh-collect-ports
- 	scsh-command-line)
+        scsh-file-syscalls
+        scsh-resources
+        scsh-environment
+        scsh-file-names
+        scsh-directories
+        scsh-user/group-db
+        scsh-process-state
+        scsh-newports
+        scsh-file
+        scsh-read/write
+        scsh-temp-files
+        scsh-globbing
+        scsh-file-matching
+        scsh-process-objects
+        scsh-processes
+        scsh-fdports
+        scsh-signals
+        scsh-tty
+        scsh-stdio
+        scsh-ptys
+        scsh-system
+        scsh-file-names-system
+        scsh-high-level-processes
+        scsh-collect-ports
+        scsh-command-line)
   (begin
     ;; work around for SRFI 14 naming fuckage
     (define ->char-set x->char-set)))
-
 
 (define-structure defenum-package (export (define-enum-constant  :syntax)
                                           (define-enum-constants :syntax)
                                           (define-enum-constants-from-zero
                                             :syntax))
   (open scheme)
-  (files enumconst)
-;  (optimize auto-integrate)
-  )
+  (files enumconst))
 
 ;;; This code opens so many modules of gruesome, low-level S48 internals
 ;;; that these two modules are segregated into separate packages, each
@@ -745,8 +742,8 @@
         fluids-internal            ; JMG: get-dynamic-env
         threads
         command-processor
-	(subset threads-internal (wait-for-event))
-	queues scheduler
+        (subset threads-internal (wait-for-event))
+        queues scheduler
         scsh-utilities
         interrupts
         low-interrupt
@@ -811,8 +808,7 @@
         packages
         receiving
         scsh-version
-        scsh-level-0            ; with-current-input-port error-output-port
-                                ; with-current-output-port exit
+        scsh-level-0            ; with-current-input-port error-output-port with-current-output-port exit
         scsh-level-0-internals  ; set-command-line-args! init-scsh-vars
         threads
         lib-dirs
@@ -838,7 +834,6 @@
       (call-exit-hooks!)
       (thunk))))
 
-
 (define-structure field-reader-package scsh-field-reader-interface
   (open receiving             ; receive
         scsh-utilities          ; deprecated-proc
@@ -857,9 +852,7 @@
   (files fr)
   ;; Handle a little bit of backwards compatibility.
   (begin (define join-strings (deprecated-proc string-join 'join-strings
-                                               "Use SRFI-13 STRING-JOIN.")))
-  )
-
+                                               "Use SRFI-13 STRING-JOIN."))))
 
 (define-structures
   ((awk-expander-package (export expand-awk expand-awk/obsolete))
@@ -872,10 +865,7 @@
         sre-syntax-tools
         scheme
         )
-  (files awk)
-;  (optimize auto-integrate)
-)
-
+  (files awk))
 
 (define-structure awk-package awk-interface
   (open awk-support-package     ; These packages provide all the stuff
@@ -960,11 +950,10 @@
 
 (define-structure simple-syntax (export define-simple-syntax)
   (open scheme)
- (begin (define-syntax define-simple-syntax
-          (syntax-rules ()
-                        ((define-simple-syntax (name . pattern) result)
-                         (define-syntax name (syntax-rules () ((name . pattern) result))))))))
-
+  (begin (define-syntax define-simple-syntax
+           (syntax-rules ()
+             ((define-simple-syntax (name . pattern) result)
+              (define-syntax name (syntax-rules () ((name . pattern) result))))))))
 
 (define-structure low-interrupt low-interrupt-interface
   (open scheme
@@ -979,9 +968,9 @@
           wait/thread
           wait/process)
   (open scheme
-	(subset scsh-level-0     (fork wait))
-	(subset threads-internal (wait-for-event))
-	(subset thread-fluids    (fork-thread)))
+        (subset scsh-level-0     (fork wait))
+        (subset threads-internal (wait-for-event))
+        (subset thread-fluids    (fork-thread)))
   (files threads))
 
 ;; (define-structure dot-locking dot-locking-interface
@@ -1017,12 +1006,6 @@
         (subset signals (error warn))
         external-calls)
   (files md5))
-
-;; (define-structure configure configure-interface
-;;   (open scheme
-;;         re-level-0 rx-syntax
-;;         (subset srfi-13 (string-join)))
-;;   (files configure))
 
 (define-structures ((lib-dirs lib-dirs-interface)
                     (lib-dirs-internal lib-dirs-internal-interface))
