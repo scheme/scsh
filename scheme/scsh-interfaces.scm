@@ -56,7 +56,6 @@
 	  make-output-fdport
 	  open-fdes
 	  close
-	  select
 	  seek/set
 	  open-file
 	  pipe
@@ -76,17 +75,15 @@
 	  close
 	  release-port-handle
 	  flush-all-ports-no-threads
-	  select!
 	  with-error-output-port*
 	  release-port-handle
 	  seek/end
 	  port-revealed
-	  select-port-channels
 	  with-error-output-port
 	  seek/delta
 	  tell
 	  seek
-	  port->fdes select-ports
+	  port->fdes
 	  char-ready?
 	  read-char
 	  display write newline write-char
@@ -205,9 +202,6 @@
                               read-string!
                               read-string/partial
                               read-string!/partial
-
-                              select select!
-                              select-ports select-port-channels
 
                               (write-string (proc (:string &opt :value :exact-integer :exact-integer) :unspecific))
                               write-string/partial)))

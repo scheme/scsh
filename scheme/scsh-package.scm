@@ -260,7 +260,6 @@
                                     file-options-union
                                     integer->file-mode))
 	(subset architecture (channel-status-option))
-	(subset primitives (add-pending-channel copy-bytes!))
 	(subset interrupts (enable-interrupts!
                             disable-interrupts!
                             with-interrupts-inhibited))
