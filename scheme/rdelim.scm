@@ -165,8 +165,8 @@
              (values #f (- i start)))
             ((< lp-port-index the-port-limit)
              (let ((the-read-char
-                    (ascii->char (byte-vector-ref
-                                  (port-buffer port) lp-port-index))))
+                    (scalar-value->char (byte-vector-ref
+                                         (port-buffer port) lp-port-index))))
                (if (char-set-contains? delims the-read-char)
                    (begin
                      (if gobble?
@@ -201,7 +201,7 @@
 
 ; overwrites port-index :-(
 (define (push-back port char)
-  (byte-vector-set! (port-buffer port) (port-index port) (char->ascii char))
+  (byte-vector-set! (port-buffer port) (port-index port) (char->scalar-value char))
   (set-port-limit! port (+ (port-limit port) 1)))
 
 
@@ -224,8 +224,8 @@
              (values #f i))
             ((< lp-port-index the-port-limit)
              (let ((the-read-char
-                    (ascii->char (byte-vector-ref
-                                  (port-buffer port) lp-port-index))))
+                    (scalar-value->char (byte-vector-ref
+                                         (port-buffer port) lp-port-index))))
                (cond ((char-set-contains? cset the-read-char)
                       (lp (+ lp-port-index 1) (+ i 1)))
                      (else

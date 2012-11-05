@@ -72,7 +72,7 @@
         receiving
         re-level-0 rx-syntax
         (subset srfi-14 (char-set x->char-set char-set-contains?))
-        ascii
+        (subset unicode (scalar-value->char char->scalar-value))
         i/o-internal ports)
   (files rdelim))
 
