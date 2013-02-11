@@ -20,30 +20,12 @@ Getting Started
 Dependencies
 ------------
 In order to run scsh, you'll need to be running on a POSIX complient operating system, the gnu build
-system, and (until its next release) the latest development revision of scheme48 at
-<http://s48.org/cgi-bin/hgwebdir.cgi/s48>.
+system, and scheme48 1.9
 
-Installing scheme48-dev
+Installing scheme48 1.9
 -----------------------
-In order to build the development version of scheme48, you'll need to have an installed version of
-the latest released version. If it's not available in your operating system's package managing
-system, the source distribution and installation instructions are available here
-<http://s48.org/1.8/download.html>.
-
-Two different versions of scheme48 can't be installed to the same prefix without file conflicts. To
-avoid this problem, either install the development version to a different prefix than the latest
-released version, or uninstall that version right before you execute the `make install` step below.
-If you choose the former method, make sure the chosen prefix's bin directory comes before the latest
-released version's prefix's bin directory in your PATH variable. This way, the command `scheme48`
-will be resolved to the development version.
-
-In a fresh clone of the scheme48 development repository
-(`hg clone http://www.s48.org/cgi-bin/hgwebdir.cgi/s48`) run the following commands
-
-    $ ./autogen.sh
-    $ ./configure
-    $ make
-    $ make install
+If scheme48 1.9 is not available in a package manager for your operating system, follow the
+instructions for installing from the source distribution here <http://s48.org/1.9/download.html>.
 
 Building scsh
 -------------
