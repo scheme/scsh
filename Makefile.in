@@ -31,8 +31,9 @@ LIB = $(libdir)/scsh-$(VERSION)
 SHARE = $(datadir)/scsh-$(VERSION)
 lib_dirs_list = ("${prefix}/lib/scsh/modules" "${prefix}/lib/scsh/modules/${VERSION}")
 
-SCHEME48VM = /usr/local/lib/scheme48-1.9t/scheme48vm
-SCHEME48 = /usr/local/bin/scheme48
+SCHEME48VERSION =  1.9
+SCHEME48VM = @libdir@/scheme48-${SCHEME48VERSION}/scheme48vm
+SCHEME48 = @bindir@/scheme48
 
 COMPILED_LIBS = c/syscalls.so \
 	c/tty.so \
