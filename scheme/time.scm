@@ -15,7 +15,7 @@
 ;;; number of seconds elapsed since "epoch" -- January 1, 1970 UTC.
 
 ;;; A DATE is a *local* name for an instant in time -- which instant
-;;; it names depends on your time zone (February 23, 1994 4:37 pm happens 
+;;; it names depends on your time zone (February 23, 1994 4:37 pm happens
 ;;; at different moments in Boston and Hong Kong).
 
 ;;; DATE definition
@@ -46,9 +46,9 @@
 
 ;;; Not exported to interface.
 (define (time-zone? x)
-  (or (integer? x)	; Seconds offset from UTC.
-      (string? x)	; Time zone name, e.g. "EDT"
-      (not x)))		; Local time
+  (or (integer? x)  ; Seconds offset from UTC.
+      (string? x) ; Time zone name, e.g. "EDT"
+      (not x)))   ; Local time
 
 ;;; Time
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -69,8 +69,8 @@
 
 (import-lambda-definition-2 %date->time
                             (sec min hour month-day month year
-                                 tz-name	; #f or string
-                                 tz-secs	; #f or int
+                                 tz-name  ; #f or string
+                                 tz-secs  ; #f or int
                                  summer?) "date2time")
 
 (define (time . args) ; optional arg [date]
@@ -91,21 +91,21 @@
                   (error "Error converting date to time." args)
                   (cdr err?.time))))
           (error "Too many arguments to TIME procedure" args))
-      (%time)))	; Fast path for (time).
+      (%time))) ; Fast path for (time).
 
 
 ;;; Date
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (import-lambda-definition-2 %time->date (time zone) "time2date")
 
-(define (date . args)	; Optional args [time zone]
+(define (date . args) ; Optional args [time zone]
   (let ((time (if (pair? args)
                   (real->exact-integer (check-arg real? (car args) date))
                   (time)))
         (zone (check-arg time-zone?
                          (and (pair? args) (:optional (cdr args) #f))
                          date)))
-    (apply 
+    (apply
      (lambda (seconds minute hour month-day month
                       year tz-name tz-secs summer? week-day year-day)
        (really-make-date seconds minute hour month-day month
@@ -118,7 +118,7 @@
 ;;; Formatting date strings
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define (date->string date)	; Sun Sep 16 01:03:52 1973
+(define (date->string date) ; Sun Sep 16 01:03:52 1973
   (format-date "~a ~b ~d ~H:~M:~S ~Y" date))
 
 (define (format-date fmt date)
@@ -140,8 +140,8 @@
     (cond ((not result) (error "~ without argument in format-date" fmt))
           (else result))))
 
-(import-lambda-definition-2 %format-date 
-                            (fmt seconds minute hour month-day month year tz-name summer? week-day 
+(import-lambda-definition-2 %format-date
+                            (fmt seconds minute hour month-day month year tz-name summer? week-day
                                  year-day)
                             "format_date")
 
@@ -152,24 +152,24 @@
 ;;;
                                         ;(define (utc-offset . args) ; Optional args [time tz]
                                         ;  (let ((tim (if (pair? args)
-                                        ;		 (real->exact-integer (check-arg real? (car args) utc-offset))
-                                        ;		 (time)))
-                                        ;	(tz (and (pair? args)
-                                        ;		 (check-arg time-zone? (:optional (cdr args) #f) utc-offset))))
+                                        ;    (real->exact-integer (check-arg real? (car args) utc-offset))
+                                        ;    (time)))
+                                        ; (tz (and (pair? args)
+                                        ;    (check-arg time-zone? (:optional (cdr args) #f) utc-offset))))
                                         ;    (if (integer? tz) tz
-                                        ;	(- (time (date tim tz) 0) tim))))
+                                        ; (- (time (date tim tz) 0) tim))))
 
 
-                                        ;(define (time-zone . args)	; Optional args [summer? tz]
+                                        ;(define (time-zone . args) ; Optional args [summer? tz]
                                         ;  (let ((tz (and (pair? args)
-                                        ;		 (check-arg time-zone? (:optional (cdr args) #f) time-zone))))
+                                        ;    (check-arg time-zone? (:optional (cdr args) #f) time-zone))))
                                         ;    (if (integer? tz)
-                                        ;	(deintegerize-time-zone tz)
-                                        ;	(let* ((summer? (if (pair? args) (car args) (time)))
-                                        ;	       (summer? (if (real? summer?) (real->exact-integer summer?) summer?)))
-                                        ;	  (receive (err zone) (%time-zone/errno summer? tz)
-                                        ;		   (if err (errno-error err time-zone summer? tz)
-                                        ;	    zone))))))
+                                        ; (deintegerize-time-zone tz)
+                                        ; (let* ((summer? (if (pair? args) (car args) (time)))
+                                        ;        (summer? (if (real? summer?) (real->exact-integer summer?) summer?)))
+                                        ;   (receive (err zone) (%time-zone/errno summer? tz)
+                                        ;      (if err (errno-error err time-zone summer? tz)
+                                        ;     zone))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -182,7 +182,7 @@
         (bitwise-ior (bitwise-not #xffffffff)
                      val))))
 
-;;; Render a number as a two-digit base ten numeral. 
+;;; Render a number as a two-digit base ten numeral.
 ;;; Pathetic. FORMAT should do this for me.
 (define (two-digits n)
   (let ((s (number->string n)))
@@ -215,17 +215,17 @@
   (if (zero? offset) name
       (receive (sign offset)
                (if (< offset 0)
-                   (values #\+ (- offset))	    ; Notice the flipped sign
-                   (values #\- offset))		    ; of SIGN.
-               (let* ((offset (modulo offset 86400))	; seconds/day
-                      (h (quotient offset 3600))	; seconds/hour
+                   (values #\+ (- offset))      ; Notice the flipped sign
+                   (values #\- offset))       ; of SIGN.
+               (let* ((offset (modulo offset 86400))  ; seconds/day
+                      (h (quotient offset 3600))  ; seconds/hour
                       (m (quotient (modulo offset 3600) 60))
                       (s (modulo offset 60)))
                  (if (zero? s)
                      (if (zero? m)
-                         (format #f "~a~a~d" name sign h)	; name+h
-                         (format #f "~a~a~a:~a"		; name+hh:mm
+                         (format #f "~a~a~d" name sign h) ; name+h
+                         (format #f "~a~a~a:~a"   ; name+hh:mm
                                  name sign (two-digits h) (two-digits m)))
-                     (format #f "~a~a~a:~a:~a"			; name+hh:mm:ss
+                     (format #f "~a~a~a:~a:~a"      ; name+hh:mm:ss
                              name sign
                              (two-digits h) (two-digits m) (two-digits s)))))))
