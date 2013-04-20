@@ -620,6 +620,13 @@
         (subset signals (error)))
   (files command-line))
 
+(define-structure scsh-time scsh-time-interface
+  (open scheme define-record-types let-opt bitwise receiving formats
+        (subset external-calls (import-lambda-definition-2))
+        (subset scsh-utilities (check-arg real->exact-integer))
+        (subset signals (error warn)))
+  (files time))
+
 ;;; The scsh-level-0 package is for implementation convenience.
 ;;; The scsh startup and top-level modules need access to scsh
 ;;; procedures, but they export procedures that are themselves
@@ -650,6 +657,7 @@
                         scsh-tty-interface ; new in 0.4
                         scsh-version-interface
                         scsh-file-names-system-interface
+                        scsh-time-interface
                         (interface-of srfi-14) ;; export this here for
                         (export ->char-set)    ;; this kludge
                         (export system-name) ; #### has nowhere else to go for now
@@ -707,7 +715,8 @@
         scsh-file-names-system
         scsh-high-level-processes
         scsh-collect-ports
-        scsh-command-line)
+        scsh-command-line
+        scsh-time)
   (begin
     ;; work around for SRFI 14 naming fuckage
     (define ->char-set x->char-set)))

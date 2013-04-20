@@ -38,6 +38,7 @@ SCHEME48 = @SCHEME48@
 COMPILED_LIBS = c/syscalls.so \
 	c/tty.so \
 	c/syscalls.so \
+	c/time.so \
 	c/tty-baud-rate-flags.so \
 	c/tty-control-chars-info.so \
 	c/tty-control-flags.so \
@@ -109,6 +110,7 @@ SCHEME = scheme/command-line.scm \
 	 scheme/user-group.scm \
 	 scheme/utilities.scm \
 	 scheme/weaktables.scm \
+	 scheme/time.scm \
 	 rx/packages.scm \
 	 rx/re-match-syntax.scm \
 	 rx/rx-lib.scm \

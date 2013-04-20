@@ -988,3 +988,39 @@ argv))
 
 (define-interface lib-dirs-internal-interface
   (export expand-lib-dir))
+
+(define-interface scsh-time-interface
+  (export make-date
+	  date?
+
+	  date:seconds
+	  date:minute	
+	  date:hour   	
+	  date:month-day	
+	  date:month   	
+	  date:year    	
+	  date:tz-name	
+	  date:tz-secs	
+	  date:summer?	
+	  date:week-day	
+	  date:year-day
+
+	  set-date:seconds
+	  set-date:minute	
+	  set-date:hour   	
+	  set-date:month-day	
+	  set-date:month   	
+	  set-date:year    	
+	  set-date:tz-name	
+	  set-date:tz-secs	
+	  set-date:summer?	
+	  set-date:week-day	
+	  set-date:year-day
+
+	  ;; time+ticks
+	  ;; ticks/sec
+	  ;; time
+	  ;; date
+	  ;; date->string
+	  ;; format-date
+    ))
