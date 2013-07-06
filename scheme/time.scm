@@ -23,6 +23,7 @@
 ;;; We hack this so the date maker can take take the last three slots
 ;;; as optional arguments.
 
+(import-dynamic-externals "=scshexternal/time")
 
 (define-record-type :date
   (really-make-date seconds minute hour month-day month year
@@ -112,7 +113,7 @@
                    year
                    (format-time-zone (or tz-name "UTC") tz-secs)
                    tz-secs summer? week-day year-day))
-     (%time->date time zone))))
+     (%time->date time (if (string? zone) (string->os-byte-vector zone) zone)))))
 
 
 ;;; Formatting date strings
@@ -124,16 +125,16 @@
 (define (format-date fmt date)
   (check-arg date? date format-date)
   (let ((result
-         (%format-date fmt
+         (%format-date (string->os-byte-vector fmt)
                        (date:seconds   date)
                        (date:minute    date)
                        (date:hour      date)
                        (date:month-day date)
                        (date:month     date)
                        (date:year      date)
-                       (if (string? (date:tz-name date))
-                           (date:tz-name date)
-                           (deintegerize-time-zone (date:tz-secs date)))
+                       (string->os-byte-vector (if (string? (date:tz-name date))
+                                                   (date:tz-name date)
+                                                   (deintegerize-time-zone (date:tz-secs date))))
                        (date:summer?   date)
                        (date:week-day  date)
                        (date:year-day  date))))
@@ -229,3 +230,10 @@
                      (format #f "~a~a~a:~a:~a"      ; name+hh:mm:ss
                              name sign
                              (two-digits h) (two-digits m) (two-digits s)))))))
+
+(define-direct-constance time-ticks-sec
+  initialize-time-ticks-sec
+  reinitialize-time-ticks-sec
+  ((%ticks/sec CLOCKS_PER_SEC)))
+
+(define (ticks/sec) %ticks/sec)

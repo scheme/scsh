@@ -37,8 +37,8 @@ SCHEME48 = @SCHEME48@
 
 COMPILED_LIBS = c/syscalls.so \
 	c/tty.so \
-	c/syscalls.so \
 	c/time.so \
+	c/time-ticks-sec.so \
 	c/tty-baud-rate-flags.so \
 	c/tty-control-chars-info.so \
 	c/tty-control-flags.so \

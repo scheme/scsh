@@ -133,5 +133,3 @@ s48_ref_t fcntl_write(s48_call_t call, s48_ref_t fd,
                       s48_ref_t command, s48_ref_t value);
 
 s48_ref_t sleep_until(s48_call_t call, s48_ref_t scm_when);
-
-extern void scsh_init_syscalls(void);

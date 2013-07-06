@@ -621,10 +621,12 @@
   (files command-line))
 
 (define-structure scsh-time scsh-time-interface
-  (open scheme define-record-types let-opt bitwise receiving formats
+  (open scheme define-record-types let-opt bitwise receiving formats constance
         (subset external-calls (import-lambda-definition-2))
+        (subset load-dynamic-externals (import-dynamic-externals))
         (subset scsh-utilities (check-arg real->exact-integer))
-        (subset signals (error warn)))
+        (subset signals (error warn))
+        (subset os-strings (string->os-byte-vector)))
   (files time))
 
 ;;; The scsh-level-0 package is for implementation convenience.
@@ -759,7 +761,8 @@
         ;; sigevents
         (modify primitives (hide wait
                                  write-char
-                                 read-char))
+                                 read-char
+                                 time))
         os-strings
         scsh-reader
         (subset packages-internal (set-package-reader!))

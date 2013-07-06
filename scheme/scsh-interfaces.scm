@@ -1017,10 +1017,9 @@ argv))
 	  set-date:week-day	
 	  set-date:year-day
 
-	  ;; time+ticks
-	  ;; ticks/sec
-	  ;; time
-	  ;; date
-	  ;; date->string
-	  ;; format-date
-    ))
+	  time+ticks
+	  ticks/sec
+	  time
+	  date
+	  date->string
+	  format-date))
