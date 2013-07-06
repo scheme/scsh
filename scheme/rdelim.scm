@@ -248,8 +248,6 @@
 ;;; (read-paragraph [port handle-delim])
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(define blank-line-regexp (rx bos (* white) #\newline eos))
-
 (define (read-paragraph . args)
   (let-optionals args ((port         (current-input-port))
                        (handle-delim 'trim))
@@ -259,14 +257,14 @@
         (cond ((eof-object? line)
                (if (eq? handle-delim 'split) (values line line) line))
 
-              ((regexp-search? blank-line-regexp line) (lp))
+              ((string-every char-set:whitespace line) (lp))
 
               ;; Then, read in non-blank lines.
               (else
                (let lp ((lines (list line)))
                  (let ((line (read-line port 'concat)))
                    (if (and (string? line)
-                            (not (regexp-search? blank-line-regexp line)))
+                            (not (string-every char-set:whitespace line)))
 
                        (lp (cons line lines))
 

@@ -70,8 +70,8 @@
         (subset signals (error warn))
         let-opt
         receiving
-        re-level-0 rx-syntax
-        (subset srfi-14 (char-set x->char-set char-set-contains?))
+        (subset srfi-13 (string-every))
+        (subset srfi-14 (char-set x->char-set char-set-contains? char-set:whitespace))
         (subset unicode (scalar-value->char char->scalar-value))
         i/o-internal ports)
   (files rdelim))
