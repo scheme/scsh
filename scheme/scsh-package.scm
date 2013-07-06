@@ -13,11 +13,11 @@
   (files constance))
 
 (define-structure let-opt-expanders let-opt-expanders-interface
-  (open scheme (subset signals (error warn)) srfi-8)
+  (open scheme (subset signals (error warn)) receiving)
   (files let-opt-expanders))
 
 (define-structure let-opt let-opt-interface
-  (open scheme (subset signals (error warn)) receiving)
+  (open scheme (subset signals (error)))
   (for-syntax (open scheme let-opt-expanders))
   (files let-opt))
 
