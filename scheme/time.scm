@@ -146,35 +146,6 @@
                                  year-day)
                             "format_date")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;; Obsoleted, since DATE records now include time zone info.
-;;; If you want the UTC offset, just do (date:tz-secs (date [time tz])).
-;;;
-                                        ;(define (utc-offset . args) ; Optional args [time tz]
-                                        ;  (let ((tim (if (pair? args)
-                                        ;    (real->exact-integer (check-arg real? (car args) utc-offset))
-                                        ;    (time)))
-                                        ; (tz (and (pair? args)
-                                        ;    (check-arg time-zone? (:optional (cdr args) #f) utc-offset))))
-                                        ;    (if (integer? tz) tz
-                                        ; (- (time (date tim tz) 0) tim))))
-
-
-                                        ;(define (time-zone . args) ; Optional args [summer? tz]
-                                        ;  (let ((tz (and (pair? args)
-                                        ;    (check-arg time-zone? (:optional (cdr args) #f) time-zone))))
-                                        ;    (if (integer? tz)
-                                        ; (deintegerize-time-zone tz)
-                                        ; (let* ((summer? (if (pair? args) (car args) (time)))
-                                        ;        (summer? (if (real? summer?) (real->exact-integer summer?) summer?)))
-                                        ;   (receive (err zone) (%time-zone/errno summer? tz)
-                                        ;      (if err (errno-error err time-zone summer? tz)
-                                        ;     zone))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 (define (compose-8/24 hi-8 lo-24)
   (let ((val (+ (arithmetic-shift hi-8 24) lo-24)))
     (if (zero? (bitwise-and hi-8 #x80)) val
