@@ -9,7 +9,7 @@ loads=$5
 
 $scheme48 -a batch <<EOF
 ,translate =scshexternal/ $lib
-,config ,load $srcdir/scheme/let-opt-config.scm $srcdir/scheme/scsh-read.scm
+,config ,load $srcdir/scheme/scsh-read.scm
 ,config ,open scsh-reader
 ,config ,set-reader scsh-read
 ,config ,load $loads

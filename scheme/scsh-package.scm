@@ -805,6 +805,7 @@
         interfaces
         ;; sigevents
         scsh-reader
+        scsh-here-string-hax
         low-interrupt wind
         fluids-internal            ; JMG: get-dynamic-env
         handle                     ; JMG: with-handler
@@ -925,10 +926,11 @@
         lib-dirs))
 
 (define-structure scsh-here-string-hax (export)
-  (open reading
+  (open scheme
+        scsh-reader
         receiving
-        scheme-with-scsh            ; Just need the delimited readers.
-        (subset features (make-immutable))
+        delimited-readers
+        (subset features (make-immutable!))
         (subset srfi-14 (char-set)))
   (files here))
 
