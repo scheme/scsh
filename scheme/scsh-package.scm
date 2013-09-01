@@ -102,7 +102,7 @@
 
 (define-structures ((tty-flags tty-flags-interface)
                     (scsh-internal-tty-flags scsh-internal-tty-flags-interface))
-  (open scheme ascii bitwise constance)
+  (open scheme ascii bitwise constance (subset srfi-1 (fold)))
   (files tty-consts))
 
 (define-structure scsh-errnos

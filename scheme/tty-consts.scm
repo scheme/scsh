@@ -107,10 +107,11 @@
    (ttyout/ff-delay1 FF1)))
 
 (define	ttyout/all-delay
-  (bitwise-ior (bitwise-ior (bitwise-ior ttyout/nl-delay ttyout/tab-delay)
-			    (bitwise-ior ttyout/cr-delay ttyout/vtab-delay))
-	       (bitwise-ior ttyout/bs-delay ttyout/ff-delay)))
-
+  (fold (lambda (flag total)
+          (if flag (bitwise-ior flag total) total)) 0
+        (list ttyout/nl-delay ttyout/tab-delay
+              ttyout/vtab-delay ttyout/cr-delay
+              ttyout/bs-delay ttyout/ff-delay)))
 
 ;;; Control flags - hacking the serial-line.
 (define-direct-constance tty-control-flags
