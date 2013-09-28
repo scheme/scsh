@@ -165,14 +165,17 @@
 ;;; ...or signals an error
 
 (define (file-not-exists? fd/port/fname . maybe-chase?)
-  (with-errno-handler
+  (with-resources-aligned
+   (list cwd-resource euid-resource egid-resource)
+   (lambda ()
+     (with-errno-handler
       ((err data)
        ((acces) 'search-denied)
        ((noent notdir) #t))
       (if maybe-chase?
           (get-file-info fd/port/fname)
           (get-file/link-info fd/port/fname))
-      #f))
+      #f))))
 
 (define (file-exists? fd/port/fname . maybe-chase?)
   (not (apply file-not-exists? fd/port/fname maybe-chase?)))

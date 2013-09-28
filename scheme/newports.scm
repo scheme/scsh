@@ -100,8 +100,12 @@
 ;;; ------------
 
 (define (open-file fname flags . maybe-mode)
-  (let ((port (s48-open-file fname flags
-                             (:optional maybe-mode (integer->file-mode #o666)))))
+  (let ((port
+         (with-resources-aligned
+          (list cwd-resource umask-resource euid-resource egid-resource)
+          (lambda ()
+            (s48-open-file fname flags
+                           (:optional maybe-mode (integer->file-mode #o666)))))))
     (set-fdport! (port->fd port) port 0)
     port))
 
@@ -381,6 +385,26 @@
 (define (tell fd/port)
   (let ((fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
     (%fd-seek fd 0 seek/delta)))
+
+(define (mumble-with-mumble-file open call)
+  (lambda (string proc)
+    (let ((port #f))
+      (dynamic-wind
+          (lambda () (set! port (open string)))
+          (lambda () (call proc port))
+          (lambda () (if port (close port)))))))
+
+(define call-with-input-file
+  (mumble-with-mumble-file open-input-file (lambda (proc port) (proc port))))
+
+(define call-with-output-file
+  (mumble-with-mumble-file open-output-file (lambda (proc port) (proc port))))
+
+(define with-input-from-file
+  (mumble-with-mumble-file open-input-file (lambda (thunk port) (call-with-current-input-port port thunk))))
+
+(define with-output-to-file
+  (mumble-with-mumble-file open-output-file (lambda (thunk port) (call-with-current-output-port port thunk))))
 
 (define (open-fdes path flags . maybe-mode) ; mode defaults to 0666
     (with-resources-aligned

@@ -220,7 +220,11 @@
                                (newline      s48-newline)
                                (write        s48-write)
                                (write-char   s48-write-char))
-                (hide open-input-file
+                (hide call-with-input-file
+                      call-with-output-file
+                      with-input-from-file
+                      with-output-to-file
+                      open-input-file
                       open-output-file))
         (subset tables (table-set!
                         table-ref
@@ -286,7 +290,11 @@
   (files newports))
 
 (define-structure scsh-file scsh-file-interface
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -319,7 +327,11 @@
          filesys))
 
 (define-structure scsh-temp-files scsh-temp-files-interface
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -367,7 +379,11 @@
   (files filemtch))
 
 (define-structure scsh-read/write scsh-read/write-interface
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -422,7 +438,11 @@
   (files procobj))
 
 (define-structure scsh-fdports scsh-fdports-interface
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -448,7 +468,11 @@
   (files signal))
 
 (define-structure scsh-processes scsh-process-interface
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              newline
                              write-char
@@ -489,7 +513,11 @@
   (files process continuation))
 
 (define-structure scsh-tty scsh-tty-interface
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -520,7 +548,11 @@
   (files tty))
 
 (define-structure scsh-stdio scsh-stdio-interface
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -535,7 +567,11 @@
   (files stdio))
 
 (define-structure scsh-ptys scsh-ptys-interface
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -592,7 +628,11 @@
 
 (define-structure scsh-high-level-processes scsh-high-level-process-interface
   (for-syntax (open scsh-syntax-helpers scheme))
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -672,7 +712,11 @@
                                    init-home-directory
                                    init-exec-path-list)))
   (for-syntax (open scsh-syntax-helpers scheme))
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -782,7 +826,11 @@
 
 (define-structure scsh-top-package (export parse-switches-and-execute
                                            with-scsh-initialized)
-  (open (modify scheme (hide write
+  (open (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -905,7 +953,11 @@
                       lib-dirs-interface)
   (open scsh-level-0
         scsh-level-0-internals
-        (modify scheme (hide write
+        (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
@@ -1024,7 +1076,11 @@
 (define-structures ((lib-dirs lib-dirs-interface)
                     (lib-dirs-internal lib-dirs-internal-interface))
   (open scsh-level-0
-        (modify scheme (hide write
+        (modify scheme (hide call-with-input-file
+                             call-with-output-file
+                             with-input-from-file
+                             with-output-to-file
+                             write
                              display
                              char-ready?
                              read-char
