@@ -195,9 +195,11 @@ s48_ref_t set_cloexec(s48_call_t call, s48_ref_t _fd, s48_ref_t _val)
   if( (flags & FD_CLOEXEC) == (FD_CLOEXEC & val) ) return s48_false_2(call);
 
   flags = (flags & ~FD_CLOEXEC) | (val & FD_CLOEXEC);
+
   if (fcntl(fd, F_SETFD, flags) == -1)
     s48_os_error_2(call, "set_cloexec", errno, 2, _fd, _val);
-  else return s48_false_2(call);
+
+  return s48_false_2(call);
 }
 
 /* Process times
@@ -436,11 +438,16 @@ s48_ref_t scsh_sync(s48_call_t call)
 s48_ref_t scsh_close(s48_call_t call, s48_ref_t sch_fdes)
 {
   int retval = close (s48_extract_long_2(call, sch_fdes));
-  if (retval == 0)
-    return s48_true_2(call);
-  else if (errno == EBADF)
-    return s48_false_2(call);
-  else s48_os_error_2(call, "scsh_close", errno, 1, sch_fdes);
+
+  if (retval != 0) {
+    if (errno == EBADF) {
+      return s48_false_2(call);
+    } else {
+      s48_os_error_2(call, "scsh_close", errno, 1, sch_fdes);
+    }
+  }
+
+  return s48_true_2(call);
 }
 
 s48_ref_t scsh_dup(s48_call_t call, s48_ref_t sch_fdes)
