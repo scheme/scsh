@@ -398,6 +398,7 @@ lose:
     if (oldenv) revert_env(oldenv); /* Clean up */
     Free(fmt2);
     s48_os_error_2(call, "format_date", err, 1, sch_fmt);
+    return NULL;
   }
 }
 
