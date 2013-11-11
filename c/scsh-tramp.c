@@ -1,9 +1,8 @@
 /*
 ** Shell-script trampoline.
 ** Copyright (c) 1994 by Olin Shivers.
-/*
 
-/* Unix #! shell scripts are not recursive. The interpreter you specify
+** Unix #! shell scripts are not recursive. The interpreter you specify
 ** on the #! line cannot itself be a shell script. This is a problem for
 ** the Scheme shell, since it is implemented as a heap image executed
 ** by the Scheme 48 vm. This means that users cannot write shell scripts
@@ -38,6 +37,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifndef VM
 #define VM "/usr/local/lib/scheme48/scheme48vm"
@@ -46,28 +46,28 @@
 #define IMAGE "/usr/local/lib/scsh/scsh.image"
 #endif
 
-main(int argc, char *argv[])
-{
-    char **ap, **aq, **newav;
+int main(int argc, char *argv[]) {
+  char **ap, **aq, **newav;
 
-    /* Insert "-i" IMAGE between argv[0] and argv[1]. */
+  /* Insert "-i" IMAGE between argv[0] and argv[1]. */
 
-    argc += 3;					/* We're adding 3 new elts. */
-    newav = (char **) malloc((argc+1) * sizeof(char*));	/* Alloc new argv. */
-    if( !newav ) {
-	perror(argv[0]);
-	exit(1);
-	}
+  argc += 3;          /* We're adding 3 new elts. */
+  newav = (char **) malloc((argc+1) * sizeof(char*)); /* Alloc new argv. */
 
-    newav[0] = argv[0];		/* Install new header args. */
-    newav[1] = "-I";
-    newav[2] = IMAGE;
-    newav[3] = argv[0];
-
-    for(ap=&argv[0], aq=&newav[3]; *ap;)	/* Copy over orignal argv */
-	*++aq = *++ap;				/*   & the terminating NULL. */
-
-    execv(VM, newav);				/* Do it. */
+  if( !newav ) {
     perror(argv[0]);
-    exit(-1);
+    exit(1);
+  }
+
+  newav[0] = argv[0];   /* Install new header args. */
+  newav[1] = "-I";
+  newav[2] = IMAGE;
+  newav[3] = argv[0];
+
+  for(ap=&argv[0], aq=&newav[3]; *ap;)  /* Copy over orignal argv */
+    *++aq = *++ap;        /*   & the terminating NULL. */
+
+  execv(VM, newav);       /* Do it. */
+  perror(argv[0]);
+  exit(-1);
 }
