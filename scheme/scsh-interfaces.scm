@@ -434,7 +434,6 @@ argv))
           getenv
           env->alist
           alist->env
-          alist->env-vec ; #### for %EXEC
           alist->env-list
           alist-update
           alist-compress

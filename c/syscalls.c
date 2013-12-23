@@ -52,7 +52,7 @@ s48_ref_t char_pp_2_string_list(s48_call_t call, char **vec) {
   s48_ref_t list = s48_null_2(call);
 
   while (ptr && *(ptr)){
-    list = s48_cons_2(call, s48_enter_string_latin_1_2(call, *ptr), list);
+    list = s48_cons_2(call, s48_enter_byte_vector_2(call, *ptr, strlen(*ptr)), list);
     ptr++;
   }
 
@@ -616,6 +616,7 @@ s48_ref_t scm_envvec(s48_call_t call){
     thread_env = make_envvec(call, environ);
     current_env = thread_env;
   }
+
   else thread_env = current_env;
 
   if (original_environ == 0)
@@ -625,41 +626,40 @@ s48_ref_t scm_envvec(s48_call_t call){
                     thread_env);
 }
 
-
-/* Load the (Scheme) strings in the (Scheme) vector VEC into environ.
-*/
-
-s48_ref_t create_env(s48_call_t call, s48_ref_t vec)
-{
+s48_ref_t create_env(s48_call_t call, s48_ref_t vec) {
   int i, envsize;
   char **newenv;
   s48_ref_t thread_env;
 
   envsize = s48_vector_length_2(call, vec);
-
   newenv = Malloc(char*, envsize+1);
   if( !newenv ) s48_out_of_memory_error_2(call);
 
-
   for( i=0; i<envsize; i++ ) {
-    char *s = s48_extract_byte_vector_2(call, s48_vector_ref_2(call, vec, i));
+    s48_ref_t byte_vector;
+    long byte_vector_length;
+    char *s;
+
+    byte_vector = s48_vector_ref_2(call, vec, i);
+    byte_vector_length = s48_byte_vector_length_2(call, byte_vector);
+    s = Malloc(char, byte_vector_length);
+    s48_copy_from_byte_vector_2(call, byte_vector, s);
+
     if (!s) {
       /* Return all the memory and bail out. */
       while(--i) Free(newenv[i]);
       Free(newenv);
       s48_out_of_memory_error_2(call);
     }
+
     newenv[i] = s;
   }
 
   newenv[envsize] = NULL;
-
   thread_env = make_envvec(call, newenv);
   environ = newenv;
   current_env = thread_env;
-
   return thread_env;
-
 }
 
 /*****************************************************************************/

@@ -139,6 +139,7 @@
   (open scheme
         locks thread-fluids
         define-record-types
+        (subset scsh-syscall-support (byte-vector->string))
         (subset os-strings (string->os-byte-vector))
         (subset record-types (define-record-resumer))
         (subset primitives (add-finalizer!))

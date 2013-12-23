@@ -13,7 +13,7 @@
   (map (lambda (var=val)
          (call-with-values (lambda () (split-env-string var=val))
                            cons))
-       env-list))
+       (map byte-vector->string env-list)))
 
 (define (alist->env-list alist)
   (map (lambda (var.val)
@@ -23,10 +23,6 @@
                            (if (string? val) val
                                (string-join val ":"))))))
        alist))
-
-(define (alist->env-vec alist)
-  (list->vector (alist->env-list alist)))
-
 
 ;;; ENV->ALIST
 
@@ -45,7 +41,7 @@
 
 ;;; assumes aligned env
 (define (envvec-alist->env alist)
-  (%create-env (alist->env-vec alist)))
+  (%create-env (list->vector (alist->env-list alist))))
 
 (import-lambda-definition-2 %align-env (envvec) "align_env")
 
