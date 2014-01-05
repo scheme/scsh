@@ -75,10 +75,13 @@
 
 ;;; Not exported.
 (define (shell-open path flags fdes)
-  (dup2 (open-file path flags (integer->file-mode #o666)) fdes))
+  (dup2 (open-file (stringify path) flags (integer->file-mode #o666)) fdes))
 
 (define create+trunc
   (file-options write-only create truncate))
 
 (define write+append+create
   (file-options write-only append create))
+
+(define read-only
+  (file-options read-only))

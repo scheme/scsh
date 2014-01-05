@@ -147,81 +147,79 @@
 
 (define (transcribe-extended-process-form epf rename compare)
   (let* ((pf (car epf))		; First form is the process form.
-	 (redirs (cdr epf)) 	; Others are redirection forms.
-	 (trans-redir (lambda (r) (transcribe-redirection r rename compare)))
-	 (redir-chunks (map trans-redir redirs))
-	 (pf-chunk (transcribe-process-form pf rename compare)))
+         (redirs (cdr epf)) 	; Others are redirection forms.
+         (trans-redir (lambda (r) (transcribe-redirection r rename compare)))
+         (redir-chunks (map trans-redir redirs))
+         (pf-chunk (transcribe-process-form pf rename compare)))
     (blockify `(,@redir-chunks ,pf-chunk) rename compare)))
-
 
 (define (transcribe-redirection redir rename compare)
   (let* ((backq (make-backquoter rename))
-	 (parse-spec (lambda (x default-fdes) ; Parse an ([fdes] arg) form.
-		       ;; X  must be a list of 1 or 2 elts.
-		       (check-arg (lambda (x) (and (list? x)
-						   (< 0 (length x) 3)))
-				  x transcribe-redirection)
-		       (let ((a (car x))
-			     (b (cdr x)))
-			 (if (null? b) (values default-fdes (backq a))
-			     (values (backq a) (backq (car b)))))))
-	 (oops (lambda () (error "unknown i/o redirection" redir)))
-	 (%open (rename 'shell-open))
-;	 (%dup-port (rename 'dup-port))
-	 (%dup->fdes (rename 'dup->fdes))
-;	 (%run/port (rename 'run/port))
-	 (%open-string-source (rename 'open-string-source))
-	 (%create+trunc (rename 'create+trunc))
-	 (%write+append+create (rename 'write+append+create))
-	 (%q (lambda (x) (list (rename 'quote) x)))
-	 (%close (rename 'close))
-	 (%move->fdes (rename 'move->fdes))
-	 (%set! (rename 'set!))
-	 (%<<-port-holder (rename '<<-port-holder))
-	 (%let (rename 'let))
-	 (%port (rename 'port))
-	 (%stdports->stdio (rename 'stdports->stdio)))
+         (parse-spec (lambda (x default-fdes) ; Parse an ([fdes] arg) form.
+                       ;; X  must be a list of 1 or 2 elts.
+                       (check-arg (lambda (x) (and (list? x)
+                                                   (< 0 (length x) 3)))
+                                  x transcribe-redirection)
+                       (let ((a (car x))
+                             (b (cdr x)))
+                         (if (null? b) (values default-fdes (backq a))
+                             (values (backq a) (backq (car b)))))))
+         (oops (lambda () (error "unknown i/o redirection" redir)))
+         (%open (rename 'shell-open))
+                                        ;	 (%dup-port (rename 'dup-port))
+         (%dup->fdes (rename 'dup->fdes))
+                                        ;	 (%run/port (rename 'run/port))
+         (%open-string-source (rename 'open-string-source))
+         (%create+trunc (rename 'create+trunc))
+         (%read-only (rename 'read-only))
+         (%write+append+create (rename 'write+append+create))
+         (%q (lambda (x) (list (rename 'quote) x)))
+         (%close (rename 'close))
+         (%move->fdes (rename 'move->fdes))
+         (%set! (rename 'set!))
+         (%<<-port-holder (rename '<<-port-holder))
+         (%let (rename 'let))
+         (%port (rename 'port))
+         (%stdports->stdio (rename 'stdports->stdio)))
     (cond ((pair? redir)
-	   (let ((args (cdr redir))
-		 (op (car redir)))
-	     (cond
-	      ((compare op (rename '<))
-	       (receive (fdes fname) (parse-spec args 0)
-		 `(,%open ,fname 0 ,fdes)))
+           (let ((args (cdr redir))
+                 (op (car redir)))
+             (cond
+              ((compare op (rename '<))
+               (receive (fdes fname) (parse-spec args 0)
+                        `(,%open ,fname ,%read-only ,fdes)))
 
-	      ((compare op (rename '>))
-	       (receive (fdes fname) (parse-spec args 1)
-		 `(,%open ,fname ,%create+trunc ,fdes)))
+              ((compare op (rename '>))
+               (receive (fdes fname) (parse-spec args 1)
+                        `(,%open ,fname ,%create+trunc ,fdes)))
 
 	       ;;; BUG BUG -- EPF is backquoted by parse-spec.
-;	       ((<<<) ; Just a RUN/PORT with a specific target fdes.
-;		(receive (fdes epf) (parse-spec args 0)
-;		  `(,%dup-port (,%run/port . ,epf) ,fdes))) ; Add a WITH-PORT.
+                                        ;	       ((<<<) ; Just a RUN/PORT with a specific target fdes.
+                                        ;		(receive (fdes epf) (parse-spec args 0)
+                                        ;		  `(,%dup-port (,%run/port . ,epf) ,fdes))) ; Add a WITH-PORT.
 
-	      ;; We save the port in the global variable <<-port-holder to prevent a
-	      ;; GC from closing the port before the exec().
-	      ((compare op (rename '<<))
-	       (receive (fdes exp) (parse-spec args 0)
-		 `(,%let ((,%port (,%open-string-source ,exp)))
-			 (,%set! ,%<<-port-holder ,%port)
-			 (,%move->fdes ,%port ,fdes))))
+              ;; We save the port in the global variable <<-port-holder to prevent a
+              ;; GC from closing the port before the exec().
+              ((compare op (rename '<<))
+               (receive (fdes exp) (parse-spec args 0)
+                        `(,%let ((,%port (,%open-string-source ,exp)))
+                                (,%set! ,%<<-port-holder ,%port)
+                                (,%move->fdes ,%port ,fdes))))
 
-	      ((compare op (rename '>>))
-	       (receive (fdes fname) (parse-spec args 1)
-		 `(,%open ,fname ,%write+append+create ,fdes)))
+              ((compare op (rename '>>))
+               (receive (fdes fname) (parse-spec args 1)
+                        `(,%open ,fname ,%write+append+create ,fdes)))
 
-	      ((compare op (rename '=))
-	       (assert (= 2 (length args))) ; Syntax check.
-	       `(,%dup->fdes ,(backq (cadr args)) ,(backq (car args))))
+              ((compare op (rename '=))
+               (assert (= 2 (length args))) ; Syntax check.
+               `(,%dup->fdes ,(backq (cadr args)) ,(backq (car args))))
 
-	      ((compare op (rename '-))	; (- fdes) => close the fdes.
-	       (assert (= 1 (length args))) ; Syntax check.
-	       `(,%close ,(backq (car args))))
+              ((compare op (rename '-))	; (- fdes) => close the fdes.
+               (assert (= 1 (length args))) ; Syntax check.
+               `(,%close ,(backq (car args))))
 
-	      (else (oops)))))
+              (else (oops)))))
 
-	  ((compare redir (rename 'stdports))
-	   `(,%stdports->stdio))
-	  (else (oops)))))
-
-;;; <<< should be {
+          ((compare redir (rename 'stdports))
+           `(,%stdports->stdio))
+          (else (oops)))))

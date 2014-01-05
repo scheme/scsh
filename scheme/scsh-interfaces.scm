@@ -346,7 +346,8 @@
           dup
           dup->fdes dup->inport dup->outport
           shell-open
-          create+trunc))
+          create+trunc
+          read-only))
 
 (define-interface scsh-process-state-interface
   (export with-resources-aligned
