@@ -947,10 +947,11 @@
 (define-structure scsh
   (compound-interface (interface-of scsh-level-0)
                       (interface-of scsh-startup-package)
+                      (export error warn)
                       re-exports-interface
                       scsh-field-reader-interface       ; new in 0.3
                       awk-interface
-                      char-predicates-interface; Urk -- Some of this is R5RS!
+                      char-predicates-interface
                       lib-dirs-interface)
   (open scsh-level-0
         scsh-level-0-internals
@@ -975,8 +976,9 @@
         scsh-startup-package
         awk-package
         field-reader-package
-        char-predicates-lib     ; Urk -- Some of this is R5RS!
-        lib-dirs))
+        char-predicates-lib
+        lib-dirs
+        (subset signals (error warn))))
 
 (define-structure scsh-here-string-hax (export)
   (open scheme
