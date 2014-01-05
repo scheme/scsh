@@ -667,7 +667,8 @@
         (subset load-dynamic-externals (import-dynamic-externals))
         (subset scsh-utilities (check-arg real->exact-integer))
         (subset signals (error warn))
-        (subset os-strings (string->os-byte-vector)))
+        (subset os-strings (string->os-byte-vector))
+        (subset scsh-syscall-support (byte-vector->string)))
   (files time))
 
 ;;; The scsh-level-0 package is for implementation convenience.

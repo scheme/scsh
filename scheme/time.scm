@@ -132,14 +132,14 @@
                        (date:month-day date)
                        (date:month     date)
                        (date:year      date)
-                       (string->os-byte-vector (if (string? (date:tz-name date))
-                                                   (date:tz-name date)
-                                                   (deintegerize-time-zone (date:tz-secs date))))
+                       (cond ((string? (date:tz-name date)) (string->os-byte-vector (date:tz-name date)))
+                             ((deintegerize-time-zone (date:tz-secs date)) => string->os-byte-vector)
+                             (else #f))
                        (date:summer?   date)
                        (date:week-day  date)
                        (date:year-day  date))))
     (cond ((not result) (error "~ without argument in format-date" fmt))
-          (else result))))
+          (else (byte-vector->string result)))))
 
 (import-lambda-definition-2 %format-date
                             (fmt seconds minute hour month-day month year tz-name summer? week-day

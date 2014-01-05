@@ -303,11 +303,7 @@ s48_ref_t format_date(s48_call_t call, s48_ref_t sch_fmt, s48_ref_t sch_sec, s48
   d.tm_wday = s48_extract_long_2(call, sch_week_day);
   d.tm_yday = s48_extract_long_2(call, sch_year_day);
   d.tm_isdst = (s48_eq_p_2(call, sch_summer, s48_false_2(call))) ? 0 : 1;
-
-#ifdef HAVE_STRUCT_TM_TM_ZONE
-  /* FreeBSD's strftime reads this */
   d.tm_zone = (s48_eq_p_2(call, sch_tz, s48_false_2(call))) ? NULL : s48_extract_byte_vector_2(call, sch_tz);
-#endif
 
   /* Copy fmt -> fmt2, converting ~ escape codes to % escape codes.
   ** Set zone=1 if fmt has a ~Z.
@@ -385,7 +381,7 @@ s48_ref_t format_date(s48_call_t call, s48_ref_t sch_fmt, s48_ref_t sch_sec, s48
 
   target[result_len-1] = '\0'; /* Flush the trailing "x". */
 #endif
-  sch_ans = s48_enter_string_latin_1_2(call, target);
+  sch_ans = s48_enter_byte_vector_2(call, target, result_len);
   Free(fmt2);
   Free(target);
   if (oldenv) revert_env(oldenv);
