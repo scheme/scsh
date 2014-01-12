@@ -54,7 +54,8 @@ enough: scsh scsh.image go
 test: enough
 	$(srcdir)/build/test.sh $(srcdir)
 
-c/%.so: c/%.c
+.SUFFIXES: .c .so
+.c.so:
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $< $(LIBS)
 
 SCHEME = scheme/command-line.scm \
