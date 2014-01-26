@@ -702,6 +702,7 @@
                         scsh-version-interface
                         scsh-file-names-system-interface
                         scsh-time-interface
+                        scsh-collect-ports-interface
                         (interface-of srfi-14) ;; export this here for
                         (export ->char-set)    ;; this kludge
                         (export system-name) ; #### has nowhere else to go for now
