@@ -33,7 +33,7 @@
 ;; 	  (else (error "Argument not fdport or file descriptor" fd/port)))))
 
 (define (move->fdes port target)
-  (dup2 port target))
+  (%dup2 (port->fdes port) target))
 
 (define (input-source? fd/port)
   (check-arg fd/port? fd/port input-source?)
@@ -72,10 +72,9 @@
   (let ((fd (apply dup->fdes fd/port maybe-target)))
     (port-maker fd (if (null? maybe-target) 0 1))))
 
-
 ;;; Not exported.
 (define (shell-open path flags fdes)
-  (dup2 (open-file (stringify path) flags (integer->file-mode #o666)) fdes))
+  (%dup2 (port->fdes (open-file (stringify path) flags (integer->file-mode #o666))) fdes))
 
 (define create+trunc
   (file-options write-only create truncate))

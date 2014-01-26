@@ -23,7 +23,7 @@
                               (close-input-port pty-in)
                               (become-session-leader)
                               (make-control-tty tty-port)
-                              (move->fdes   tty-port 0)
+                              (move->fdes tty-port 0)
                               (move->fdes tty-port 1)
                               (move->fdes tty-port 2)
                               (make-pty-a-tty! (current-input-port))
