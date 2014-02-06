@@ -19,7 +19,6 @@
 
 (define-interface scsh-errors-interface
   (export errno-error
-          error
           (with-errno-handler* (proc ((proc (:number :value) :values); handler
                                       (proc () :values))             ; thunk
                                      :values))

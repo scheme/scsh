@@ -703,6 +703,7 @@
                         scsh-file-names-system-interface
                         scsh-time-interface
                         scsh-collect-ports-interface
+                        scsh-errors-interface
                         (interface-of srfi-14) ;; export this here for
                         (export ->char-set)    ;; this kludge
                         (export system-name) ; #### has nowhere else to go for now
@@ -765,6 +766,7 @@
         scsh-high-level-processes
         scsh-collect-ports
         scsh-command-line
+        scsh-errnos
         scsh-time)
   (begin
     ;; work around for SRFI 14 naming fuckage
