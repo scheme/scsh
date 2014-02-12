@@ -162,7 +162,7 @@ install: enough dirs install-scsh-image install-scsh
 
 install-scsh: scsh
         #install runner
-	rm $(DESTDIR)$(bindir)/$(RUNNABLE)
+	rm -f $(DESTDIR)$(bindir)/$(RUNNABLE)
 	$(INSTALL_PROGRAM) scsh $(DESTDIR)$(bindir)/$(RUNNABLE)
 
 	for file in $(patsubst c/%,%,$(COMPILED_LIBS)) ; do \
