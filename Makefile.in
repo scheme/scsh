@@ -31,7 +31,7 @@ LIB = $(libdir)/scsh-$(VERSION)
 SHARE = $(datadir)/scsh-$(VERSION)
 lib_dirs_list = ("${prefix}/lib/scsh/modules" "${prefix}/lib/scsh/modules/${VERSION}")
 
-SCHEME48VERSION =  1.9
+SCHEME48VERSION =  1.9.1
 SCHEME48VM = @S48DIR@/lib/scheme48-${SCHEME48VERSION}/scheme48vm
 SCHEME48 = @SCHEME48@
 
