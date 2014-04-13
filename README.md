@@ -20,12 +20,12 @@ Getting Started
 Dependencies
 ------------
 In order to run scsh, you'll need to be running on a POSIX complient operating system, the gnu build
-system, and scheme48 1.9.1
+system, and scheme48 1.9.2
 
-Installing scheme48 1.9
------------------------
-If scheme48 1.9.1 is not available in a package manager for your operating system, follow the
-instructions for installing from the source distribution here <http://s48.org/1.9/download.html>.
+Installing scheme48 1.9.2
+-------------------------
+If scheme48 1.9.2 is not available in a package manager for your operating system, follow the
+instructions for installing from the source distribution here <http://www.s48.org/1.9.2/download.html>.
 
 Building scsh
 -------------
