@@ -165,17 +165,18 @@
 ;;; ...or signals an error
 
 (define (file-not-exists? fd/port/fname . maybe-chase?)
-  (with-resources-aligned
-   (list cwd-resource euid-resource egid-resource)
-   (lambda ()
-     (with-errno-handler
-      ((err data)
-       ((acces) 'search-denied)
-       ((noent notdir) #t))
-      (if maybe-chase?
-          (get-file-info fd/port/fname)
-          (get-file/link-info fd/port/fname))
-      #f))))
+  (let ((chase? (:optional maybe-chase? #t)))
+    (with-resources-aligned
+     (list cwd-resource euid-resource egid-resource)
+     (lambda ()
+       (with-errno-handler
+        ((err data)
+         ((acces) 'search-denied)
+         ((noent notdir) #t))
+        (if chase?
+            (get-file-info fd/port/fname)
+            (get-file/link-info fd/port/fname))
+        #f)))))
 
 (define (file-exists? fd/port/fname . maybe-chase?)
   (not (apply file-not-exists? fd/port/fname maybe-chase?)))
