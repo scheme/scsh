@@ -1,0 +1,10 @@
+#lang scribble/manual
+
+@title{Scsh: The Reference Manual}
+
+@table-of-contents[]
+
+@include-section["introduction.scribble"]
+@include-section["process-notation.scribble"]
+
+@index-section[]
