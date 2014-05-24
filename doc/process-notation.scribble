@@ -206,55 +206,55 @@ port bound to a pipe. Furthermore, each of these forms is a simple expansion int
 procedures. For example, @code{(run/port . epf)} expands into
 @code{(run/port* (lambda () (exec-epf . epf)))}.
 
-@deftogether[(@defform[(run/port epf)]
-              @defproc[(run/port* [thunk (-> any/c)]) port?])]{
+@deftogether[(@defform[#:link-target? #f (run/port epf)]
+              @defproc[#:link-target? #f (run/port* [thunk (-> any/c)]) port?])]{
 Returns a port open on process's stdout. Returns immediately after forking child process.
 }
 
-@deftogether[(@defform[(run/file epf)]
-              @defproc[(run/file* [thunk (-> any/c)]) string?])]{
+@deftogether[(@defform[#:link-target? #f (run/file epf)]
+              @defproc[#:link-target? #f (run/file* [thunk (-> any/c)]) string?])]{
 Returns the name of a temp file containing the process's output. Returns when the process exits.
 }
 
-@deftogether[(@defform[(run/string epf)]
-              @defproc[(run/string* [thunk (-> any/c)]) string?])]{
+@deftogether[(@defform[#:link-target? #f (run/string epf)]
+              @defproc[#:link-target? #f (run/string* [thunk (-> any/c)]) string?])]{
 Returns a string containing the process' output. Returns when an eof is read.
 }
 
-@deftogether[(@defform[(run/strings epf)]
-              @defproc[(run/strings* [thunk (-> any/c)]) (listof string?)])]{
+@deftogether[(@defform[#:link-target? #f (run/strings epf)]
+              @defproc[#:link-target? #f (run/strings* [thunk (-> any/c)]) (listof string?)])]{
 Splits process' output into a list of newline-delimited strings. The delimiting newlines are not
 part of the returned strings. Returns when an eof is read.
 }
 
-@deftogether[(@defform[(run/sexp epf)]
-              @defproc[(run/sexp* [thunk (-> any/c)]) any/c])]{
+@deftogether[(@defform[#:link-target? #f (run/sexp epf)]
+              @defproc[#:link-target? #f (run/sexp* [thunk (-> any/c)]) any/c])]{
 Returns a single object from process' stdout with @code{read}. Returns as soon as the read
 completes.
 }
 
-@deftogether[(@defform[(run/sexps epf)]
-              @defproc[(run/sexps* [thunk (-> any/c)]) (listof any/c)])]{
+@deftogether[(@defform[#:link-target? #f (run/sexps epf)]
+              @defproc[#:link-target? #f (run/sexps* [thunk (-> any/c)]) (listof any/c)])]{
 Repeatedly reads objects from process' stdout with @code{read}. Returns accumulated list upon eof.
 }
 
 @subsubsection{Parsing Input from Ports}
 The following procedures are also of utility for generally parsing input streams in scsh:
 
-@defproc[(port->string [port port?]) string?]{
+@defproc[#:link-target? #f (port->string [port port?]) string?]{
 Reads the port until eof, then returns the accumulated string.
 }
 
-@defproc[(port->sexp-list [port port?]) (listof any/c)]{
+@defproc[#:link-target? #f (port->sexp-list [port port?]) (listof any/c)]{
 Repeatedly reads data from the port until eof, then returns the accumulated list of items.
 }
 
-@defproc[(port->string-list [port port?]) (listof string?)]{
+@defproc[#:link-target? #f (port->string-list [port port?]) (listof string?)]{
 Repeatedly reads newline-terminated strings from the port until eof, then returns the accumulated
 list of strings. The delimiting newlines are not part of the returned strings.
 }
 
-@defproc[(port->list [reader (-> port? any/c)] [port port?]) (listof any/c)]{
+@defproc[#:link-target? #f (port->list [reader (-> port? any/c)] [port port?]) (listof any/c)]{
 Generalises @code{port->sexp-list} and @code{port->string-list}. Uses @code{reader} to repeatedly
 read objects from a port and accumulates these objects into a list, which is returned upon eof.
 @code{port->sexp-list} and @code{port->string-list} are trivial to define, being merely
@@ -272,9 +272,10 @@ The following compositions also hold:
 }
 
 
-@defproc[(port-fold [port port?]
-                    [reader (-> port? any/c)]
-                    [op (-> any/c any/c ...+ (values any/c ...+))] [seeds any/c] ...+) (values any/c ...+)]{
+@defproc[#:link-target? #f (port-fold [port port?]
+                                      [reader (-> port? any/c)]
+                                      [op (-> any/c any/c ...+ (values any/c ...+))]
+                                      [seeds any/c] ...+) (values any/c ...+)]{
 This procedure can be used to perform a variety of iterative operations over an input stream. It
 repeatedly uses @code{reader} to read an object from @code{port}. If the first read returns eof,
 then the entire @code{port-fold} operation returns the seeds as multiple values.
@@ -303,8 +304,8 @@ forms and procedures provide more complicated facilities for manipulating proces
 
 @subsection{Pids and Ports Together}
 
-@deftogether[(@defform[(run/port+proc epf)]
-              @defproc[(run/port+proc* [thunk (-> any/c)]) (values [port port?] [proc process?])])]{
+@deftogether[(@defform[#:link-target? #f (run/port+proc epf)]
+              @defproc[#:link-target? #f (run/port+proc* [thunk (-> any/c)]) (values [port port?] [proc process?])])]{
 This special form and its analogous procedure can be used if the programmer also wishes access to
 the process' pid, exit status, or other information. They both fork off a subprocess, returning two
 values: a port open on the process' stdout (and current output port), and the subprocess's process
@@ -330,9 +331,9 @@ For instance, he may wish to read the stdout and stderr streams into two distinc
 accomplished with the @code{run/collecting} form and its analogous procedure,
 @code{run/collecting*}.
 
-@deftogether[(@defform[(run/collecting fds ...+ epf)]
-              @defproc[(run/collecting* [fds (listof integer?)]
-                                        [thunk (-> any/c)])
+@deftogether[(@defform[#:link-target? #f (run/collecting fds ...+ epf)]
+              @defproc[#:link-target? #f (run/collecting* [fds (listof integer?)]
+                                                          [thunk (-> any/c)])
                        (values [status integer?] [port port?] ...+)])]
 These guys run processes that produce multiple output streams and return ports open on these
 streams. To avoid issues of deadlock, @code{run/collecting} doesn't use pipes. Instead, it first
@@ -419,12 +420,12 @@ See @code{temp-file-channel} for more information on creating temp files as comm
 @section{Conditional Process Sequencing Forms}
 These forms allow conditional execution of a sequence of processes.
 
-@defform[(|| pf ...+)]{
+@defform[#:link-target? #f (|| pf ...+)]{
 Run each proc until one completes successfully (i.e., exit status zero). Return true if some proc
 completes successfully; otherwise @code{#f}.
 }
 
-@defform[(&& pf ...+)]{
+@defform[#:link-target? #f (&& pf ...+)]{
 Run each proc until one fails (i.e., exit status non-zero). Return true if all procs complete
 successfully; otherwise @code{#f}.
 }
@@ -432,7 +433,7 @@ successfully; otherwise @code{#f}.
 @section{Process Filters}
 These procedures are useful for forking off processes to filter text streams.
 
-@defproc[(make-char-port-filter [filter (-> character? character?)]) procedure?]{
+@defproc[#:link-target? #f (make-char-port-filter [filter (-> character? character?)]) procedure?]{
 Returns a procedure that when called, repeatedly reads a character from the current input port,
 applies @code{filter} to the character, and writes the result to the current output port. The
 procedure returns upon reaching eof on the input port.
@@ -449,8 +450,8 @@ For example, to downcase a stream of text in a spell-checking pipeline, instead 
                 (> spell-errors.txt))}
 }
 
-@defproc[(make-string-port-filter [filter (-> character? character?)]
-                                  [buflen integer? 1024]) procedure?]{
+@defproc[#:link-target? #f (make-string-port-filter [filter (-> character? character?)]
+                                                    [buflen integer? 1024]) procedure?]{
 Returns a procedure that when called, repeatedly reads a string from the current input port, applies
 @code{filter} to the string, and writes the result to the current output port. The procedure returns
 upon reaching eof on the input port.
