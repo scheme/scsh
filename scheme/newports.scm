@@ -371,19 +371,13 @@
 (define seek/delta 1)
 (define seek/end 2)
 
-(define (seek fd/port offset . maybe-whence)
-  (if (and (open-input-port? fd/port)
-           (> (byte-vector-length (port-buffer fd/port)) 1))
-      (error "Seek does currently not work on buffered ports" fd/port))
-  (if (and (open-output-port? fd/port)
-           (> (byte-vector-length (port-buffer fd/port)) 0))
-      (error "Seek does currently not work on buffered ports" fd/port))
+(define (seek fd offset . maybe-whence)
   (let ((whence (:optional maybe-whence seek/set))
-        (fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
+        (fd (check-arg integer? fd seek)))
     (%fd-seek fd offset whence)))
 
-(define (tell fd/port)
-  (let ((fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
+(define (tell fd)
+  (let ((fd (check-arg integer? fd tell)))
     (%fd-seek fd 0 seek/delta)))
 
 (define (mumble-with-mumble-file open call)

@@ -6,5 +6,6 @@
 
 @include-section["introduction.scribble"]
 @include-section["process-notation.scribble"]
+@include-section["system-calls.scribble"]
 
 @index-section[]
