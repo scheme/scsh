@@ -31,3 +31,5 @@ system, and the primary repository is hosted on github at
 @hyperlink["https://github.com/scheme/scsh"]{scheme/scsh}.
 
 This section will be updated to point at the final distribution once the next version is released.
+
+@; need to talk about interaction between racket and scsh/s48 conventions.
