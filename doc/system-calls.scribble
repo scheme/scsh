@@ -56,7 +56,8 @@ procedure that generated the error, and @var{data} is a list of information gene
 which varies from syscall to syscall.
 
 If @var{handler} returns, the handler search continues upwards. @var{handler} can acquire the
-exception by invoking a saved continuation. This procedure can be sugared over with the following syntax:
+exception by invoking a saved continuation. This procedure can be sugared over with the following
+syntax:
 
 @codeblock{(with-errno-handler
                  ((errno packet) clause ...)
@@ -94,8 +95,8 @@ It is not defined what dynamic context the handler executes in, so fluid variabl
 be referenced.
 @; ^ check exception srfi to see if this is specified.
 
-Note that Scsh system calls always retry when interrupted, so that the @code{errno/intr} exception is
-never raised. If the programmer wishes to abort a system call on an interrupt, he should have the
+Note that Scsh system calls always retry when interrupted, so that the @code{errno/intr} exception
+is never raised. If the programmer wishes to abort a system call on an interrupt, he should have the
 interrupt handler explicitly raise an exception or invoke a stored continuation to throw out of the
 system call.
 }
@@ -121,13 +122,13 @@ port. Note that character-at-a-time operations such as @code{read-char} are like
 when performed directly upon file descriptors.
 
 The standard RnRS procedures @code{read-char}, @code{char-ready?}, @code{write}, @code{display},
-@code{newline}, and @code{write-char} are all generic, accepting integer file descriptor arguments as
-well as ports. Scsh also mandates the availability of @code{format}, and further requires @code{format}
-to accept file descriptor arguments as well as ports.
+@code{newline}, and @code{write-char} are all generic, accepting integer file descriptor arguments
+as well as ports. Scsh also mandates the availability of @code{format}, and further requires
+@code{format} to accept file descriptor arguments as well as ports.
 
-The procedures @code{peek-char} and @code{read} do @emph{not} accept file descriptor arguments, since
-these functions require the ability to read ahead in the input stream, a feature not supported by
-Unix I/O.
+The procedures @code{peek-char} and @code{read} do @emph{not} accept file descriptor arguments,
+since these functions require the ability to read ahead in the input stream, a feature not supported
+by Unix I/O.
 
 @subsection{Port Manipulation and Standard Ports}
 @defproc[#:link-target? #f (close-after [port port?] [consumer (-> port? any)]) any]{
@@ -157,8 +158,8 @@ friends.
 Closes the port or file descriptor.
 
 If @var{fd/port} is a file descriptor, and it has a port allocated to it, the port is shifted to a
-new file descriptor created with @code{(dup fd/port)} before closing @code{fd/port}. The port then has
-its revealed count set to zero.  This reflects the design criteria that ports are not associated
+new file descriptor created with @code{(dup fd/port)} before closing @code{fd/port}. The port then
+has its revealed count set to zero.  This reflects the design criteria that ports are not associated
 with file descriptors, but with the streams they denote.
 
 To close a file descriptor, and any associated port it might have, you must instead say one of
@@ -187,8 +188,8 @@ same port.}
 @deftogether[(@defproc[#:link-target? #f (with-stdio-ports* [thunk (-> any)]) any]
               @defform[#:link-target? #f (with-stdio-ports body ...+)])]{
 @code{with-stdio-ports*} binds the standard ports @code{(current-input-port)},
-@code{(current-output-port)}, and @code{(error-output-port)} to be ports on file descriptors 0, 1, 2,
-and then calls @var{thunk}. It is equivalent to:
+@code{(current-output-port)}, and @code{(error-output-port)} to be ports on file descriptors 0, 1,
+2, and then calls @var{thunk}. It is equivalent to:
 
 @codeblock{(with-current-input-port (fdes->inport 0)
              (with-current-output-port (fdes->inport 1)
@@ -277,13 +278,13 @@ Ports allocated with @code{open-output-file} and @code{open-input-file} are unre
 @var{revealed} is initialised to 0. No one knows the port's file descriptor, so the file descriptor
 can be closed when the port is collected.
 
-The functions @code{fdes->output-port}, @code{fdes->input-port}, @code{port->fdes} are used to shift back
-and forth between file descriptors and ports.  When @code{port->fdes} reveals a port's file
+The functions @code{fdes->output-port}, @code{fdes->input-port}, @code{port->fdes} are used to shift
+back and forth between file descriptors and ports.  When @code{port->fdes} reveals a port's file
 descriptor, it increments the port's @var{revealed} field.  When the user is through with the file
 descriptor, he can call @code{(release-port-handle port)}, which decrements the count. The function
-@code{(call/fdes fd/port proc)} automates this protocol. @code{call/fdes} uses @code{dynamic-wind} to
-enforce the protocol. If @var{proc} throws out of the @code{call/fdes} application, the unwind handler
-releases the descriptor handle; if the user subsequently tries to throw @emph{back} into
+@code{(call/fdes fd/port proc)} automates this protocol. @code{call/fdes} uses @code{dynamic-wind}
+to enforce the protocol. If @var{proc} throws out of the @code{call/fdes} application, the unwind
+handler releases the descriptor handle; if the user subsequently tries to throw @emph{back} into
 @var{proc}'s context, the wind handler raises an error. When the user maps a file descriptor to a
 port with @code{fdes->outport} or @code{fdes->inport}, the port has its revealed field incremented.
 
@@ -307,15 +308,16 @@ straightforward ways, yet allows access to the underlying Unix substrate without
 the garbage collector. This is critical, since shell programming absolutely requires access to the
 Unix file descriptors, as their numerical values are a critical part of the process interface.
 
-A port's underlying file descriptor can be shifted around with @code{dup(2)} when convenient. That is,
-the actual file descriptor on top of which a port is constructed can be shifted around underneath
-the port by the scsh kernel when necessary.  This is important, because when the user is setting up
-file descriptors prior to a @code{exec(2)}, he may explicitly use a file descriptor that has already
-been allocated to some port. In this case, the scsh kernel just shifts the port's file descriptor to
-some new location with @code{dup}, freeing up its old descriptor.  This prevents errors from happening
-in the following scenario.  Suppose we have a file open on port @var{f}.  Now we want to run a
-program that reads input on file 0, writes output to file 1, errors to file 2, and logs execution
-information on file 3. We want to run this program with input from \ex{f}. So we write:
+A port's underlying file descriptor can be shifted around with @code{dup(2)} when convenient. That
+is, the actual file descriptor on top of which a port is constructed can be shifted around
+underneath the port by the scsh kernel when necessary.  This is important, because when the user is
+setting up file descriptors prior to a @code{exec(2)}, he may explicitly use a file descriptor that
+has already been allocated to some port. In this case, the scsh kernel just shifts the port's file
+descriptor to some new location with @code{dup}, freeing up its old descriptor.  This prevents
+errors from happening in the following scenario.  Suppose we have a file open on port @var{f}.  Now
+we want to run a program that reads input on file 0, writes output to file 1, errors to file 2, and
+logs execution information on file 3. We want to run this program with input from @code{f}. So we
+write:
 
 @codeblock{(run (/usr/shivers/bin/prog)
                 (> 1 output.txt)
@@ -323,13 +325,13 @@ information on file 3. We want to run this program with input from \ex{f}. So we
                 (> 3 trace.log)
                 (= 0 ,f))}
 
-Now, suppose by ill chance that, unbeknownst to us, when the operating system opened @code{f}'s file,
-it allocated descriptor 3 for it. If we blindly redirect @code{trace.log} into file descriptor 3,
-we'll clobber @code{f}! However, the port-shuffling machinery saves us: when the @code{run} form tries
-to dup @code{trace.log}'s file descriptor to 3, @code{dup} will notice that file descriptor 3 is already
-associated with an unrevealed port (i.e., @code{f}). So, it will first move @code{f} to some other file
-descriptor. This keeps @code{f} alive and well so that it can subsequently be dup'd into descriptor 0
-for @code{prog}'s stdin.
+Now, suppose by ill chance that, unbeknownst to us, when the operating system opened @code{f}'s
+file, it allocated descriptor 3 for it. If we blindly redirect @code{trace.log} into file descriptor
+3, we'll clobber @code{f}! However, the port-shuffling machinery saves us: when the @code{run} form
+tries to dup @code{trace.log}'s file descriptor to 3, @code{dup} will notice that file descriptor 3
+is already associated with an unrevealed port (i.e., @code{f}). So, it will first move @code{f} to
+some other file descriptor. This keeps @code{f} alive and well so that it can subsequently be dup'd
+into descriptor 0 for @code{prog}'s stdin.
 
 The port-shifting machinery makes the following guarantee: a port is only moved when the underlying
 file descriptor is closed, either by a @code{close()} or a @code{dup2()} operation. Otherwise a
@@ -352,17 +354,18 @@ Here are the routines for manipulating ports in scsh. The important points to re
           @item{The association between a file port and a particular file descriptor is never
                 changed @emph{except} when the file descriptor is explicitly closed. ``Closing''
                 includes being used as the target of a @code{dup2}, so the set of procedures below
-                that close their targets are @code{close}, two-argument @code{dup}, and @code{move->fdes}.
-                If the target file descriptor of one of these routines has an allocated port, the
-                port will be shifted to another freshly-allocated file descriptor, and marked as
-                unrevealed, thus preserving the port but freeing its old file descriptor.}]
+                that close their targets are @code{close}, two-argument @code{dup}, and
+                @code{move->fdes}. If the target file descriptor of one of these routines has an
+                allocated port, the port will be shifted to another freshly-allocated file
+                descriptor, and marked as unrevealed, thus preserving the port but freeing its old
+                file descriptor.}]
 
 These rules are what is necessary to ``make things work out'' with no surprises in the general case.
 
 @deftogether[(@defproc[#:link-target? #f (fdes->inport [fd integer?]) port?]
               @defproc[#:link-target? #f (fdes->outport [fd integer?]) port?])]{
-These guys return an input or output port respecitvely, backed by @var{fd}. The returned port has its
-revealed count set to 1.
+These guys return an input or output port respecitvely, backed by @var{fd}. The returned port has
+its revealed count set to 1.
 }
 
 @; will need to export fdport? if we use it as a predicate here.
@@ -405,7 +408,7 @@ In all cases when @var{fd/port} is actually shifted, if there is a port already 
 @var{target-fd}, it is first relocated to some other file descriptor.
 }
 
-@subsection{{\Unix} I/O}
+@subsection{Unix I/O}
 @deftogether[(@defproc*[#:link-target? #f
                         ([(dup [fd/port (or/c integer? fdport?)]) fdport?]
                          [(dup [fd/port (or/c integer? fdport?)] [newfd integer?]) fdport?])]
@@ -418,10 +421,11 @@ In all cases when @var{fd/port} is actually shifted, if there is a port already 
               @defproc*[#:link-target? #f
                         ([(dup->fdes [fd/port (or/c integer? fdport?)]) integer?]
                          [(dup->fdes [fd/port (or/c integer? fdport?)] [newfd integer?]) integer?])])]{
-These procedures provide the functionality of C's @code{dup()} and @code{dup2()}. The different routines
-return different types of values: @code{dup->inport}, @code{dup->outport}, and @code{dup->fdes} return
-input ports, output ports, and integer file descriptors, respectively. @code{dup}'s return value
-depends on on the type of @var{fd/port}---it maps fd -> fd and port -> port.
+These procedures provide the functionality of C's @code{dup()} and @code{dup2()}. The different
+routines return different types of values: @code{dup->inport}, @code{dup->outport}, and
+@code{dup->fdes} return input ports, output ports, and integer file descriptors, respectively.
+@code{dup}'s return value depends on on the type of @var{fd/port}---it maps fd -> fd and port ->
+port.
 
 These procedures use the Unix @code{dup()} syscall to replicate the file descriptor or file port
 @var{fd/port}. If a @var{newfd} file descriptor is given, it is used as the target of the dup
@@ -435,11 +439,11 @@ If the @var{newfd} target is given, and some port is already using that file des
 first quietly shifted (with another @code{dup}) to some other file descriptor (zeroing its revealed
 count).
 
-Since scheme doesn't provide read/write ports, @code{dup->inport} and @code{dup->outport} can be useful
-for getting an output version of an input port, or @emph{vice versa}.  For example, if @code{p} is an
-input port open on a tty, and we would like to do output to that tty, we can simply use
-@code{(dup->outport p)} to produce an equivalent output port for the tty. Be sure to open the file
-with the @code{open/read+write} flag for this.
+Since scheme doesn't provide read/write ports, @code{dup->inport} and @code{dup->outport} can be
+useful for getting an output version of an input port, or @emph{vice versa}.  For example, if
+@code{p} is an input port open on a tty, and we would like to do output to that tty, we can simply
+use @code{(dup->outport p)} to produce an equivalent output port for the tty. Be sure to open the
+file with the @code{open/read+write} flag for this.
 }
 
 @defproc*[#:link-target? #f
@@ -447,10 +451,11 @@ with the @code{open/read+write} flag for this.
            [(seek [fd integer?] [offset integer?] [whence integer?]) integer?])]{
 Reposition the I/O cursor for a file descriptor. @var{whence} is one of @code{seek/set},
 @code{seek/delta}, or @code{seek/end}, and defaults to @code{seek/set}. If @code{seek/set}, then
-@var{offset} is an absolute index into the file; if @code{seek/delta}, then @var{offset} is a relative
-offset from the current I/O cursor; if @code{seek/end}, then @var{offset} is a relative offset from
-the end of file. Note that not all file descriptors are seekable; this is dependent on the OS
-implementation. The return value is the resulting position of the I/O cursor in the I/O stream.
+@var{offset} is an absolute index into the file; if @code{seek/delta}, then @var{offset} is a
+relative offset from the current I/O cursor; if @code{seek/end}, then @var{offset} is a relative
+offset from the end of file. Note that not all file descriptors are seekable; this is dependent on
+the OS implementation. The return value is the resulting position of the I/O cursor in the I/O
+stream.
 }
 
 @defproc[#:link-target? #f (tell [fd integer?]) integer?]{
