@@ -99,26 +99,25 @@
 ;;; Open & Close
 ;;; ------------
 
-(define (open-file fname flags . maybe-mode)
+(define (open-file fname options . maybe-mode)
   (let ((port
          (with-resources-aligned
           (list cwd-resource umask-resource euid-resource egid-resource)
           (lambda ()
-            (s48-open-file fname flags
-                           (:optional maybe-mode (integer->file-mode #o666)))))))
+            (s48-open-file fname options (:optional maybe-mode (file-mode read write)))))))
     (set-fdport! (port->fd port) port 0)
     port))
 
-(define (open-input-file fname . maybe-flags)
-  (let ((flags (:optional maybe-flags (file-options))))
-    (open-file fname (file-options-union flags (file-options read-only)))))
+(define (open-input-file fname . maybe-options)
+  (let ((options (:optional maybe-options (file-options))))
+    (open-file fname (file-options-union options (file-options read-only)))))
 
 (define (open-output-file fname . rest)
-  (let* ((flags (if (pair? rest) (car rest)
-		    (file-options create truncate))) ; default
-	 (maybe-mode (if (null? rest) '() (cdr rest)))
-	 (flags (file-options-union flags (file-options write-only))))
-    (apply open-file fname flags maybe-mode)))
+  (let* ((options (if (pair? rest) (car rest)
+                      (file-options create truncate))) ; default
+         (maybe-mode (if (null? rest) '() (cdr rest)))
+         (options (file-options-union options (file-options write-only))))
+    (apply open-file fname options maybe-mode)))
 
 (define (increment-revealed-count port delta)
   (atomically!

@@ -462,3 +462,20 @@ stream.
 Returns the position of the I/O cursor in the the I/O stream. Not all file descriptors support
 cursor-reporting; this is dependent on the OS implementation.
 }
+
+@defproc[#:link-target? #f (open-file [fname string?] [options file-options?] [mode file-mode? (filemode read write)]) fdport?]{
+@var{options} is a file-option? (ref). You must use exactly one of the options @code{read-only},
+@code{write-only}, or @code{read-write}. The returned port is an input port if the @var{options}
+permit it, otherwise an output port. scheme48/scsh do not have input/output ports, so it's one
+or the other. You can hack simultaneous I/O on a file by opening it r/w, taking the result input
+port, and duping it to an output port with @code{dup->outport}.
+}
+
+@deftogether[(@defproc[#:link-target? #f (open-input-file [fname string?] [options file-options? (file-options)]) port?]
+              @defproc[#:link-target? #f (open-output-file [fname string?]
+                                                           [options file-options? (file-options create truncate)]
+                                                           [mode file-mode? (filemode read write)]) port?])]{
+These are equivalent to @code{open-file}, after first including @code{read-only} or
+@code{write-only} options, respectively, in the @var{options} argument. The default values for
+@var{options} make the procedures backwards-compatible with their unary RnRS definitions.
+}

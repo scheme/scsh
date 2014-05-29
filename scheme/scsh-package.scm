@@ -263,7 +263,7 @@
                 (expose open-file
                         file-options
                         file-options-union
-                        integer->file-mode))
+                        file-mode))
         (subset architecture (channel-status-option))
         (subset interrupts (enable-interrupts!
                             disable-interrupts!
