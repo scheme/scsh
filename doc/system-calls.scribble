@@ -479,3 +479,8 @@ These are equivalent to @code{open-file}, after first including @code{read-only}
 @code{write-only} options, respectively, in the @var{options} argument. The default values for
 @var{options} make the procedures backwards-compatible with their unary RnRS definitions.
 }
+
+@defproc[#:link-target? #f (pipe) (values [rport fdport?] [wport fdport?])]{
+Returns two ports @var{rport} and @var{wport}, the read and write endpoints respectively of a Unix
+pipe.
+}
