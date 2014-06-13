@@ -449,7 +449,7 @@ For example, to downcase a stream of text in a spell-checking pipeline, instead 
                 (> spell-errors.txt))}
 }
 
-@defproc[#:link-target? #f (make-string-port-filter [filter (-> character? character?)]
+@defproc[#:link-target? #f (make-string-port-filter [filter (-> string? string?)]
                                                     [buflen integer? 1024]) procedure?]{
 Returns a procedure that when called, repeatedly reads a string from the current input port, applies
 @code{filter} to the string, and writes the result to the current output port. The procedure returns
