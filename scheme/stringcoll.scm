@@ -135,39 +135,36 @@
 
 (define (collect-char! sc c)
   (let ((chunk (string-collector:chunk sc))
-	(chunk-left (string-collector:chunk-left sc)))
-
+        (chunk-left (string-collector:chunk-left sc)))
     (cond (chunk
-	   (string-set! chunk (- 128 chunk-left) c)
-	   (cond ((> chunk-left 1)
-		  (set-string-collector:chunk-left sc (- chunk-left 1)))
-		 (else
-		  (set-string-collector:chunks sc
-		       (cons chunk (string-collector:chunks sc)))
-		  (set-string-collector:chunk sc #f))))
-	  (else
-	   (let ((new-chunk (make-string 128 c)))
-	     (set-string-collector:chunk-left sc 127)
-	     (set-string-collector:chunk sc new-chunk)))))
+           (string-set! chunk (- 128 chunk-left) c)
+           (cond ((> chunk-left 1)
+                  (set-string-collector:chunk-left sc (- chunk-left 1)))
+                 (else
+                  (set-string-collector:chunks sc (cons chunk (string-collector:chunks sc)))
+                  (set-string-collector:chunk sc #f))))
+          (else
+           (let ((new-chunk (make-string 128 c)))
+             (set-string-collector:chunk-left sc 127)
+             (set-string-collector:chunk sc new-chunk)))))
 
   ;; We don't actually do anything with this, but we keep it updated anyway.
   (set-string-collector:len sc (+ (string-collector:len sc) 1))
   sc)
-
 
 ;;; Convert the data in the string-collector SC to a single contiguous
 ;;; string and return it.
 
 (define (string-collector->string sc)
   (let ((chunk  (string-collector:chunk sc))
-	(chunks (string-collector:chunks sc)))
+        (chunks (string-collector:chunks sc)))
     (apply string-append
-	   (reverse (if chunk
-			(cons (substring chunk 0
-					 (- 128
-					    (string-collector:chunk-left sc)))
-			      chunks)
-			chunks)))))
+           (reverse (if chunk
+                        (cons (substring chunk 0
+                                         (- 128
+                                            (string-collector:chunk-left sc)))
+                              chunks)
+                        chunks)))))
 
 ;;; It's too bad we can't side-effect the string-collector's chunk list
 ;;; to be a single chunk after this coalescing operation, but we don't
