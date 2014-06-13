@@ -379,33 +379,6 @@
         scsh-globbing)
   (files filemtch))
 
-(define-structure scsh-read/write scsh-read/write-interface
-  (open (modify scheme (hide call-with-input-file
-                             call-with-output-file
-                             with-input-from-file
-                             with-output-to-file
-                             write
-                             display
-                             char-ready?
-                             read-char
-                             write-char
-                             newline
-                             open-input-file
-                             open-output-file))
-        bitwise
-        (subset primitives (copy-bytes!))
-        let-opt
-        signals
-        scsh-newports
-        buffered-io-flags
-        (subset os-strings (string->os-byte-vector))
-        (subset posix-i/o (i/o-flags))
-        (subset posix-files (file-options file-options-on?))
-        (subset scsh-utilities (bogus-substring-spec?))
-        (subset i/o (read-block write-block))
-        (subset i/o-internal (open-input-port?)))
-  (files rw))
-
 (define-structure scsh-process-objects scsh-process-objects-interface
   (open scheme
         receiving
@@ -622,7 +595,6 @@
         reduce
         (subset scsh-utilities (deprecated-proc))
         (subset srfi-1 (reverse!))
-        scsh-read/write
         delimited-readers
         string-collectors)
   (files port-collect))
@@ -683,7 +655,6 @@
     (compound-interface scsh-delimited-readers-interface
                         scsh-io-interface
                         scsh-file-interface
-                        scsh-read/write-interface
                         scsh-globbing-interface
                         scsh-file-matching-interface
                         scsh-temp-files-interface
@@ -750,7 +721,6 @@
         scsh-process-state
         scsh-newports
         scsh-file
-        scsh-read/write
         scsh-temp-files
         scsh-globbing
         scsh-file-matching

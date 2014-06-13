@@ -92,13 +92,6 @@
 	  open-output-file
           init-fdports!))
 
-(define-interface scsh-read/write-interface
-  (export read-string/partial
-	  read-string!/partial
-	  read-string read-string!
-	  write-string
-	  write-string/partial))
-
 (define-interface scsh-flock-interface
   (export lock-region?
 	  lock-region:exclusive?
@@ -194,14 +187,7 @@
                               port->string-list
                               port->list
                               port-fold reduce-port
-                              port->fdes
-                              read-string
-                              read-string!
-                              read-string/partial
-                              read-string!/partial
-
-                              (write-string (proc (:string &opt :value :exact-integer :exact-integer) :unspecific))
-                              write-string/partial)))
+                              port->fdes)))
 
 
 (define-interface scsh-file-interface

@@ -91,7 +91,6 @@ SCHEME = scheme/command-line.scm \
 	 scheme/pty.scm \
 	 scheme/rdelim.scm \
 	 scheme/resource.scm \
-	 scheme/rw.scm \
 	 scheme/scsh-condition.scm \
 	 scheme/scsh-interfaces.scm \
 	 scheme/scsh-package.scm \

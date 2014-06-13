@@ -6,12 +6,6 @@
     (collect-char! sc char)
     (string-collector->string sc)))
 
-;;; (loop (initial (sc (make-string-collector)))
-;;;       (bind (s (read-string 1024 port)))
-;;;       (while s)
-;;;       (do (collect-string! sc s))
-;;;       (result (string-collector->string sc)))
-
 ;;; Read items from PORT with READER until EOF. Collect items into a list.
 
 (define (port->list reader port)
@@ -60,13 +54,21 @@
             (begin (write-char (filter c))
                    (lp)))))))
 
+(define (port->string/limit port limit)
+  (iterate loop ((input* char port read-char)
+                 (count* len 0))
+                ((chars (list)))
+    (let ((chars (cons char chars)))
+      (if (>= len (- limit 1))
+        (list->string (reverse chars))
+        (loop chars)))
+    (and (pair? chars) (list->string (reverse chars)))))
+
 (define (make-string-port-filter filter . maybe-buflen)
-  (let* ((buflen (:optional maybe-buflen 1024))
-         (buf (make-string buflen)))
+  (let ((buflen (:optional maybe-buflen 1024)))
     (lambda ()
       (let lp ()
-        (cond ((read-string! buf (current-input-port) 0 buflen) =>
-               (lambda (nread)
-                 (display (filter (if (= nread buflen) buf
-                                      (substring buf 0 nread)))) ; last one.
+        (cond ((port->string/limit (current-input-port) buflen) =>
+               (lambda (string)
+                 (display (filter string))
                  (lp))))))))
