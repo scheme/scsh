@@ -399,12 +399,6 @@
 (define with-output-to-file
   (mumble-with-mumble-file open-output-file (lambda (thunk port) (call-with-current-output-port port thunk))))
 
-(define (open-fdes path flags . maybe-mode) ; mode defaults to 0666
-    (with-resources-aligned
-     (list cwd-resource umask-resource euid-resource egid-resource)
-     (lambda ()
-      (%open path flags (:optional maybe-mode #o666)))))
-
 (import-lambda-definition-2 pipe-fdes () "scheme_pipe")
 
 (define (pipe)

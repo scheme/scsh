@@ -53,7 +53,6 @@
 	  close-fdes
 	  make-input-fdport
 	  make-output-fdport
-	  open-fdes
 	  close
 	  seek/set
 	  open-file
@@ -189,7 +188,6 @@
                               fdes->inport
                               fdes->outport
                               move->fdes
-                              open-fdes
                               pipe
                               port->string
                               port->sexp-list
