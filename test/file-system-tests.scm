@@ -294,7 +294,7 @@
 	     (with-cwd (create-temp-dir)
 		       (create-file fname)
 		       (let ((port (open-file fname (file-options write-only))))
-			 (write-string "1" port)
+			 (display "1" port)
 			 (let ((res-1 (file-size fname)))
 			   (sync-file port)
 			   (let ((res-2 (file-size fname)))
@@ -417,7 +417,7 @@
 
 (add-test/fname/fd/port! 'file-size
 			 (lambda (port)
-			   (write-string "0123456789" port)
+			   (display "0123456789" port)
 			   (sync-file port))
 			 file-size
 			 (lambda (res) (= res 10))
