@@ -86,11 +86,6 @@
         scheme)
   (files syntax-helpers))
 
-;;; The bufpol/{block, line, none} values
-(define-structure buffered-io-flags buffered-io-flags-interface
-  (open defenum-package scheme)
-  (files bufpol))
-
 (define-structure waitcodes
   (export wait/poll
           wait/stopped-children
@@ -280,7 +275,7 @@
                                          search-tree-ref))
         (subset condvars (make-condvar condvar-value))
         extended-ports
-        scsh-utilities buffered-io-flags
+        scsh-utilities
         signals
         threads
         (subset srfi-1 (any filter))
@@ -705,7 +700,6 @@
         receiving
         bitwise
         delimited-readers
-        buffered-io-flags   ; stdio dependent
         ascii
         srfi-14
         scsh-version
