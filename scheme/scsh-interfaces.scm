@@ -87,23 +87,6 @@
 	  open-output-file
           init-fdports!))
 
-(define-interface scsh-flock-interface
-  (export lock-region?
-	  lock-region:exclusive?
-	  lock-region:whence
-	  lock-region:start
-	  lock-region:len
-	  lock-region:pid		; Deprecated proc.
-	  lock-region:proc
-	  make-lock-region
-
-	  lock-region
-	  lock-region/no-block
-	  get-lock-region
-	  unlock-region
-	  with-region-lock*
-	  (with-region-lock :syntax)))
-
 (define-interface scsh-io-interface
   (export close
           close-after
