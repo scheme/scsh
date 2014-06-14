@@ -484,3 +484,15 @@ These are equivalent to @code{open-file}, after first including @code{read-only}
 Returns two ports @var{rport} and @var{wport}, the read and write endpoints respectively of a Unix
 pipe.
 }
+
+@subsection{Buffered I/O}
+
+@defproc[#:link-target? #f (force-output [fd/port (or/c integer? fdport?)]) undefined]{
+This procedure does nothing when applied to an integer file descriptor. It flushes buffered output
+when applied to a port, and raises a write-error exception on error. Returns no value.
+}
+
+@defproc[#:link-target? #f (flush-all-ports) undefined]{
+This procedure flushes all open output ports with buffered data.
+}
+
