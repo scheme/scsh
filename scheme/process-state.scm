@@ -1,12 +1,7 @@
 ;;; UMASK
-
-(define (set-process-umask mask)
-  (let ((old-mask (set-file-creation-mask! (integer->file-mode mask))))
-    (file-mode->integer old-mask)))
-
 (define (process-umask)
-  (let ((mask (set-process-umask 0)))
-    (set-process-umask mask)
+  (let ((mask (set-file-creation-mask! (file-mode- (file-mode all) (file-mode all)))))
+    (set-file-creation-mask! mask)
     mask))
 
 ;;; These calls change/reveal the process working directory
@@ -184,7 +179,7 @@
 ;; Actually do the syscall and update the cache
 ;; assumes the resource lock obtained
 (define (change-and-cache-umask new-umask)
-  (set-process-umask new-umask)
+  (set-file-creation-mask! new-umask)
   (set! *umask-cache* (process-umask)))
 
 ;; The thread-specific umask: A thread fluid
@@ -206,7 +201,7 @@
 
 (define (align-umask!)
   (let ((thread-umask (umask)))
-    (if (not (= thread-umask (umask-cache)))
+    (if (not (file-mode=? thread-umask (umask-cache)))
         (change-and-cache-umask thread-umask))))
 
 (define (set-umask new-umask)

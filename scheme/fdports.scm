@@ -74,7 +74,7 @@
 
 ;;; Not exported.
 (define (shell-open path flags fdes)
-  (%dup2 (port->fdes (open-file (stringify path) flags (integer->file-mode #o666))) fdes))
+  (%dup2 (port->fdes (open-file (stringify path) flags (file-mode read write))) fdes))
 
 (define create+trunc
   (file-options write-only create truncate))

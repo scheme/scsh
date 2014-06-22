@@ -306,9 +306,18 @@
                           write-char
                           char-ready?
                           read-char))
-        (modify posix-files (hide file-mode
-                                  file-type
-                                  file-info?))
+        (modify posix-files (hide file-type
+                                  file-info?
+                                  file-info-type
+                                  file-info-group
+                                  file-info-inode
+                                  file-info-last-access
+                                  file-info-last-mod
+                                  file-info-last-status-change
+                                  file-info-mode
+                                  file-info-nlinks
+                                  file-info-owner
+                                  file-info-size))
         (subset os-strings (os-string->string))
         (subset scsh-utilities (define-simple-syntax deprecated-proc real->exact-integer))
         (subset signals (error))
@@ -342,7 +351,7 @@
         fluids
         (subset scsh-utilities (make-reinitializer))
         (subset signals (error))
-        (subset posix-files (integer->file-mode file-options))
+        (subset posix-files (file-options file-mode))
         scsh-environment
         scsh-errnos
         scsh-process-state
@@ -421,7 +430,7 @@
                              open-output-file))
         signals
         bitwise
-        (subset posix-files (file-options integer->file-mode))
+        (subset posix-files (file-options file-mode))
         (subset posix-i/o (dup2))
         (subset scsh-utilities (check-arg stringify))
         scsh-file-syscalls

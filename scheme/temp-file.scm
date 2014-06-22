@@ -22,7 +22,7 @@
                               exclusive)))
     (apply temp-file-iterate
            (lambda (fname)
-             (close-output-port (open-file fname oflags (integer->file-mode #o600)))
+             (close-output-port (open-file fname oflags (file-mode owner-read owner-write)))
              fname)
            (if (null? maybe-prefix) '()
                (list (string-append (constant-format-string (car maybe-prefix))

@@ -198,16 +198,16 @@
           file-info:atime
           file-info:mtime
           file-info:ctime
-          file-type
-          file-group
-          file-inode
-          file-last-access
-          file-last-mod
-          file-last-status-change
-          file-mode
-          file-nlinks
-          file-owner
-          file-size
+          file-info-type
+          file-info-group
+          file-info-inode
+          file-info-last-access
+          file-info-last-mod
+          file-info-last-status-change
+          file-info-mode
+          file-info-nlinks
+          file-info-owner
+          file-info-size
           file-symlink?
           file-directory?
           file-fifo?

@@ -20,13 +20,9 @@
 	  (create-directory temp-dir))
       temp-dir)))
 
-(define (file-perms fname/fd/port)
-  (bitwise-and (file-mode fname/fd/port)
-	       #o777))
-
-(define (mask fixnum)
-  (bitwise-and fixnum
-	       (bitwise-not (umask))))
+(define (mask mode)
+  (integer->file-mode (bitwise-and (file-mode->integer mode)
+                                   (bitwise-not (file-mode->integer (umask))))))
 
 (define (create-file fname)
   (close-output-port (open-output-file fname)))
@@ -53,15 +49,15 @@
 	   "dir")
 
 (add-test! 'create-directory-2 'file-system
-	   (lambda (name perms)
-	     (with-cwd (create-temp-dir)
-		       (create-directory name perms)
-		       (let ((result (and (file-directory? name)
-					  (= (file-perms name)
-					     (mask perms)))))
-			 (delete-filesys-object name)
-			 result)))
-	   "dir" #o700)
+     (lambda (name mode)
+       (with-cwd (create-temp-dir)
+           (create-directory name mode)
+           (let ((result (and (file-directory? name)
+                              (file-mode=? (file-info-mode name)
+                                           (mask mode)))))
+       (delete-filesys-object name)
+       result)))
+     "dir" (file-mode owner))
 
 ;; --- Create FIFO ---
 
@@ -69,23 +65,23 @@
 	   (lambda (name)
             (with-cwd (create-temp-dir)
 			  (create-fifo name)
-			  (let ((result (eq? (file-type name)
+			  (let ((result (eq? (file-info-type name)
 					     'fifo)))
 			    (delete-filesys-object name)
 			    result)))
 	   "fifo")
 
 (add-test! 'create-fifo-2 'file-system
-	   (lambda (name perms)
-	     (with-cwd (create-temp-dir)
-		       (create-fifo name perms)
-		       (let ((result (and (eq? (file-type name)
-					       'fifo)
-					  (= (file-perms name)
-					     (mask perms)))))
-			 (delete-filesys-object name)
-			 result)))
-	   "fifo" #o700)
+     (lambda (name mode)
+       (with-cwd (create-temp-dir)
+                 (create-fifo name mode)
+                 (let ((result (and (eq? (file-info-type name)
+                                         'fifo)
+                                    (file-mode=? (file-info-mode name)
+                                                 (mask mode)))))
+       (delete-filesys-object name)
+       result)))
+     "fifo" (file-mode owner))
 
 ;; --- Create-hard-link ---
 
@@ -108,9 +104,9 @@
 		       (create-file fname)
 		       (create-symlink fname linkname)
 		       (let ((result (and (file-exists? linkname)
-					  (eq? (file-type linkname #f)
+					  (eq? (file-info-type linkname #f)
 					       'symlink)
-					  (eq? (file-type linkname #t)
+					  (eq? (file-info-type linkname #t)
 					       'regular))))
 			 (delete-filesys-object fname)
 			 (delete-filesys-object linkname)
@@ -240,9 +236,9 @@
 			 #f
 			 (lambda (fname/fd/port mode)
 			   (set-file-mode fname/fd/port mode)
-			   (file-perms fname/fd/port))
-			 =
-			 '("file") '(#o754))
+			   (file-info-mode fname/fd/port))
+			 file-mode=?
+			 '("file") `(,(file-mode owner group-read group-exec other-read)))
 
 ;; --- Set-file-owner ---
 
@@ -250,7 +246,7 @@
 			 #f
 			 (lambda (fname/fd/port uid)
 			   (set-file-owner fname/fd/port uid)
-			   (file-owner fname/fd/port))
+			   (file-info-owner fname/fd/port))
 			 equal?
 			 '("file") (list (user-uid)))
 
@@ -261,7 +257,7 @@
 			 #f
 			 (lambda (fname/fd/port gid)
 			   (set-file-group fname/fd/port gid)
-			   (file-group fname/fd/port))
+			   (file-info-group fname/fd/port))
 			 equal?
 			 '("file") (list (user-gid)))
 
@@ -272,7 +268,7 @@
 	     (with-cwd (create-temp-dir)
 		       (create-file fname)
 		       (set-file-times fname time-1 0)
-		       (let ((result (file-last-access fname)))
+		       (let ((result (file-info-last-access fname)))
 			 (delete-filesys-object fname)
 			 (= result time-1))))
 	   "file" 10000)
@@ -282,7 +278,7 @@
 	     (with-cwd (create-temp-dir)
 		       (create-file fname)
 		       (set-file-times fname 0 time-2)
-		       (let ((result (file-last-mod fname)))
+		       (let ((result (file-info-last-mod fname)))
 			 (delete-filesys-object fname)
 			 (= result time-2))))
 	   "file" 10000)
@@ -295,9 +291,9 @@
 		       (create-file fname)
 		       (let ((port (open-file fname (file-options write-only))))
 			 (display "1" port)
-			 (let ((res-1 (file-size fname)))
+			 (let ((res-1 (file-info-size fname)))
 			   (sync-file port)
-			   (let ((res-2 (file-size fname)))
+			   (let ((res-2 (file-info-size fname)))
 			     (close port)
 			     (delete-filesys-object fname)
 			     (and (= res-1 0) (> res-2 0)))))))
@@ -310,19 +306,19 @@
 			  (write (make-string 100 #\*) port))
 			(lambda (fname/fd/port len)
 			  (truncate-file fname/fd/port len)
-			  (file-size fname/fd/port))
+			  (file-info-size fname/fd/port))
 			=
 			'("file") '(10))
 
 ;; --- file-info stuff ---
 
-;; --- file-type ---
+;; --- file-info-type ---
 
 (add-test! 'file-type-dir 'file-system
 	   (lambda (fname)
 	     (with-cwd (create-temp-dir)
 		       (create-directory fname)
-		       (let ((result (file-type fname)))
+		       (let ((result (file-info-type fname)))
 			 (delete-filesys-object fname)
 			 (equal? result 'directory))))
 	   "dir")
@@ -331,7 +327,7 @@
 	   (lambda (fname)
 	     (with-cwd (create-temp-dir)
 		       (create-fifo fname)
-		       (let ((result (file-type fname)))
+		       (let ((result (file-info-type fname)))
 			 (delete-filesys-object fname)
 			 (equal? result 'fifo))))
 	   "fifo")
@@ -340,32 +336,17 @@
 	   (lambda (fname)
 	     (with-cwd (create-temp-dir)
 		       (create-file fname)
-		       (let ((result (file-type fname)))
+		       (let ((result (file-info-type fname)))
 			 (delete-filesys-object fname)
 			 (equal? result 'regular))))
 	   "file")
 
-;(add-test! 'file-type-socket 'file-system
-;	   (lambda (fname)
-;	     (let* ((pathname (string-append (create-temp-dir)
-;					     fname))
-;		    (socket (create-socket protocol-family/unix
-;					   socket-type/raw))
-;		    (addr (unix-address->socket-address
-;			   pathname)))
-;	       (bind-socket socket addr)
-;	       ;; now fname should be a socket
-;	       (let ((result (file-info pathname)))
-;		 (delete-filesys-object pathname)
-;		 (equal? result 'socket))))
-;	   "socket")
-
-;; --- file-inode ---
+;; --- file-info-inode ---
 ;; only check for overrun (problem on AFS according to Martin)
 (add-test/fname/fd/port! 'file-inode
 			 #f
 			 (lambda (fname/fd/port)
-			   (> 0 (file-inode fname/fd/port)))
+			   (> 0 (file-info-inode fname/fd/port)))
 			 '("file"))
 
 
@@ -375,85 +356,84 @@
 			 #f
 			 (lambda (fname/fd/port mode)
 			   (set-file-mode fname/fd/port mode)
-			   (bitwise-and (file-mode fname/fd/port)
-					#o777))
-			 =
-			 '("file") (list #o754))
+			   (file-info-mode fname/fd/port))
+			 file-mode=?
+			 '("file") (list (file-mode owner group-read group-exec other-read)))
 
-;; --- file-nlinks ---
+;; --- file-info-nlinks ---
 
 (add-test/fname/fd/port! 'file-nlinks
 			 #f
 			 (lambda (fname/fd/port fname1 fname2)
 			   (create-hard-link fname1 fname2)
-			   (let ((result (file-nlinks fname/fd/port)))
+			   (let ((result (file-info-nlinks fname/fd/port)))
 			     (delete-filesys-object fname2)
 			     (= result 2)))
 			 #f
 			 '("file-1") '("file-1") '("file-2"))
 
-;; --- file-owner ---
+;; --- file-info-owner ---
 
 (add-test/fname/fd/port! 'file-owner
 			 #f
 			 (lambda (fname/fd/port uid)
 			   (set-file-owner fname/fd/port uid)
-			   (file-owner fname/fd/port))
+			   (file-info-owner fname/fd/port))
 			 equal?
 			 '("file") (list (user-uid)))
 
 
-;; --- file-group ---
+;; --- file-info-group ---
 
 (add-test/fname/fd/port! 'file-group
 			 #f
 			 (lambda (fname/fd/port gid)
 			   (set-file-group fname/fd/port gid)
-			   (file-group fname/fd/port))
+			   (file-info-group fname/fd/port))
 			 equal?
 			 '("file") (list (user-gid)))
 
-;; --- file-size ---
+;; --- file-info-size ---
 
 (add-test/fname/fd/port! 'file-size
 			 (lambda (port)
 			   (display "0123456789" port)
 			   (sync-file port))
-			 file-size
+			 file-info-size
 			 (lambda (res) (= res 10))
 			 '("file"))
 
-;; --- file-last-access ---
+;; --- file-info-last-access ---
 
 (add-test/fname/fd/port! 'file-last-access
 			 #f
 			 (lambda (fname/fd/port fname atime)
 			   (set-file-times fname atime 0)
-			   (file-last-access fname/fd/port))
+			   (file-info-last-access fname/fd/port))
 			 (lambda (restime fname mtime)
 			   (= restime mtime))
 			 '("file") '("file") '(10000))
 
-;; --- file-last-mod ---
+;; --- file-info-last-mod ---
 
 (add-test/fname/fd/port! 'file-last-mod
 			 #f
 			 (lambda (fname/fd/port fname mtime)
 			   (set-file-times fname 0 mtime)
-			   (file-last-mod fname/fd/port))
+			   (file-info-last-mod fname/fd/port))
 			 (lambda (restime fname mtime)
 			   (= restime mtime))
 			 '("file") '("file") '(10000))
 
-;; -- file-last-status-change ---
+;; -- file-info-last-status-change ---
 (add-test/fname/fd/port! 'file-last-status-change
 			 #f
 			 (lambda (fname/fd/port)
-			   (let ((before (file-last-status-change
+			   (let ((before (file-info-last-status-change
 					  fname/fd/port)))
 			     ;; do anything
-			     (set-file-mode fname/fd/port #o777)
-			     (let ((after (file-last-status-change
+			     (set-file-mode fname/fd/port (file-mode all))
+			     (let ((after (file-info-last-status-change
 					   fname/fd/port)))
 			       (> after before) ;; how much??
 			       )))
@@ -461,13 +441,13 @@
 
 ;; --- file-not-read/write/exec-able ---
 
-(define (add-file-not-?-able func name perms)
+(define (add-file-not-?-able func name mode)
   ;; normal function
   (add-test! (symbol-append name "-normal") 'file-system
 	     (lambda (fname)
 	       (with-cwd (create-temp-dir)
 			 (create-file fname)
-			 (set-file-mode fname perms)
+			 (set-file-mode fname mode)
 			 (let ((result (not (func fname))))
 			   (delete-filesys-object fname)
 			   result)))
@@ -478,9 +458,9 @@
 	       (with-cwd (create-temp-dir)
 			 (create-directory dirname)
 			 (create-file (string-append dirname fname))
-			 (set-file-mode dirname 0) ;; or 666 ??
+			 (set-file-mode dirname (file-mode read write)) ;; or 666 ??
 			 (let ((result (func (string-append dirname fname))))
-			   (set-file-mode dirname #o777)
+			   (set-file-mode dirname (file-mode all))
 			   (delete-filesys-object (string-append dirname fname))
 			   (delete-filesys-object dirname)
 			   (equal? result 'search-denied))))
@@ -490,8 +470,7 @@
 	     (lambda (fname)
 	       (with-cwd (create-temp-dir)
 			 (create-file fname)
-			 (set-file-mode fname
-					(bitwise-xor perms #o777))
+			 (set-file-mode fname (file-mode- (file-mode all) mode))
 			 (let ((result (func fname)))
 			   (delete-filesys-object fname)
 			   (equal? result 'permission))))
@@ -517,9 +496,9 @@
 				    (eq? func file-not-writable?))))))
 	     "file"))
 
-(add-file-not-?-able file-not-readable? 'file-not-readable? #o444)
-(add-file-not-?-able file-not-writable? 'file-not-writable? #o222)
-(add-file-not-?-able file-not-executable? 'file-not-executable? #o111)
+(add-file-not-?-able file-not-readable? 'file-not-readable? (file-mode read))
+(add-file-not-?-able file-not-writable? 'file-not-writable? (file-mode write))
+(add-file-not-?-able file-not-executable? 'file-not-executable? (file-mode exec))
 
 
 ;; --- file-(not)-exists? --
@@ -540,10 +519,10 @@
 	     (with-cwd (create-temp-dir)
 		       (create-directory dirname)
 		       (create-file (string-append dirname fname))
-		       (set-file-mode dirname 0)
+		       (set-file-mode dirname (integer->file-mode 0))
 		       (let ((result (file-not-exists? (string-append
 							dirname fname))))
-			 (set-file-mode dirname #o777)
+			 (set-file-mode dirname (file-mode all))
 			 (delete-filesys-object (string-append dirname fname))
 			 (delete-filesys-object dirname)
 			 (equal? result 'search-denied))))
@@ -578,8 +557,8 @@
            (lambda (fname linkname)
              (create-file fname)
              (create-symlink fname linkname)
-             (let ((result (file-type linkname #f))
-                   (result-2 (file-type linkname #t)))
+             (let ((result (file-info-type linkname #f))
+                   (result-2 (file-info-type linkname #t)))
                (delete-filesys-object linkname)
                (delete-filesys-object fname)
                (and (equal? result 'symlink)
