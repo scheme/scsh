@@ -496,3 +496,24 @@ when applied to a port, and raises a write-error exception on error. Returns no 
 This procedure flushes all open output ports with buffered data.
 }
 
+@section{Filesystem}
+Besides the procedures in this section, which allow access to the computer's file system, scsh also
+provides a set of procedures which manipulate file @emph{names}. These string-processing procedures
+are documented in @; TODO @secref["manipulating-filenames"]
+
+@deftogether[(@defproc[#:link-target? #f (create-directory [fname string?] [mode file-mode? (file-mode all)] [override? (or/c #f 'query any/c) #f]) undefined]
+              @defproc[#:link-target? #f (create-fifo [fname string?] [mode file-mode? (file-mode all)] [override? (or/c #f 'query any/c) #f]) undefined]
+              @defproc[#:link-target? #f (create-hard-link [oldname string?] [newname string?] [override? (or/c #f 'query any/c) #f]) undefined]
+              @defproc[#:link-target? #f (create-symlink [oldname string?] [newname string?] [override? (or/c #f 'query any/c) #f]) undefined])]{
+These procedures create objects of various kinds in the file system. The @var{override?} argument
+controls the action if there is already an object in the file system with the new name:
+
+@tabular[#:sep @hspace[2]
+         (list (list @code{#f} @nested{signal an error (default)})
+               (list @code{'query} @nested{prompt the user})
+               (list @emph{other} @nested{delete the old object (with @code{delete-file} or
+                                          @code{delete-directory} as appropriate) before creating
+                                          the new object}))]
+
+@var{mode} defaults to @code{(file-mode all)} (but is masked by the current umask).
+}
