@@ -552,3 +552,27 @@ These procedures set the permission bits, owner id, and group id of a file, resp
 can be specified by giving the file name, or either an integer file descriptor or a port open on the
 file. Setting file user ownership usually requires root privileges.
 }
+
+@defproc[#:link-target? #f (set-file-times [fname string?]
+                                           [access-time integer? (current-time)]
+                                           [mod-time integer? (current-time)]) undefined]{
+@var{fname} to the supplied values (see (link to sec:time) for the scsh representation of time). If
+neither time argument is supplied, they are both taken to be the current time. You must provide both
+times or neither. If the procedure completes successfully, the file's time of last status-change
+(@code{ctime}) is set to the current time.
+}
+
+@margin-note{These procedures are not Posix. Their actual effect may vary between operating systems.
+             See your OS's documentation for @code{sync(2)} and @code{fsync(2)} respectively for
+             specifics}
+
+@deftogether[(@defproc[#:link-target? #f (sync-file [fd/port (or/c integer? fdport?)]) undefined]
+              @defproc[#:link-target? #f (sync-file-system) undefined])]{
+Calling @code{sync-file} causes Unix to update the disk data structures for a given file. If
+@var{fd/port} is a port, any buffered data it may have is first flushed. Calling
+@code{sync-file-system} synchronises the kernel's entire file system with the disk.
+}
+
+@defproc[#:link-target? #f (truncate-file [fname/fd/port (or/c string? integer? fdport?)] [len integer?]) undefined]{
+Truncate the specified file to @var{len} bytes in length.
+}
