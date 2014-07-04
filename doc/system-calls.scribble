@@ -517,3 +517,38 @@ controls the action if there is already an object in the file system with the ne
 
 @var{mode} defaults to @code{(file-mode all)} (but is masked by the current umask).
 }
+
+@deftogether[(@defproc[#:link-target? #f (delete-directory [fname string?]) undefined]
+              @defproc[#:link-target? #f (delete-file [fname string?]) undefined]
+              @defproc[#:link-target? #f (delete-filesys-object [fname string?]) undefined])]{
+These procedures delete objects from the filesystem. The @code{delete-filesys-object} procedure will
+delete an object of any type from the file system: files, (empty) directories, symlinks, fifos, etc.
+
+If the object being deleted doesn't exist, @code{delete-directory} and @code{delete-file} raise an
+error, while delete-filesys-object simply returns.
+}
+
+@defproc[#:link-target? #f (read-symlink [fname string?]) string?]{
+Return the filename referenced by the symbolic link @var{fname}.
+}
+
+@margin-note{There is an unfortunate atomicity problem with the @code{rename-file} procedure: if you
+             specify no-override, but create file @var{new-fname} sometime between
+             @code{rename-file}'s existence check and the actual rename operation, your file will be
+             clobbered with @var{old-fname}. There is no way to fix this problem, given the
+             semantics of Unix @code{rename()}; at least it is highly unlikely to occur in
+             practice.}
+
+@defproc[#:link-target? #f (rename-file [old-fname string?] [new-fname string?] [override? (or/c #f 'query any/c) #f]) undefined]{
+If you override an existing object, then @var{old-fname} and @var{new-fname} must
+type-match---either both directories, or both non-directories. This is required by the semantics of
+Unix @code{rename()}.
+}
+
+@deftogether[(@defproc[#:link-target? #f (set-file-mode [fname/fd/port (or/c string? integer? fdport?)] [mode file-mode?]) undefined]
+              @defproc[#:link-target? #f (set-file-owner [fname/fd/port (or/c string? integer? fdport?)] [uid integer?]) undefined]
+              @defproc[#:link-target? #f (set-file-group [fname/fd/port (or/c string? integer? fdport?)] [gid integer?]) undefined])]{
+These procedures set the permission bits, owner id, and group id of a file, respectively. The file
+can be specified by giving the file name, or either an integer file descriptor or a port open on the
+file. Setting file user ownership usually requires root privileges.
+}
