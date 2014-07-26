@@ -650,3 +650,94 @@ Returns the time at which the file described by @var{finfo} last had its status 
 These procuders are a composition of @code{file-info} and its accessors. They allow more convenient
 access to file based information, without handling an intermediary file-info object.
 }
+
+@deftogether[(@defproc[#:link-target? #f (file-directory? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc[#:link-target? #f (file-fifo? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc[#:link-target? #f (file-regular? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc[#:link-target? #f (file-socket? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc[#:link-target? #f (file-special? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc[#:link-target? #f (file-symlink? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
+These procedures are file-type predicates that test the type of a given file. They are applied to
+the same arguments to which @code{file-info} is applied; the sole exception is @code{file-symlink?},
+which does not take the optional @var{chase?} second argument.
+}
+
+@deftogether[(@defproc[#:link-target? #f (file-info-directory? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-fifo? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-regular? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-socket? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-special? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-symlink? [file-info file-info?]) boolean?])]{
+These are variants of the file-type predicates which work directly on @code{file-info} records.
+}
+
+@deftogether[(@defproc[#:link-target? #f (file-not-readable? [fname/fd/port (or/c string? integer? fdport?)])
+                       (or/c #f 'search-denied 'permission 'no-directory 'nonexistent)]
+              @defproc[#:link-target? #f (file-not-writable? [fname/fd/port (or/c string? integer? fdport?)])
+                       (or/c #f 'search-denied 'permission 'no-directory 'nonexistent)]
+              @defproc[#:link-target? #f (file-not-executable? [fname/fd/port (or/c string? integer? fdport?)])
+                       (or/c #f 'search-denied 'permission 'no-directory 'nonexistent)])]{
+This set of procedures are a convenient means to work on the permission bits of a file. The meaning
+of their return values are as follows:
+
+@tabular[#:sep @hspace[2]
+         (list (list @code{#f} @nested{Access permitted})
+               (list @code{'search-denied} @nested{Can't stat --- a protected directory is blocking access})
+               (list @code{'permission} @nested{Permission denied.})
+               (list @code{'no-directory} @nested{Some directory doesn't exist.})
+               (list @code{'nonexistent} @nested{File doesn't exist.}))]
+
+A file is considered writeable if either (1) it exists and is writeable or (2) it doesn't exist and
+the directory is writeable. Since symlink permission bits are ignored by the filesystem, these calls
+do not take a @var{chase?} flag.
+
+Note that these procedures use the process' @emph{effective} user and group ids for permission
+checking. Posix defines an @code{access()} function that uses the process' real uid and gids. This
+is handy for setuid programs that would like to find out if the actual user has specific rights;
+scsh ought to provide this functionality (but doesn't at the current time).
+
+There are several problems with these procedures. First, there's an atomicity issue. In between
+checking permissions for a file and then trying an operation on the file, another process could
+change the permissions, so a return value from these functions guarantees nothing. Second, the code
+special-cases permission checking when the uid is root---if the file exists, root is assumed to have
+the requested permission. However, not even root can write a file that is on a read-only file
+system, such as a CD ROM. In this case, @code{file-not-writable?} will lie, saying that root has
+write access, when in fact the opening the file for write access will fail. Finally, write
+permission confounds write access and create access. These should be disentangled.
+
+Some of these problems could be avoided if Posix had a real-uid variant of the @code{access()} call
+we could use, but the atomicity issue is still a problem. In the final analysis, the only way to
+find out if you have the right to perform an operation on a file is to try and open it for the
+desired operation. These permission-checking functions are mostly intended for script-writing, where
+loose guarantees are tolerated.
+}
+
+@deftogether[(@defproc[#:link-target? #f (file-readable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?]
+              @defproc[#:link-target? #f (file-writable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?]
+              @defproc[#:link-target? #f (file-executable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
+These procedures are the logical negation of the preceding @code{file-not-}* procedures. Refer to those
+for a discussion of their problems and limitations. These procedures will only ever return @code{#t}
+or @code{#f}, and not the symbols giving specific reasons.
+}
+
+@deftogether[(@defproc[#:link-target? #f (file-info-not-readable? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-not-writable? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-not-executable? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-readable? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-writable? [file-info file-info?]) boolean?]
+              @defproc[#:link-target? #f (file-info-executable? [file-info file-info?]) boolean?])]{
+There are variants of the file permission predicates which work directly on @code{file-info}
+records.
+}
+
+@deftogether[(@defproc[#:link-target? #f (file-not-exists? [fname/fd/port (or/c string? integer? fdport?)]) (or/c boolean? 'search-denied)]
+              @defproc[#:link-target? #f (file-exists? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
+The meaning of the return values of @code{file-not-exists?} are as follows:
+
+@tabular[#:sep @hspace[2]
+         (list (list @code{#f} @nested{Exists})
+               (list @code{#t} @nested{Doesn't exist.})
+               (list @code{'search-denied} @nested{Some protected directory is blocking the search.}))]
+
+@code{file-exists?} is simply the logical negation of @code{file-not-exists?}.
+}
