@@ -53,7 +53,7 @@
        (with-cwd (create-temp-dir)
            (create-directory name mode)
            (let ((result (and (file-directory? name)
-                              (file-mode=? (file-info-mode name)
+                              (file-mode=? (file:mode name)
                                            (mask mode)))))
        (delete-filesys-object name)
        result)))
@@ -65,7 +65,7 @@
 	   (lambda (name)
             (with-cwd (create-temp-dir)
 			  (create-fifo name)
-			  (let ((result (eq? (file-info-type name)
+			  (let ((result (eq? (file:type name)
 					     'fifo)))
 			    (delete-filesys-object name)
 			    result)))
@@ -75,9 +75,9 @@
      (lambda (name mode)
        (with-cwd (create-temp-dir)
                  (create-fifo name mode)
-                 (let ((result (and (eq? (file-info-type name)
+                 (let ((result (and (eq? (file:type name)
                                          'fifo)
-                                    (file-mode=? (file-info-mode name)
+                                    (file-mode=? (file:mode name)
                                                  (mask mode)))))
        (delete-filesys-object name)
        result)))
@@ -104,9 +104,9 @@
 		       (create-file fname)
 		       (create-symlink fname linkname)
 		       (let ((result (and (file-exists? linkname)
-					  (eq? (file-info-type linkname #f)
+					  (eq? (file:type linkname #f)
 					       'symlink)
-					  (eq? (file-info-type linkname #t)
+					  (eq? (file:type linkname #t)
 					       'regular))))
 			 (delete-filesys-object fname)
 			 (delete-filesys-object linkname)
@@ -236,7 +236,7 @@
 			 #f
 			 (lambda (fname/fd/port mode)
 			   (set-file-mode fname/fd/port mode)
-			   (file-info-mode fname/fd/port))
+			   (file:mode fname/fd/port))
 			 file-mode=?
 			 '("file") `(,(file-mode owner group-read group-exec other-read)))
 
@@ -246,7 +246,7 @@
 			 #f
 			 (lambda (fname/fd/port uid)
 			   (set-file-owner fname/fd/port uid)
-			   (file-info-owner fname/fd/port))
+			   (file:owner fname/fd/port))
 			 equal?
 			 '("file") (list (user-uid)))
 
@@ -257,7 +257,7 @@
 			 #f
 			 (lambda (fname/fd/port gid)
 			   (set-file-group fname/fd/port gid)
-			   (file-info-group fname/fd/port))
+			   (file:group fname/fd/port))
 			 equal?
 			 '("file") (list (user-gid)))
 
@@ -268,7 +268,7 @@
 	     (with-cwd (create-temp-dir)
 		       (create-file fname)
 		       (set-file-times fname time-1 0)
-		       (let ((result (file-info-last-access fname)))
+		       (let ((result (file:last-access fname)))
 			 (delete-filesys-object fname)
 			 (= result time-1))))
 	   "file" 10000)
@@ -278,7 +278,7 @@
 	     (with-cwd (create-temp-dir)
 		       (create-file fname)
 		       (set-file-times fname 0 time-2)
-		       (let ((result (file-info-last-mod fname)))
+		       (let ((result (file:last-mod fname)))
 			 (delete-filesys-object fname)
 			 (= result time-2))))
 	   "file" 10000)
@@ -291,9 +291,9 @@
 		       (create-file fname)
 		       (let ((port (open-file fname (file-options write-only))))
 			 (display "1" port)
-			 (let ((res-1 (file-info-size fname)))
+			 (let ((res-1 (file:size fname)))
 			   (sync-file port)
-			   (let ((res-2 (file-info-size fname)))
+			   (let ((res-2 (file:size fname)))
 			     (close port)
 			     (delete-filesys-object fname)
 			     (and (= res-1 0) (> res-2 0)))))))
@@ -306,134 +306,114 @@
 			  (write (make-string 100 #\*) port))
 			(lambda (fname/fd/port len)
 			  (truncate-file fname/fd/port len)
-			  (file-info-size fname/fd/port))
+			  (file:size fname/fd/port))
 			=
 			'("file") '(10))
 
 ;; --- file-info stuff ---
 
-;; --- file-info-type ---
-
-(add-test! 'file-type-dir 'file-system
+(add-test! 'file:type-dir 'file-system
 	   (lambda (fname)
 	     (with-cwd (create-temp-dir)
 		       (create-directory fname)
-		       (let ((result (file-info-type fname)))
+		       (let ((result (file:type fname)))
 			 (delete-filesys-object fname)
 			 (equal? result 'directory))))
 	   "dir")
 
-(add-test! 'file-type-fifo 'file-system
+(add-test! 'file:type-fifo 'file-system
 	   (lambda (fname)
 	     (with-cwd (create-temp-dir)
 		       (create-fifo fname)
-		       (let ((result (file-info-type fname)))
+		       (let ((result (file:type fname)))
 			 (delete-filesys-object fname)
 			 (equal? result 'fifo))))
 	   "fifo")
 
-(add-test! 'file-type-regular 'file-system
+(add-test! 'file:type-regular 'file-system
 	   (lambda (fname)
 	     (with-cwd (create-temp-dir)
 		       (create-file fname)
-		       (let ((result (file-info-type fname)))
+		       (let ((result (file:type fname)))
 			 (delete-filesys-object fname)
 			 (equal? result 'regular))))
 	   "file")
 
-;; --- file-info-inode ---
 ;; only check for overrun (problem on AFS according to Martin)
-(add-test/fname/fd/port! 'file-inode
+(add-test/fname/fd/port! 'file:inode
 			 #f
 			 (lambda (fname/fd/port)
-			   (> 0 (file-info-inode fname/fd/port)))
+			   (> 0 (file:inode fname/fd/port)))
 			 '("file"))
 
-
-;; --- file-mode ---
-
-(add-test/fname/fd/port! 'file-mode
+(add-test/fname/fd/port! 'file:mode
 			 #f
 			 (lambda (fname/fd/port mode)
 			   (set-file-mode fname/fd/port mode)
-			   (file-info-mode fname/fd/port))
+			   (file:mode fname/fd/port))
 			 file-mode=?
 			 '("file") (list (file-mode owner group-read group-exec other-read)))
 
-;; --- file-info-nlinks ---
-
-(add-test/fname/fd/port! 'file-nlinks
+(add-test/fname/fd/port! 'file:nlinks
 			 #f
 			 (lambda (fname/fd/port fname1 fname2)
 			   (create-hard-link fname1 fname2)
-			   (let ((result (file-info-nlinks fname/fd/port)))
+			   (let ((result (file:nlinks fname/fd/port)))
 			     (delete-filesys-object fname2)
 			     (= result 2)))
 			 #f
 			 '("file-1") '("file-1") '("file-2"))
 
-;; --- file-info-owner ---
-
-(add-test/fname/fd/port! 'file-owner
+(add-test/fname/fd/port! 'file:owner
 			 #f
 			 (lambda (fname/fd/port uid)
 			   (set-file-owner fname/fd/port uid)
-			   (file-info-owner fname/fd/port))
+			   (file:owner fname/fd/port))
 			 equal?
 			 '("file") (list (user-uid)))
 
-
-;; --- file-info-group ---
-
-(add-test/fname/fd/port! 'file-group
+(add-test/fname/fd/port! 'file:group
 			 #f
 			 (lambda (fname/fd/port gid)
 			   (set-file-group fname/fd/port gid)
-			   (file-info-group fname/fd/port))
+			   (file:group fname/fd/port))
 			 equal?
 			 '("file") (list (user-gid)))
 
-;; --- file-info-size ---
-
-(add-test/fname/fd/port! 'file-size
+(add-test/fname/fd/port! 'file:size
 			 (lambda (port)
 			   (display "0123456789" port)
 			   (sync-file port))
-			 file-info-size
+			 file:size
 			 (lambda (res) (= res 10))
 			 '("file"))
 
-;; --- file-info-last-access ---
-
-(add-test/fname/fd/port! 'file-last-access
+(add-test/fname/fd/port! 'file:last-access
 			 #f
 			 (lambda (fname/fd/port fname atime)
 			   (set-file-times fname atime 0)
-			   (file-info-last-access fname/fd/port))
+			   (file:last-access fname/fd/port))
 			 (lambda (restime fname mtime)
 			   (= restime mtime))
 			 '("file") '("file") '(10000))
 
-;; --- file-info-last-mod ---
-
-(add-test/fname/fd/port! 'file-last-mod
+(add-test/fname/fd/port! 'file:last-mod
 			 #f
 			 (lambda (fname/fd/port fname mtime)
 			   (set-file-times fname 0 mtime)
-			   (file-info-last-mod fname/fd/port))
+			   (file:last-mod fname/fd/port))
 			 (lambda (restime fname mtime)
 			   (= restime mtime))
 			 '("file") '("file") '(10000))
 
-;; -- file-info-last-status-change ---
-(add-test/fname/fd/port! 'file-last-status-change
+(add-test/fname/fd/port! 'file:last-status-change
 			 #f
 			 (lambda (fname/fd/port)
-			   (let ((before (file-info-last-status-change
+			   (let ((before (file:last-status-change
 					  fname/fd/port)))
 			     ;; do anything
 			     (set-file-mode fname/fd/port (file-mode all))
-			     (let ((after (file-info-last-status-change
+			     (let ((after (file:last-status-change
 					   fname/fd/port)))
 			       (> after before) ;; how much??
 			       )))
@@ -557,8 +537,8 @@
            (lambda (fname linkname)
              (create-file fname)
              (create-symlink fname linkname)
-             (let ((result (file-info-type linkname #f))
-                   (result-2 (file-info-type linkname #t)))
+             (let ((result (file:type linkname #f))
+                   (result-2 (file:type linkname #t)))
                (delete-filesys-object linkname)
                (delete-filesys-object fname)
                (and (equal? result 'symlink)

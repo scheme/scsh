@@ -307,17 +307,7 @@
                           char-ready?
                           read-char))
         (modify posix-files (hide file-type
-                                  file-info?
-                                  file-info-type
-                                  file-info-group
-                                  file-info-inode
-                                  file-info-last-access
-                                  file-info-last-mod
-                                  file-info-last-status-change
-                                  file-info-mode
-                                  file-info-nlinks
-                                  file-info-owner
-                                  file-info-size))
+                                  file-info?))
         (subset os-strings (os-string->string))
         (subset scsh-utilities (define-simple-syntax deprecated-proc real->exact-integer))
         (subset signals (error))

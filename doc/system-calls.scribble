@@ -576,3 +576,77 @@ Calling @code{sync-file} causes Unix to update the disk data structures for a gi
 @defproc[#:link-target? #f (truncate-file [fname/fd/port (or/c string? integer? fdport?)] [len integer?]) undefined]{
 Truncate the specified file to @var{len} bytes in length.
 }
+
+@defproc[#:link-target? #f (file-info [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) file-info?]{
+Returns a record structure containing everything there is to know about a file. If the @var{chase?}
+flag is true (the default), then the procedure chases symlinks and reports on the files to which
+they refer. If @var{chase?} is false, then the procedure checks the actual file itself, even if it's
+a symlink. The @var{chase?} flag is ignored if the file argument is a file descriptor or port.
+
+The value returned is a @emph{file-info record}, whose accessors are defined in this chapter.
+}
+
+@defproc[#:link-target? #f (file-info:type [finfo file-info?])
+         (or/c 'block-special 'char-special 'directory 'fifo 'regular 'socket 'symlink)]{
+Returns a symbol denoting the type of the file described by @var{finfo}.
+}
+
+@defproc[#:link-target? #f (file-info:device [finfo file-info?]) integer?]{
+Returns an integer denoting the device that the file described by @var{finfo} resides on.
+}
+
+@defproc[#:link-target? #f (file-info:inode [finfo file-info?]) integer?]{
+Returns an integer denoting the file system inode that points to the file described by @var{finfo}.
+}
+
+@defproc[#:link-target? #f (file-info:mode [finfo file-info?]) file-mode?]{
+Returns a file-mode object describing the permissions set on the file described by @var{finfo}.
+}
+
+@defproc[#:link-target? #f (file-info:nlinks [finfo file-info?]) integer?]{
+Returns the number of hard links to the file described by @var{finfo}.
+}
+
+@defproc[#:link-target? #f (file-info:uid [finfo file-info?]) integer?]{
+Returns user id of the owner of the file file described by @var{finfo}.
+}
+
+@defproc[#:link-target? #f (file-info:gid [finfo file-info?]) integer?]{
+Returns the group id of the file described by @var{finfo}.
+}
+
+@defproc[#:link-target? #f (file-info:size [finfo file-info?]) integer?]{
+Returns the size in bytes of the file described by @var{finfo}.
+}
+
+@defproc[#:link-target? #f (file-info:size [finfo file-info?]) integer?]{
+Returns the time at which the file described by @var{finfo} was last accessed.
+}
+
+@defproc[#:link-target? #f (file-info:atime [finfo file-info?]) integer?]{
+Returns the time at which the file described by @var{finfo} was last accessed.
+}
+
+@defproc[#:link-target? #f (file-info:mtime [finfo file-info?]) integer?]{
+Returns the time at which the file described by @var{finfo} was last modified.
+}
+
+@defproc[#:link-target? #f (file-info:ctime [finfo file-info?]) integer?]{
+Returns the time at which the file described by @var{finfo} last had its status changed.
+}
+
+@deftogether[(@defproc[#:link-target? #f (file:type [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t])
+                       (or/c 'block-special 'char-special 'directory 'fifo 'regular 'socket 'symlink)]
+              @defproc[#:link-target? #f (file:device [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc[#:link-target? #f (file:inode [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc[#:link-target? #f (file:mode [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) file-mode?]
+              @defproc[#:link-target? #f (file:nlinks [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc[#:link-target? #f (file:uid [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc[#:link-target? #f (file:gid [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc[#:link-target? #f (file:size [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc[#:link-target? #f (file:atime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc[#:link-target? #f (file:mtime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc[#:link-target? #f (file:ctime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?])]{
+These procuders are a composition of @code{file-info} and its accessors. They allow more convenient
+access to file based information, without handling an intermediary file-info object.
+}
