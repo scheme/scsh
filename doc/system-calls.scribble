@@ -786,3 +786,68 @@ These functions implement a direct interface to the @code{opendir()} / @code{rea
 @code{(read-directory-stream directory-stream)} returns the next file in the stream or @code{#f} if
 no such file exists. Finally, @code{(close-directory-stream directory-stream)} closes the stream.
 }
+
+@defproc[#:link-target? #f (glob [pattern string?] ...) (listof string)]{
+@margin-note{Why bother to mention such a silly possibility? Because that is what sh does.}
+Glob each pattern against the filesystem and return the sorted list. Duplicates are not removed.
+Patterns matching nothing are not included literally.
+
+C shell {a,b,c} patterns are expanded. Backslash quotes characters, turning off the
+special meaning of {, }, @code{*}, [, ], and ?.
+
+Note that the rules of backslash for Scheme strings and glob patterns work together to require four
+backslashes in a row to specify a single literal backslash. Fortunately, it is very rare that a
+backslash occurs in a Unix file name.
+
+A glob subpattern will not match against dot files unless the first character of the subpattern is a
+literal ".". Further, a dot subpattern will not match the files @code{"."} or @code{".."}
+unless it is a constant pattern, as in @code{(glob "../*/*.c")}. So a directory's dot files can be
+reliably generated with the simple glob pattern @code{".*"}.
+
+Some examples.
+
+All the C and #include files in my directory:
+@codeblock{(glob "*.c" "*.h")}
+
+All the C files in this directory and its immediate subdirectories:
+@codeblock{(glob "*.c" "*/*.c")}
+
+All the C files in the lexer and parser dirs:
+@codeblock{(glob "lexer/*.c" "parser/*.c")
+           (glob "{lexer,parser}/*.c")}
+
+All the C files in the strange directory @code{"{lexer,parser}"}:
+@codeblock{(glob "\\{lexer,parser\\}/*.c")}
+
+All the files ending in @code{"*"}, e.g. @code{("foo*" "bar*")}:
+@codeblock{(glob "*\\*")}
+
+All files containing the string @code{"lexer"}, e.g. @code{("mylexer.c" "lexer1.notes")}:
+@codeblock{(glob "*lexer*")}
+
+Either @code{("lexer")} or @code{()}:
+@codeblock{(glob "lexer")}
+
+If the first character of the pattern (after expanding braces) is a slash, the search begins at
+root; otherwise, the search begins in the current working directory.
+
+If the last character of the pattern (after expanding braces) is a slash, then the result matches
+must be directories, e.g.
+
+@codeblock{(glob "/usr/man/man?/") => ("/usr/man/man1/" "/usr/man/man2/" ...)}
+
+Globbing can sometimes be useful when we need a list of a directory's files where each element in
+the list includes the pathname for the file.
+
+Compare:
+@codeblock{(directory-files "../include") => ("cig.h" "decls.h" ...)}
+
+@codeblock{(glob "../include/*") => ("../include/cig.h" "../include/decls.h" ...)}
+}
+
+@defproc[#:link-target? #f (glob-quote [pattern string?]) string?]{
+Returns a constant glob pattern that exactly matches @var{pattern}. All wild-card characters in
+@var{pattern} are quoted with a backslash.
+
+@codeblock{(glob-quote "Any *.c files?") => "Any \\*.c files\\?"}
+}
