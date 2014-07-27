@@ -539,9 +539,10 @@ argv))
 
 (define-interface scsh-directories-interface
   (export open-directory-stream
-	  close-directory-stream
-	  read-directory-stream
-	  directory-files))
+          close-directory-stream
+          read-directory-stream
+          directory-stream?
+          directory-files))
 
 (define-interface weak-tables-interface
   (export make-weak-table weak-table-set! weak-table-ref weak-table-walk

@@ -173,6 +173,7 @@
                 (expose open-directory-stream
                         close-directory-stream
                         read-directory-stream
+                        directory-stream?
                         list-directory))
         scsh-file-names
         scsh-resources
