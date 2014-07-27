@@ -247,9 +247,6 @@
           glob-quote
           maybe-directory-files))
 
-(define-interface scsh-file-matching-interface
-  (export file-match))
-
 (define-interface scsh-temp-files-interface
   (export create-temp-file
           temp-file-iterate

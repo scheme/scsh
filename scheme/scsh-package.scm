@@ -364,16 +364,6 @@
         scsh-directories)
   (files glob))
 
-(define-structure scsh-file-matching scsh-file-matching-interface
-  (open scheme
-        re-level-0
-        signals handle conditions
-        (subset srfi-1 (filter))
-        (subset srfi-13 (string-index-right))
-        scsh-file-names
-        scsh-globbing)
-  (files filemtch))
-
 (define-structure scsh-process-objects scsh-process-objects-interface
   (open scheme
         receiving
@@ -651,7 +641,6 @@
                         scsh-io-interface
                         scsh-file-interface
                         scsh-globbing-interface
-                        scsh-file-matching-interface
                         scsh-temp-files-interface
                         scsh-directories-interface
                         scsh-process-state-interface
@@ -717,7 +706,6 @@
         scsh-file
         scsh-temp-files
         scsh-globbing
-        scsh-file-matching
         scsh-process-objects
         scsh-processes
         scsh-fdports
