@@ -1,5 +1,7 @@
 #lang scribble/manual
 
+@(require "def-with-nolink.rkt")
+
 @title{System Calls}
 Scsh provides (almost) complete access to the basic Unix kernel services: processes, files, signals
 and so forth.  These procedures comprise a Scheme binding for Posix, with a few of the more standard
@@ -30,13 +32,13 @@ For reference purposes, the Unix @code{errno} numbers are bound to the variables
 @code{errno/noent}, etc. System calls never return \@code{error/intr}---they automatically retry.
 
 @; update this function and this section to use legit errnos.
-@defproc[#:link-target? #f (errno-error [errno integer?] [syscall string?] [data any/c] ...) any]{
+@defproc/nolink[(errno-error [errno integer?] [syscall string?] [data any/c] ...) any]{
 Raises a Unix error exception for Unix error number @var{errno}. The @var{syscall} and @var{data}
 arguments are packaged up in the exception packet passed to the exception handler.
 }
 
-@deftogether[(@defform[#:link-target? #f (with-errno-handler handler-spec ... body)]
-              @defproc[#:link-target? #f (with-errno-handler* [handler (-> integer? (listof any/c) (values any/c ...))]
+@deftogether[(@defform/nolink[(with-errno-handler handler-spec ... body)]
+              @defproc/nolink[(with-errno-handler* [handler (-> integer? (listof any/c) (values any/c ...))]
                                                               [thunk (-> (values any/c ...))])
                        (values any/c ...)])]{
 Unix syscalls raise error exceptions by calling @code{errno-error}. Programs can use
@@ -131,30 +133,30 @@ since these functions require the ability to read ahead in the input stream, a f
 by Unix I/O.
 
 @subsection{Port Manipulation and Standard Ports}
-@defproc[#:link-target? #f (close-after [port port?] [consumer (-> port? any)]) any]{
+@defproc/nolink[(close-after [port port?] [consumer (-> port? any)]) any]{
 Returns @code{(consumer port)}, but closes the port on return. No dynamic-wind magic.
 }
 
-@defproc[#:link-target? #f (error-output-port) port?]{
+@defproc/nolink[(error-output-port) port?]{
 This procedure is analogous to @code{current-output-port}, but produces a port used for error
 messages---the scsh equivalent of stderr.
 }
 
-@deftogether[(@defproc[#:link-target? #f (with-current-input-port* [port port?] [thunk (-> any)]) any]
-              @defproc[#:link-target? #f (with-current-output-port* [port port?] [thunk (-> any)]) any]
-              @defproc[#:link-target? #f (with-error-output-port* [port port?] [thunk (-> any)]) any])]{
+@deftogether[(@defproc/nolink[(with-current-input-port* [port port?] [thunk (-> any)]) any]
+              @defproc/nolink[(with-current-output-port* [port port?] [thunk (-> any)]) any]
+              @defproc/nolink[(with-error-output-port* [port port?] [thunk (-> any)]) any])]{
 These procedures install @var{port} as the current input, current output, and error output port,
 respectively, for the duration of a call to @var{thunk} and return @var{thunk}'s value(s).
 }
 
-@deftogether[(@defform[#:link-target? #f (with-current-input-port port body ...+)]
-              @defform[#:link-target? #f (with-current-output-port port body ...+)]
-              @defform[#:link-target? #f (with-error-output-port port body ...+)])]{
+@deftogether[(@defform/nolink[(with-current-input-port port body ...+)]
+              @defform/nolink[(with-current-output-port port body ...+)]
+              @defform/nolink[(with-error-output-port port body ...+)])]{
 These special forms are simply syntactic sugar for the @code{with-current-input-port*} procedure and
 friends.
 }
 
-@defproc[#:link-target? #f (close [fd/port (or/c integer? port?)]) boolean?]{
+@defproc/nolink[(close [fd/port (or/c integer? port?)]) boolean?]{
 Closes the port or file descriptor.
 
 If @var{fd/port} is a file descriptor, and it has a port allocated to it, the port is shifted to a
@@ -172,7 +174,7 @@ The procedure returns true if it closed an open port. If the port was already cl
 false; this is not an error.
 }
 
-@defproc[#:link-target? #f (stdports->stdio) undefined]{
+@defproc/nolink[(stdports->stdio) undefined]{
 Synchronises Unix' standard I/O file descriptors and Scheme's current I/O ports. Causes the standard
 I/O file descriptors (0, 1, and 2) take their values from the current I/O ports. It is exactly
 equivalent to the series of redirections:
@@ -185,8 +187,8 @@ equivalent to the series of redirections:
 same port.}
 }
 
-@deftogether[(@defproc[#:link-target? #f (with-stdio-ports* [thunk (-> any)]) any]
-              @defform[#:link-target? #f (with-stdio-ports body ...+)])]{
+@deftogether[(@defproc/nolink[(with-stdio-ports* [thunk (-> any)]) any]
+              @defform/nolink[(with-stdio-ports body ...+)])]{
 @code{with-stdio-ports*} binds the standard ports @code{(current-input-port)},
 @code{(current-output-port)}, and @code{(error-output-port)} to be ports on file descriptors 0, 1,
 2, and then calls @var{thunk}. It is equivalent to:
@@ -205,17 +207,17 @@ names that scheme48 uses, so be warned that the interface described herein may b
 @; ^ isn't there a SRFI for this? change wording or remove if so
 
 
-@defproc[#:link-target? #f (make-string-input-port [string string?]) port?]{
+@defproc/nolink[(make-string-input-port [string string?]) port?]{
 Returns a port that reads characters from the supplied string.
 }
 
-@deftogether[(@defproc[#:link-target? #f (make-string-output-port) port?]
-              @defproc[#:link-target? #f (string-output-port-output [port port?]) string?])]{
+@deftogether[(@defproc/nolink[(make-string-output-port) port?]
+              @defproc/nolink[(string-output-port-output [port port?]) string?])]{
 A string output port is a port that collects the characters given to it into a string. The
 accumulated string is retrieved by applying @code{string-output-port-output} to the port.
 }
 
-@defproc[#:link-target? #f (call-with-string-output-port [procedure (-> port? any)]) string?]{
+@defproc/nolink[(call-with-string-output-port [procedure (-> port? any)]) string?]{
 The @var{procedure} value is called on a port. When it returns, @code{call-with-string-output-port}
 returns a string containing the characters that were written to that port during the execution of
 @var{procedure}.
@@ -362,26 +364,26 @@ Here are the routines for manipulating ports in scsh. The important points to re
 
 These rules are what is necessary to ``make things work out'' with no surprises in the general case.
 
-@deftogether[(@defproc[#:link-target? #f (fdes->inport [fd integer?]) port?]
-              @defproc[#:link-target? #f (fdes->outport [fd integer?]) port?])]{
+@deftogether[(@defproc/nolink[(fdes->inport [fd integer?]) port?]
+              @defproc/nolink[(fdes->outport [fd integer?]) port?])]{
 These guys return an input or output port respecitvely, backed by @var{fd}. The returned port has
 its revealed count set to 1.
 }
 
 @; will need to export fdport? if we use it as a predicate here.
-@defproc[#:link-target? #f (port->fdes [port fdport?]) integer?]{
+@defproc/nolink[(port->fdes [port fdport?]) integer?]{
 Returns the file descriptor backing @var{port} and increments its revealed count by 1.
 }
 
-@defproc[#:link-target? #f (port-revealed [port fdport?]) (or/c integer? #f)]{
+@defproc/nolink[(port-revealed [port fdport?]) (or/c integer? #f)]{
 Return the port's revealed count if positive, otherwise #f.
 }
 
-@defproc[#:link-target? #f (release-port-handle [port fdport?]) undefined]{
+@defproc/nolink[(release-port-handle [port fdport?]) undefined]{
 Decrement @var{port}'s revealed count.
 }
 
-@defproc[#:link-target? #f (call/fdes [fd/port (or/c integer? fdport?)]
+@defproc/nolink[(call/fdes [fd/port (or/c integer? fdport?)]
                                       [consumer (-> integer? any)]) any]{
 Calls @var{consumer} on a file descriptor; takes care of revealed bookkeeping. If @var{fd/port} is a
 file descriptor, this is just @code{(consumer fd/port)}. If @var{fd/port} is a port, calls
@@ -392,7 +394,7 @@ When @code{call/fdes} is called with port argument, you are not allowed to throw
 with a stored continuation, as that would violate the revealed-count bookkeeping.
 }
 
-@defproc[#:link-target? #f (move->fdes [fd/port (or/c integer? fdport?)] [target-fd integer?])
+@defproc/nolink[(move->fdes [fd/port (or/c integer? fdport?)] [target-fd integer?])
          (or/c integer? fdport?)]{
 Maps fd -> fd and port ->port.
 
@@ -458,12 +460,12 @@ the OS implementation. The return value is the resulting position of the I/O cur
 stream.
 }
 
-@defproc[#:link-target? #f (tell [fd integer?]) integer?]{
+@defproc/nolink[(tell [fd integer?]) integer?]{
 Returns the position of the I/O cursor in the the I/O stream. Not all file descriptors support
 cursor-reporting; this is dependent on the OS implementation.
 }
 
-@defproc[#:link-target? #f (open-file [fname string?] [options file-options?] [mode file-mode? (filemode read write)]) fdport?]{
+@defproc/nolink[(open-file [fname string?] [options file-options?] [mode file-mode? (filemode read write)]) fdport?]{
 @var{options} is a file-option? (ref). You must use exactly one of the options @code{read-only},
 @code{write-only}, or @code{read-write}. The returned port is an input port if the @var{options}
 permit it, otherwise an output port. scheme48/scsh do not have input/output ports, so it's one
@@ -471,8 +473,8 @@ or the other. You can hack simultaneous I/O on a file by opening it r/w, taking 
 port, and duping it to an output port with @code{dup->outport}.
 }
 
-@deftogether[(@defproc[#:link-target? #f (open-input-file [fname string?] [options file-options? (file-options)]) port?]
-              @defproc[#:link-target? #f (open-output-file [fname string?]
+@deftogether[(@defproc/nolink[(open-input-file [fname string?] [options file-options? (file-options)]) port?]
+              @defproc/nolink[(open-output-file [fname string?]
                                                            [options file-options? (file-options create truncate)]
                                                            [mode file-mode? (filemode read write)]) port?])]{
 These are equivalent to @code{open-file}, after first including @code{read-only} or
@@ -480,19 +482,19 @@ These are equivalent to @code{open-file}, after first including @code{read-only}
 @var{options} make the procedures backwards-compatible with their unary RnRS definitions.
 }
 
-@defproc[#:link-target? #f (pipe) (values [rport fdport?] [wport fdport?])]{
+@defproc/nolink[(pipe) (values [rport fdport?] [wport fdport?])]{
 Returns two ports @var{rport} and @var{wport}, the read and write endpoints respectively of a Unix
 pipe.
 }
 
 @subsection{Buffered I/O}
 
-@defproc[#:link-target? #f (force-output [fd/port (or/c integer? fdport?)]) undefined]{
+@defproc/nolink[(force-output [fd/port (or/c integer? fdport?)]) undefined]{
 This procedure does nothing when applied to an integer file descriptor. It flushes buffered output
 when applied to a port, and raises a write-error exception on error. Returns no value.
 }
 
-@defproc[#:link-target? #f (flush-all-ports) undefined]{
+@defproc/nolink[(flush-all-ports) undefined]{
 This procedure flushes all open output ports with buffered data.
 }
 
@@ -501,10 +503,10 @@ Besides the procedures in this section, which allow access to the computer's fil
 provides a set of procedures which manipulate file @emph{names}. These string-processing procedures
 are documented in @; TODO @secref["manipulating-filenames"]
 
-@deftogether[(@defproc[#:link-target? #f (create-directory [fname string?] [mode file-mode? (file-mode all)] [override? (or/c #f 'query any/c) #f]) undefined]
-              @defproc[#:link-target? #f (create-fifo [fname string?] [mode file-mode? (file-mode all)] [override? (or/c #f 'query any/c) #f]) undefined]
-              @defproc[#:link-target? #f (create-hard-link [oldname string?] [newname string?] [override? (or/c #f 'query any/c) #f]) undefined]
-              @defproc[#:link-target? #f (create-symlink [oldname string?] [newname string?] [override? (or/c #f 'query any/c) #f]) undefined])]{
+@deftogether[(@defproc/nolink[(create-directory [fname string?] [mode file-mode? (file-mode all)] [override? (or/c #f 'query any/c) #f]) undefined]
+              @defproc/nolink[(create-fifo [fname string?] [mode file-mode? (file-mode all)] [override? (or/c #f 'query any/c) #f]) undefined]
+              @defproc/nolink[(create-hard-link [oldname string?] [newname string?] [override? (or/c #f 'query any/c) #f]) undefined]
+              @defproc/nolink[(create-symlink [oldname string?] [newname string?] [override? (or/c #f 'query any/c) #f]) undefined])]{
 These procedures create objects of various kinds in the file system. The @var{override?} argument
 controls the action if there is already an object in the file system with the new name:
 
@@ -518,9 +520,9 @@ controls the action if there is already an object in the file system with the ne
 @var{mode} defaults to @code{(file-mode all)} (but is masked by the current umask).
 }
 
-@deftogether[(@defproc[#:link-target? #f (delete-directory [fname string?]) undefined]
-              @defproc[#:link-target? #f (delete-file [fname string?]) undefined]
-              @defproc[#:link-target? #f (delete-filesys-object [fname string?]) undefined])]{
+@deftogether[(@defproc/nolink[(delete-directory [fname string?]) undefined]
+              @defproc/nolink[(delete-file [fname string?]) undefined]
+              @defproc/nolink[(delete-filesys-object [fname string?]) undefined])]{
 These procedures delete objects from the filesystem. The @code{delete-filesys-object} procedure will
 delete an object of any type from the file system: files, (empty) directories, symlinks, fifos, etc.
 
@@ -528,7 +530,7 @@ If the object being deleted doesn't exist, @code{delete-directory} and @code{del
 error, while delete-filesys-object simply returns.
 }
 
-@defproc[#:link-target? #f (read-symlink [fname string?]) string?]{
+@defproc/nolink[(read-symlink [fname string?]) string?]{
 Return the filename referenced by the symbolic link @var{fname}.
 }
 
@@ -539,21 +541,21 @@ Return the filename referenced by the symbolic link @var{fname}.
              semantics of Unix @code{rename()}; at least it is highly unlikely to occur in
              practice.}
 
-@defproc[#:link-target? #f (rename-file [old-fname string?] [new-fname string?] [override? (or/c #f 'query any/c) #f]) undefined]{
+@defproc/nolink[(rename-file [old-fname string?] [new-fname string?] [override? (or/c #f 'query any/c) #f]) undefined]{
 If you override an existing object, then @var{old-fname} and @var{new-fname} must
 type-match---either both directories, or both non-directories. This is required by the semantics of
 Unix @code{rename()}.
 }
 
-@deftogether[(@defproc[#:link-target? #f (set-file-mode [fname/fd/port (or/c string? integer? fdport?)] [mode file-mode?]) undefined]
-              @defproc[#:link-target? #f (set-file-owner [fname/fd/port (or/c string? integer? fdport?)] [uid integer?]) undefined]
-              @defproc[#:link-target? #f (set-file-group [fname/fd/port (or/c string? integer? fdport?)] [gid integer?]) undefined])]{
+@deftogether[(@defproc/nolink[(set-file-mode [fname/fd/port (or/c string? integer? fdport?)] [mode file-mode?]) undefined]
+              @defproc/nolink[(set-file-owner [fname/fd/port (or/c string? integer? fdport?)] [uid integer?]) undefined]
+              @defproc/nolink[(set-file-group [fname/fd/port (or/c string? integer? fdport?)] [gid integer?]) undefined])]{
 These procedures set the permission bits, owner id, and group id of a file, respectively. The file
 can be specified by giving the file name, or either an integer file descriptor or a port open on the
 file. Setting file user ownership usually requires root privileges.
 }
 
-@defproc[#:link-target? #f (set-file-times [fname string?]
+@defproc/nolink[(set-file-times [fname string?]
                                            [access-time integer? (current-time)]
                                            [mod-time integer? (current-time)]) undefined]{
 @var{fname} to the supplied values (see (link to sec:time) for the scsh representation of time). If
@@ -566,18 +568,18 @@ times or neither. If the procedure completes successfully, the file's time of la
              See your OS's documentation for @code{sync(2)} and @code{fsync(2)} respectively for
              specifics}
 
-@deftogether[(@defproc[#:link-target? #f (sync-file [fd/port (or/c integer? fdport?)]) undefined]
-              @defproc[#:link-target? #f (sync-file-system) undefined])]{
+@deftogether[(@defproc/nolink[(sync-file [fd/port (or/c integer? fdport?)]) undefined]
+              @defproc/nolink[(sync-file-system) undefined])]{
 Calling @code{sync-file} causes Unix to update the disk data structures for a given file. If
 @var{fd/port} is a port, any buffered data it may have is first flushed. Calling
 @code{sync-file-system} synchronises the kernel's entire file system with the disk.
 }
 
-@defproc[#:link-target? #f (truncate-file [fname/fd/port (or/c string? integer? fdport?)] [len integer?]) undefined]{
+@defproc/nolink[(truncate-file [fname/fd/port (or/c string? integer? fdport?)] [len integer?]) undefined]{
 Truncate the specified file to @var{len} bytes in length.
 }
 
-@defproc[#:link-target? #f (file-info [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) file-info?]{
+@defproc/nolink[(file-info [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) file-info?]{
 Returns a record structure containing everything there is to know about a file. If the @var{chase?}
 flag is true (the default), then the procedure chases symlinks and reports on the files to which
 they refer. If @var{chase?} is false, then the procedure checks the actual file itself, even if it's
@@ -586,96 +588,96 @@ a symlink. The @var{chase?} flag is ignored if the file argument is a file descr
 The value returned is a @emph{file-info record}, whose accessors are defined in this chapter.
 }
 
-@defproc[#:link-target? #f (file-info:type [finfo file-info?])
+@defproc/nolink[(file-info:type [finfo file-info?])
          (or/c 'block-special 'char-special 'directory 'fifo 'regular 'socket 'symlink)]{
 Returns a symbol denoting the type of the file described by @var{finfo}.
 }
 
-@defproc[#:link-target? #f (file-info:device [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:device [finfo file-info?]) integer?]{
 Returns an integer denoting the device that the file described by @var{finfo} resides on.
 }
 
-@defproc[#:link-target? #f (file-info:inode [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:inode [finfo file-info?]) integer?]{
 Returns an integer denoting the file system inode that points to the file described by @var{finfo}.
 }
 
-@defproc[#:link-target? #f (file-info:mode [finfo file-info?]) file-mode?]{
+@defproc/nolink[(file-info:mode [finfo file-info?]) file-mode?]{
 Returns a file-mode object describing the permissions set on the file described by @var{finfo}.
 }
 
-@defproc[#:link-target? #f (file-info:nlinks [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:nlinks [finfo file-info?]) integer?]{
 Returns the number of hard links to the file described by @var{finfo}.
 }
 
-@defproc[#:link-target? #f (file-info:uid [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:uid [finfo file-info?]) integer?]{
 Returns user id of the owner of the file file described by @var{finfo}.
 }
 
-@defproc[#:link-target? #f (file-info:gid [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:gid [finfo file-info?]) integer?]{
 Returns the group id of the file described by @var{finfo}.
 }
 
-@defproc[#:link-target? #f (file-info:size [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:size [finfo file-info?]) integer?]{
 Returns the size in bytes of the file described by @var{finfo}.
 }
 
-@defproc[#:link-target? #f (file-info:size [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:size [finfo file-info?]) integer?]{
 Returns the time at which the file described by @var{finfo} was last accessed.
 }
 
-@defproc[#:link-target? #f (file-info:atime [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:atime [finfo file-info?]) integer?]{
 Returns the time at which the file described by @var{finfo} was last accessed.
 }
 
-@defproc[#:link-target? #f (file-info:mtime [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:mtime [finfo file-info?]) integer?]{
 Returns the time at which the file described by @var{finfo} was last modified.
 }
 
-@defproc[#:link-target? #f (file-info:ctime [finfo file-info?]) integer?]{
+@defproc/nolink[(file-info:ctime [finfo file-info?]) integer?]{
 Returns the time at which the file described by @var{finfo} last had its status changed.
 }
 
-@deftogether[(@defproc[#:link-target? #f (file:type [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t])
+@deftogether[(@defproc/nolink[(file:type [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t])
                        (or/c 'block-special 'char-special 'directory 'fifo 'regular 'socket 'symlink)]
-              @defproc[#:link-target? #f (file:device [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
-              @defproc[#:link-target? #f (file:inode [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
-              @defproc[#:link-target? #f (file:mode [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) file-mode?]
-              @defproc[#:link-target? #f (file:nlinks [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
-              @defproc[#:link-target? #f (file:uid [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
-              @defproc[#:link-target? #f (file:gid [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
-              @defproc[#:link-target? #f (file:size [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
-              @defproc[#:link-target? #f (file:atime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
-              @defproc[#:link-target? #f (file:mtime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
-              @defproc[#:link-target? #f (file:ctime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?])]{
+              @defproc/nolink[(file:device [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc/nolink[(file:inode [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc/nolink[(file:mode [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) file-mode?]
+              @defproc/nolink[(file:nlinks [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc/nolink[(file:uid [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc/nolink[(file:gid [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc/nolink[(file:size [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc/nolink[(file:atime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc/nolink[(file:mtime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?]
+              @defproc/nolink[(file:ctime [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) integer?])]{
 These procuders are a composition of @code{file-info} and its accessors. They allow more convenient
 access to file based information, without handling an intermediary file-info object.
 }
 
-@deftogether[(@defproc[#:link-target? #f (file-directory? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
-              @defproc[#:link-target? #f (file-fifo? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
-              @defproc[#:link-target? #f (file-regular? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
-              @defproc[#:link-target? #f (file-socket? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
-              @defproc[#:link-target? #f (file-special? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
-              @defproc[#:link-target? #f (file-symlink? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
+@deftogether[(@defproc/nolink[(file-directory? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc/nolink[(file-fifo? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc/nolink[(file-regular? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc/nolink[(file-socket? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc/nolink[(file-special? [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) boolean?]
+              @defproc/nolink[(file-symlink? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
 These procedures are file-type predicates that test the type of a given file. They are applied to
 the same arguments to which @code{file-info} is applied; the sole exception is @code{file-symlink?},
 which does not take the optional @var{chase?} second argument.
 }
 
-@deftogether[(@defproc[#:link-target? #f (file-info-directory? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-fifo? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-regular? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-socket? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-special? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-symlink? [file-info file-info?]) boolean?])]{
+@deftogether[(@defproc/nolink[(file-info-directory? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-fifo? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-regular? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-socket? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-special? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-symlink? [file-info file-info?]) boolean?])]{
 These are variants of the file-type predicates which work directly on @code{file-info} records.
 }
 
-@deftogether[(@defproc[#:link-target? #f (file-not-readable? [fname/fd/port (or/c string? integer? fdport?)])
+@deftogether[(@defproc/nolink[(file-not-readable? [fname/fd/port (or/c string? integer? fdport?)])
                        (or/c #f 'search-denied 'permission 'no-directory 'nonexistent)]
-              @defproc[#:link-target? #f (file-not-writable? [fname/fd/port (or/c string? integer? fdport?)])
+              @defproc/nolink[(file-not-writable? [fname/fd/port (or/c string? integer? fdport?)])
                        (or/c #f 'search-denied 'permission 'no-directory 'nonexistent)]
-              @defproc[#:link-target? #f (file-not-executable? [fname/fd/port (or/c string? integer? fdport?)])
+              @defproc/nolink[(file-not-executable? [fname/fd/port (or/c string? integer? fdport?)])
                        (or/c #f 'search-denied 'permission 'no-directory 'nonexistent)])]{
 This set of procedures are a convenient means to work on the permission bits of a file. The meaning
 of their return values are as follows:
@@ -712,26 +714,26 @@ desired operation. These permission-checking functions are mostly intended for s
 loose guarantees are tolerated.
 }
 
-@deftogether[(@defproc[#:link-target? #f (file-readable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?]
-              @defproc[#:link-target? #f (file-writable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?]
-              @defproc[#:link-target? #f (file-executable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
+@deftogether[(@defproc/nolink[(file-readable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?]
+              @defproc/nolink[(file-writable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?]
+              @defproc/nolink[(file-executable? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
 These procedures are the logical negation of the preceding @code{file-not-}* procedures. Refer to those
 for a discussion of their problems and limitations. These procedures will only ever return @code{#t}
 or @code{#f}, and not the symbols giving specific reasons.
 }
 
-@deftogether[(@defproc[#:link-target? #f (file-info-not-readable? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-not-writable? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-not-executable? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-readable? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-writable? [file-info file-info?]) boolean?]
-              @defproc[#:link-target? #f (file-info-executable? [file-info file-info?]) boolean?])]{
+@deftogether[(@defproc/nolink[(file-info-not-readable? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-not-writable? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-not-executable? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-readable? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-writable? [file-info file-info?]) boolean?]
+              @defproc/nolink[(file-info-executable? [file-info file-info?]) boolean?])]{
 There are variants of the file permission predicates which work directly on @code{file-info}
 records.
 }
 
-@deftogether[(@defproc[#:link-target? #f (file-not-exists? [fname/fd/port (or/c string? integer? fdport?)]) (or/c boolean? 'search-denied)]
-              @defproc[#:link-target? #f (file-exists? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
+@deftogether[(@defproc/nolink[(file-not-exists? [fname/fd/port (or/c string? integer? fdport?)]) (or/c boolean? 'search-denied)]
+              @defproc/nolink[(file-exists? [fname/fd/port (or/c string? integer? fdport?)]) boolean?])]{
 The meaning of the return values of @code{file-not-exists?} are as follows:
 
 @tabular[#:sep @hspace[2]
@@ -742,7 +744,7 @@ The meaning of the return values of @code{file-not-exists?} are as follows:
 @code{file-exists?} is simply the logical negation of @code{file-not-exists?}.
 }
 
-@defproc[#:link-target? #f (directory-files [dir string? (cwd)] [dotfiles? boolean? #f]) (listof string?)]{
+@defproc/nolink[(directory-files [dir string? (cwd)] [dotfiles? boolean? #f]) (listof string?)]{
 Return the list of files in directory @var{dir}, which defaults to the current working directory.
 The @var{dotfiles?} flag causes dot files to be included in the list. Regardless of the value of
 @var{dotfiles?}, the two files @code{"."} and @code{".."} are @emph{never} returned.
@@ -775,10 +777,10 @@ filenames with whitespace in their names will be split into separate entries.
 @code{directory-files} is reliable.
 }
 
-@deftogether[(@defproc[#:link-target? #f (open-directory-stream [dir string?]) directory-stream?]
-              @defproc[#:link-target? #f (directory-stream? [maybe-directory-stream any/c]) boolean?]
-              @defproc[#:link-target? #f (read-directory-stream [directory-stream directory-stream?]) (or/c string? #f)]
-              @defproc[#:link-target? #f (close-directory-stream [directory-stream directory-stream?]) undefined])]{
+@deftogether[(@defproc/nolink[(open-directory-stream [dir string?]) directory-stream?]
+              @defproc/nolink[(directory-stream? [maybe-directory-stream any/c]) boolean?]
+              @defproc/nolink[(read-directory-stream [directory-stream directory-stream?]) (or/c string? #f)]
+              @defproc/nolink[(close-directory-stream [directory-stream directory-stream?]) undefined])]{
 These functions implement a direct interface to the @code{opendir()} / @code{readdir()} /
 @code{closedir()} family of functions for processing directory streams.
 @code{(open-directory-stream dir)} creates a stream of files in the directory @var{dir}.
@@ -787,7 +789,7 @@ These functions implement a direct interface to the @code{opendir()} / @code{rea
 no such file exists. Finally, @code{(close-directory-stream directory-stream)} closes the stream.
 }
 
-@defproc[#:link-target? #f (glob [pattern string?] ...) (listof string)]{
+@defproc/nolink[(glob [pattern string?] ...) (listof string)]{
 @margin-note{Why bother to mention such a silly possibility? Because that is what sh does.}
 Glob each pattern against the filesystem and return the sorted list. Duplicates are not removed.
 Patterns matching nothing are not included literally.
@@ -845,7 +847,7 @@ Compare:
 @codeblock{(glob "../include/*") => ("../include/cig.h" "../include/decls.h" ...)}
 }
 
-@defproc[#:link-target? #f (glob-quote [pattern string?]) string?]{
+@defproc/nolink[(glob-quote [pattern string?]) string?]{
 Returns a constant glob pattern that exactly matches @var{pattern}. All wild-card characters in
 @var{pattern} are quoted with a backslash.
 
