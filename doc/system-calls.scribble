@@ -475,8 +475,8 @@ port, and duping it to an output port with @code{dup->outport}.
 
 @deftogether[(@defproc/nolink[(open-input-file [fname string?] [options file-options? (file-options)]) port?]
               @defproc/nolink[(open-output-file [fname string?]
-                                                           [options file-options? (file-options create truncate)]
-                                                           [mode file-mode? (filemode read write)]) port?])]{
+                                                [options file-options? (file-options create truncate)]
+                                                [mode file-mode? (file-mode read write)]) port?])]{
 These are equivalent to @code{open-file}, after first including @code{read-only} or
 @code{write-only} options, respectively, in the @var{options} argument. The default values for
 @var{options} make the procedures backwards-compatible with their unary RnRS definitions.
