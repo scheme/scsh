@@ -1054,13 +1054,15 @@
   (files lib-dirs))
 
 (define-structure scsh-user
-  (compound-interface (interface-of floatnums)
+  (compound-interface (interface-of fluids)
+                      (interface-of floatnums)
                       (interface-of srfi-1)
                       (interface-of srfi-13)
                       (interface-of srfi-14)
                       (interface-of scsh)
                       (interface-of scheme))
-  (open floatnums
+  (open fluids
+        floatnums
         srfi-1
         srfi-13
         srfi-14
