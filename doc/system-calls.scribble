@@ -503,6 +503,7 @@ Besides the procedures in this section, which allow access to the computer's fil
 provides a set of procedures which manipulate file @emph{names}. These string-processing procedures
 are documented in @; TODO @secref["manipulating-filenames"]
 
+@subsection{Manipulating Filesystem Objects}
 @deftogether[(@defproc/nolink[(create-directory [fname string?] [mode file-mode? (file-mode all)] [override? (or/c #f 'query any/c) #f]) undefined]
               @defproc/nolink[(create-fifo [fname string?] [mode file-mode? (file-mode all)] [override? (or/c #f 'query any/c) #f]) undefined]
               @defproc/nolink[(create-hard-link [oldname string?] [newname string?] [override? (or/c #f 'query any/c) #f]) undefined]
@@ -579,6 +580,7 @@ Calling @code{sync-file} causes Unix to update the disk data structures for a gi
 Truncate the specified file to @var{len} bytes in length.
 }
 
+@subsection{Querying File Information}
 @defproc/nolink[(file-info [fname/fd/port (or/c string? integer? fdport?)] [chase? any/c #t]) file-info?]{
 Returns a record structure containing everything there is to know about a file. If the @var{chase?}
 flag is true (the default), then the procedure chases symlinks and reports on the files to which
@@ -744,6 +746,7 @@ The meaning of the return values of @code{file-not-exists?} are as follows:
 @code{file-exists?} is simply the logical negation of @code{file-not-exists?}.
 }
 
+@subsection{Traversing Directories}
 @defproc/nolink[(directory-files [dir string? (cwd)] [dotfiles? boolean? #f]) (listof string?)]{
 Return the list of files in directory @var{dir}, which defaults to the current working directory.
 The @var{dotfiles?} flag causes dot files to be included in the list. Regardless of the value of
@@ -789,6 +792,7 @@ These functions implement a direct interface to the @code{opendir()} / @code{rea
 no such file exists. Finally, @code{(close-directory-stream directory-stream)} closes the stream.
 }
 
+@subsection{Globbing}
 @defproc/nolink[(glob [pattern string?] ...) (listof string)]{
 @margin-note{Why bother to mention such a silly possibility? Because that is what sh does.}
 Glob each pattern against the filesystem and return the sorted list. Duplicates are not removed.
@@ -854,6 +858,7 @@ Returns a constant glob pattern that exactly matches @var{pattern}. All wild-car
 @codeblock{(glob-quote "Any *.c files?") => "Any \\*.c files\\?"}
 }
 
+@subsection{Temporary Files}
 @defproc/nolink[(create-temp-file [prefix string? (fluid *temp-file-template*)]) string?]{
 @code{create-temp-file} creates a new temporary file and return its name. The optional argument
 specifies the filename prefix to use, and defaults to the value of @code{"$TMPDIR/<pid>"} if
