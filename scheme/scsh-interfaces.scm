@@ -37,11 +37,6 @@
 	  %stat-file %stat-fdes
 	  %sync-file %sync-file-system))
 
-(define buffered-io-flags-interface
-  (export ((bufpol/block
-            bufpol/line
-            bufpol/none) :number)))
-
 (define-interface scsh-newports-interface
   (export call/fdes
 	  sleazy-call/fdes
@@ -53,7 +48,6 @@
 	  close-fdes
 	  make-input-fdport
 	  make-output-fdport
-	  open-fdes
 	  close
 	  seek/set
 	  open-file
@@ -93,117 +87,81 @@
 	  open-output-file
           init-fdports!))
 
-(define-interface scsh-read/write-interface
-  (export read-string/partial
-	  read-string!/partial
-	  read-string read-string!
-	  write-string
-	  write-string/partial))
-
-(define-interface scsh-flock-interface
-  (export lock-region?
-	  lock-region:exclusive?
-	  lock-region:whence
-	  lock-region:start
-	  lock-region:len
-	  lock-region:pid		; Deprecated proc.
-	  lock-region:proc
-	  make-lock-region
-
-	  lock-region
-	  lock-region/no-block
-	  get-lock-region
-	  unlock-region
-	  with-region-lock*
-	  (with-region-lock :syntax)))
-
 (define-interface scsh-io-interface
-  (compound-interface buffered-io-flags-interface
-                      (export close
-                              close-after
-                              current-error-port
-                              error-output-port
-                              dup
-                              dup->inport
-                              dup->outport
-                              dup->fdes
+  (export close
+          close-after
+          current-error-port
+          error-output-port
+          dup
+          dup->inport
+          dup->outport
+          dup->fdes
 
-                              force-output
-                              bufpol/block
-                              bufpol/line
-                              bufpol/none
+          force-output
 
-                              seek
-                              tell
-                              seek/set
-                              seek/delta
-                              seek/end
+          seek
+          tell
+          seek/set
+          seek/delta
+          seek/end
 
-                              flush-all-ports
-                              flush-all-ports-no-threads
-                              ;; R4RS I/O procedures that scsh provides.
-                              write
-                              char-ready?
-                              read-char
-                              write-char
-                              display
-                              newline
-                              input-port?
-                              output-port?
-                              call-with-input-file
-                              call-with-output-file
-                              with-input-from-file
-                              with-output-to-file
-                              open-input-file
-                              open-output-file
-                              format
+          flush-all-ports
+          flush-all-ports-no-threads
+          ;; R4RS I/O procedures that scsh provides.
+          write
+          char-ready?
+          read-char
+          write-char
+          display
+          newline
+          input-port?
+          output-port?
+          call-with-input-file
+          call-with-output-file
+          with-input-from-file
+          with-output-to-file
+          open-input-file
+          open-output-file
+          format
 
-                              fork-pty-session
-                              open-pty
-                              pty-name->tty-name
-                              tty-name->pty-name
-                              make-pty-generator
+          fork-pty-session
+          open-pty
+          pty-name->tty-name
+          tty-name->pty-name
+          make-pty-generator
 
-                              init-fdports!
+          init-fdports!
 
-                              with-current-input-port*
-                              (with-current-input-port :syntax)
-                              with-current-output-port*
-                              (with-current-output-port :syntax)
-                              with-current-error-port*
-                              (with-current-error-port :syntax)
-                              with-error-output-port*
-                              (with-error-output-port :syntax)
-                              ;; set-current-input-port!
-                              ;; set-current-output-port!
-                              ;; set-current-error-port!
-                              ;; set-error-output-port!
+          with-current-input-port*
+          (with-current-input-port :syntax)
+          with-current-output-port*
+          (with-current-output-port :syntax)
+          with-current-error-port*
+          (with-current-error-port :syntax)
+          with-error-output-port*
+          (with-error-output-port :syntax)
+          ;; set-current-input-port!
+          ;; set-current-output-port!
+          ;; set-current-error-port!
+          ;; set-error-output-port!
 
-                              stdports->stdio
-                              with-stdio-ports*
-                              (with-stdio-ports :syntax)
+          stdports->stdio
+          with-stdio-ports*
+          (with-stdio-ports :syntax)
 
-                              call/fdes
-                              release-port-handle
-                              port-revealed
-                              fdes->inport
-                              fdes->outport
-                              move->fdes
-                              open-fdes
-                              pipe
-                              port->string
-                              port->sexp-list
-                              port->string-list
-                              port->list
-                              port-fold reduce-port
-                              port->fdes
-                              read-string
-                              read-string!
-                              read-string/partial
-                              read-string!/partial
-
-                              (write-string (proc (:string &opt :value :exact-integer :exact-integer) :unspecific))
-                              write-string/partial)))
+          call/fdes
+          release-port-handle
+          port-revealed
+          fdes->inport
+          fdes->outport
+          move->fdes
+          pipe
+          port->string
+          port->sexp-list
+          port->string-list
+          port->list
+          port-fold reduce-port
+          port->fdes))
 
 
 (define-interface scsh-file-interface
@@ -240,16 +198,16 @@
           file-info:atime
           file-info:mtime
           file-info:ctime
-          file-type
-          file-group
-          file-inode
-          file-last-access
-          file-last-mod
-          file-last-status-change
-          file-mode
-          file-nlinks
-          file-owner
-          file-size
+          file:type
+          file:group
+          file:inode
+          file:last-access
+          file:last-mod
+          file:last-status-change
+          file:mode
+          file:nlinks
+          file:owner
+          file:size
           file-symlink?
           file-directory?
           file-fifo?
@@ -288,9 +246,6 @@
   (export glob
           glob-quote
           maybe-directory-files))
-
-(define-interface scsh-file-matching-interface
-  (export file-match))
 
 (define-interface scsh-temp-files-interface
   (export create-temp-file
@@ -346,6 +301,7 @@
           dup->fdes dup->inport dup->outport
           shell-open
           create+trunc
+          write+append+create
           read-only))
 
 (define-interface scsh-process-state-interface
@@ -581,9 +537,10 @@ argv))
 
 (define-interface scsh-directories-interface
   (export open-directory-stream
-	  close-directory-stream
-	  read-directory-stream
-	  directory-files))
+          close-directory-stream
+          read-directory-stream
+          directory-stream?
+          directory-files))
 
 (define-interface weak-tables-interface
   (export make-weak-table weak-table-set! weak-table-ref weak-table-walk

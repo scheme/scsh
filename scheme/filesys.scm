@@ -58,26 +58,25 @@
 ;;;;;;;
 
 (define (create-directory dir . rest)
-  (let ((perms (if (null? rest) #o777 (car rest)))
-	(override? (if (or (null? rest) (null? (cdr rest))) #f
-		       (cadr rest))))
+  (let-optionals rest ((mode (file-mode all))
+                       (override? #f))
     (create-file-thing dir
-		       (lambda (dir)
-                         (make-directory dir (integer->file-mode perms)))
-		       override?
-		       "create-directory"
-		       create-directory)))
+                       (lambda (dir)
+                         (make-directory dir mode))
+                       override?
+                       "create-directory"
+                       create-directory)))
+
 
 (define (create-fifo fifo . rest)
-  (let ((perms (if (null? rest) #o777 (car rest)))
-	(override? (if (or (null? rest) (null? (cdr rest))) #f
-		       (cadr rest))))
+  (let-optionals rest ((mode (file-mode all))
+                       (override? #f))
     (create-file-thing fifo
-		       (lambda (fifo)
-                         (make-fifo fifo (integer->file-mode perms))) ;from posix-files
-		       override?
-		       "create-fifo"
-		       create-fifo)))
+           (lambda (fifo)
+             (make-fifo fifo mode))
+           override?
+           "create-fifo"
+           create-fifo)))
 
 (define (create-hard-link old-fname new-fname . maybe-override?)
   (create-file-thing new-fname

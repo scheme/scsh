@@ -99,26 +99,25 @@
 ;;; Open & Close
 ;;; ------------
 
-(define (open-file fname flags . maybe-mode)
+(define (open-file fname options . maybe-mode)
   (let ((port
          (with-resources-aligned
           (list cwd-resource umask-resource euid-resource egid-resource)
           (lambda ()
-            (s48-open-file fname flags
-                           (:optional maybe-mode (integer->file-mode #o666)))))))
+            (s48-open-file fname options (:optional maybe-mode (file-mode read write)))))))
     (set-fdport! (port->fd port) port 0)
     port))
 
-(define (open-input-file fname . maybe-flags)
-  (let ((flags (:optional maybe-flags (file-options))))
-    (open-file fname (file-options-union flags (file-options read-only)))))
+(define (open-input-file fname . maybe-options)
+  (let ((options (:optional maybe-options (file-options))))
+    (open-file fname (file-options-union options (file-options read-only)))))
 
 (define (open-output-file fname . rest)
-  (let* ((flags (if (pair? rest) (car rest)
-		    (file-options create truncate))) ; default
-	 (maybe-mode (if (null? rest) '() (cdr rest)))
-	 (flags (file-options-union flags (file-options write-only))))
-    (apply open-file fname flags maybe-mode)))
+  (let* ((options (if (pair? rest) (car rest)
+                      (file-options create truncate))) ; default
+         (maybe-mode (if (null? rest) '() (cdr rest)))
+         (options (file-options-union options (file-options write-only))))
+    (apply open-file fname options maybe-mode)))
 
 (define (increment-revealed-count port delta)
   (atomically!
@@ -371,19 +370,13 @@
 (define seek/delta 1)
 (define seek/end 2)
 
-(define (seek fd/port offset . maybe-whence)
-  (if (and (open-input-port? fd/port)
-           (> (byte-vector-length (port-buffer fd/port)) 1))
-      (error "Seek does currently not work on buffered ports" fd/port))
-  (if (and (open-output-port? fd/port)
-           (> (byte-vector-length (port-buffer fd/port)) 0))
-      (error "Seek does currently not work on buffered ports" fd/port))
+(define (seek fd offset . maybe-whence)
   (let ((whence (:optional maybe-whence seek/set))
-        (fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
+        (fd (check-arg integer? fd seek)))
     (%fd-seek fd offset whence)))
 
-(define (tell fd/port)
-  (let ((fd (if (integer? fd/port) fd/port (port->fdes fd/port))))
+(define (tell fd)
+  (let ((fd (check-arg integer? fd tell)))
     (%fd-seek fd 0 seek/delta)))
 
 (define (mumble-with-mumble-file open call)
@@ -405,12 +398,6 @@
 
 (define with-output-to-file
   (mumble-with-mumble-file open-output-file (lambda (thunk port) (call-with-current-output-port port thunk))))
-
-(define (open-fdes path flags . maybe-mode) ; mode defaults to 0666
-    (with-resources-aligned
-     (list cwd-resource umask-resource euid-resource egid-resource)
-     (lambda ()
-      (%open path flags (:optional maybe-mode #o666)))))
 
 (import-lambda-definition-2 pipe-fdes () "scheme_pipe")
 

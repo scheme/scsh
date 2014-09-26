@@ -27,8 +27,8 @@
           #f
           (string<= f1 f2))))
 
-(define (read-directory-stream directory)
-  (let ((dir-stream (s48-read-directory-stream directory)))
-    (if dir-stream
-        (os-string->string dir-stream)
-        dir-stream)))
+(define (read-directory-stream dir-stream)
+  (let ((file (s48-read-directory-stream dir-stream)))
+    (if file
+        (os-string->string file)
+        file)))

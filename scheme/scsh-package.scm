@@ -86,11 +86,6 @@
         scheme)
   (files syntax-helpers))
 
-;;; The bufpol/{block, line, none} values
-(define-structure buffered-io-flags buffered-io-flags-interface
-  (open defenum-package scheme)
-  (files bufpol))
-
 (define-structure waitcodes
   (export wait/poll
           wait/stopped-children
@@ -178,6 +173,7 @@
                 (expose open-directory-stream
                         close-directory-stream
                         read-directory-stream
+                        directory-stream?
                         list-directory))
         scsh-file-names
         scsh-resources
@@ -263,7 +259,7 @@
                 (expose open-file
                         file-options
                         file-options-union
-                        integer->file-mode))
+                        file-mode))
         (subset architecture (channel-status-option))
         (subset interrupts (enable-interrupts!
                             disable-interrupts!
@@ -280,7 +276,7 @@
                                          search-tree-ref))
         (subset condvars (make-condvar condvar-value))
         extended-ports
-        scsh-utilities buffered-io-flags
+        scsh-utilities
         signals
         threads
         (subset srfi-1 (any filter))
@@ -311,8 +307,7 @@
                           write-char
                           char-ready?
                           read-char))
-        (modify posix-files (hide file-mode
-                                  file-type
+        (modify posix-files (hide file-type
                                   file-info?))
         (subset os-strings (os-string->string))
         (subset scsh-utilities (define-simple-syntax deprecated-proc real->exact-integer))
@@ -347,7 +342,7 @@
         fluids
         (subset scsh-utilities (make-reinitializer))
         (subset signals (error))
-        (subset posix-files (integer->file-mode file-options))
+        (subset posix-files (file-options file-mode))
         scsh-environment
         scsh-errnos
         scsh-process-state
@@ -368,43 +363,6 @@
         scsh-file
         scsh-directories)
   (files glob))
-
-(define-structure scsh-file-matching scsh-file-matching-interface
-  (open scheme
-        re-level-0
-        signals handle conditions
-        (subset srfi-1 (filter))
-        (subset srfi-13 (string-index-right))
-        scsh-file-names
-        scsh-globbing)
-  (files filemtch))
-
-(define-structure scsh-read/write scsh-read/write-interface
-  (open (modify scheme (hide call-with-input-file
-                             call-with-output-file
-                             with-input-from-file
-                             with-output-to-file
-                             write
-                             display
-                             char-ready?
-                             read-char
-                             write-char
-                             newline
-                             open-input-file
-                             open-output-file))
-        bitwise
-        (subset primitives (copy-bytes!))
-        let-opt
-        signals
-        scsh-newports
-        buffered-io-flags
-        (subset os-strings (string->os-byte-vector))
-        (subset posix-i/o (i/o-flags))
-        (subset posix-files (file-options file-options-on?))
-        (subset scsh-utilities (bogus-substring-spec?))
-        (subset i/o (read-block write-block))
-        (subset i/o-internal (open-input-port?)))
-  (files rw))
 
 (define-structure scsh-process-objects scsh-process-objects-interface
   (open scheme
@@ -453,7 +411,7 @@
                              open-output-file))
         signals
         bitwise
-        (subset posix-files (file-options integer->file-mode))
+        (subset posix-files (file-options file-mode))
         (subset posix-i/o (dup2))
         (subset scsh-utilities (check-arg stringify))
         scsh-file-syscalls
@@ -622,7 +580,6 @@
         reduce
         (subset scsh-utilities (deprecated-proc))
         (subset srfi-1 (reverse!))
-        scsh-read/write
         delimited-readers
         string-collectors)
   (files port-collect))
@@ -683,9 +640,7 @@
     (compound-interface scsh-delimited-readers-interface
                         scsh-io-interface
                         scsh-file-interface
-                        scsh-read/write-interface
                         scsh-globbing-interface
-                        scsh-file-matching-interface
                         scsh-temp-files-interface
                         scsh-directories-interface
                         scsh-process-state-interface
@@ -734,7 +689,6 @@
         receiving
         bitwise
         delimited-readers
-        buffered-io-flags   ; stdio dependent
         ascii
         srfi-14
         scsh-version
@@ -750,10 +704,8 @@
         scsh-process-state
         scsh-newports
         scsh-file
-        scsh-read/write
         scsh-temp-files
         scsh-globbing
-        scsh-file-matching
         scsh-process-objects
         scsh-processes
         scsh-fdports
@@ -1102,13 +1054,15 @@
   (files lib-dirs))
 
 (define-structure scsh-user
-  (compound-interface (interface-of floatnums)
+  (compound-interface (interface-of fluids)
+                      (interface-of floatnums)
                       (interface-of srfi-1)
                       (interface-of srfi-13)
                       (interface-of srfi-14)
                       (interface-of scsh)
                       (interface-of scheme))
-  (open floatnums
+  (open fluids
+        floatnums
         srfi-1
         srfi-13
         srfi-14

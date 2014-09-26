@@ -8,11 +8,10 @@
 (add-test! 'with-umask 'process-state
 	   (lambda (new-umask)
 	     (let ((old-umask (umask)))
-	       (and
-		(with-umask new-umask
-			    (= (umask) new-umask))
-		(= (umask) old-umask))))
-	   0)
+	       (and (with-umask new-umask
+                (file-mode=? (umask) new-umask))
+              (file-mode=? (umask) old-umask))))
+	   (integer->file-mode 0))
 
 (add-test! 'set-umask 'process-state
 	   (lambda (new-umask)
@@ -20,8 +19,8 @@
 	       (set-umask new-umask)
 	       (let ((res (umask)))
 		 (set-umask old-umask)
-		 (= res new-umask))))
-	   7)
+		 (file-mode=? res new-umask))))
+     (file-mode other))
 
 ;; --- cwd stuff ---
 

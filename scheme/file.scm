@@ -11,9 +11,10 @@
       (call/fdes thing fd-op)))
 
 (define (set-file-mode thing mode)
-  (generic-file-op thing
-                   (lambda (fd)    (%set-fdes-mode fd    mode))
-                   (lambda (fname) (%set-file-mode fname mode))))
+  (let ((mode (file-mode->integer mode)))
+    (generic-file-op thing
+                     (lambda (fd)    (%set-fdes-mode fd    mode))
+                     (lambda (fname) (%set-file-mode fname mode)))))
 
 (define (set-file-owner thing uid)
   (generic-file-op thing

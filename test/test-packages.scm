@@ -19,14 +19,16 @@
 
 (define-structure file-system-test (export)
   (open scsh-user
-        (subset posix-files (file-options))
+        (subset posix-files (file-options file-mode file-mode=? file-mode-
+                             integer->file-mode file-mode->integer))
         (subset posix-i/o (port->fd))
         test-base)
   (files file-system-tests))
 
 (define-structure process-state-test (export)
   (open	scsh-user
-	test-base)
+        test-base
+        (subset posix-files (file-mode file-mode=? integer->file-mode)))
   (files process-state-tests))
 
 (define-structure env-test

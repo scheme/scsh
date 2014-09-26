@@ -51,7 +51,6 @@
   (mtime file-info:mtime)
   (ctime file-info:ctime))
 
-;;; Should be redone to return multiple-values.
 (define (%file-info fd/port/fname chase?)
   (let ((ans-vec (make-vector 11))
         (file-type (lambda (type-code)
@@ -66,7 +65,7 @@
     (make-file-info (file-type (vector-ref ans-vec 0))
                     (vector-ref ans-vec 1)
                     (vector-ref ans-vec 2)
-                    (vector-ref ans-vec 3)
+                    (integer->file-mode (bitwise-and #o777 (vector-ref ans-vec 3)))
                     (vector-ref ans-vec 4)
                     (vector-ref ans-vec 5)
                     (vector-ref ans-vec 6)
@@ -109,19 +108,17 @@
 
 (define (file-info-not-accessible? perms info)
   (let ((uid (user-effective-uid)))
-    (and (let ((acc (file-info:mode info)))
-	   (cond ((zero? uid) #f)	; Root can do as he wishes.
+    (and (let ((acc (file-mode->integer (file-info:mode info))))
+           (cond ((zero? uid) #f) ; Root can do as he wishes.
+                 ((= (file-info:uid info) (user-effective-uid)) ; User
+                  (zero? (bitwise-and acc (arithmetic-shift perms 6))))
 
-		 ((= (file-info:uid info) (user-effective-uid)) ; User
-		  (zero? (bitwise-and acc (arithmetic-shift perms 6))))
-
-		 ((or (= (file-info:gid info) (user-effective-gid)) ; Group
-		      (memv (file-info:gid info) (user-supplementary-gids)))
-		  (zero? (bitwise-and acc (arithmetic-shift perms 3))))
-
-		 (else			; Other
-		  (zero? (bitwise-and acc perms)))))
-	 'permission)))
+                 ((or (= (file-info:gid info) (user-effective-gid)) ; Group
+                      (memv (file-info:gid info) (user-supplementary-gids)))
+                  (zero? (bitwise-and acc (arithmetic-shift perms 3))))
+                 (else      ; Other
+                  (zero? (bitwise-and acc perms)))))
+         'permission)))
 
 ;;;;;;
 
@@ -181,24 +178,20 @@
 (define (file-exists? fd/port/fname . maybe-chase?)
   (not (apply file-not-exists? fd/port/fname maybe-chase?)))
 
-;;;;;;
-
-;;; stat and derived file-{mode,size,owner,group,times,inode,...} ops.
-
 (define-simple-syntax (define-stat-proc proc info-slot)
   (define (proc fname/fd/port . maybe-chase?)
     (info-slot (apply file-info fname/fd/port maybe-chase?))))
 
-(define-stat-proc file-type               file-info:type)
-(define-stat-proc file-group              file-info:gid)
-(define-stat-proc file-inode              file-info:inode)
-(define-stat-proc file-last-access        file-info:atime)
-(define-stat-proc file-last-mod           file-info:mtime)
-(define-stat-proc file-last-status-change file-info:ctime)
-(define-stat-proc file-mode               file-info:mode)
-(define-stat-proc file-nlinks             file-info:nlinks)
-(define-stat-proc file-owner              file-info:uid)
-(define-stat-proc file-size               file-info:size)
+(define-stat-proc file:type               file-info:type)
+(define-stat-proc file:group              file-info:gid)
+(define-stat-proc file:inode              file-info:inode)
+(define-stat-proc file:last-access        file-info:atime)
+(define-stat-proc file:last-mod           file-info:mtime)
+(define-stat-proc file:last-status-change file-info:ctime)
+(define-stat-proc file:mode               file-info:mode)
+(define-stat-proc file:nlinks             file-info:nlinks)
+(define-stat-proc file:owner              file-info:uid)
+(define-stat-proc file:size               file-info:size)
 
 (define (file-info-to-fname/fd/port predicate)
   (lambda (fname/fd/port . maybe-chase?)
