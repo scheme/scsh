@@ -301,6 +301,7 @@
           dup->fdes dup->inport dup->outport
           shell-open
           create+trunc
+          write+append+create
           read-only))
 
 (define-interface scsh-process-state-interface
