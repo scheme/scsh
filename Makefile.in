@@ -172,7 +172,7 @@ install-scsh: scsh
 
 install-scsh-image: install-scsh
 	$(srcdir)/build/build-image.sh $(srcdir) \
-		"$(DESTDIR)$(LIB)/" '$(DESTDIR)$(LIB)/scsh.image' '$(SCHEME48) -h 0' '$(LOADS)'
+		"$(LIB)/" '$(DESTDIR)$(LIB)/scsh.image' '$(SCHEME48) -h 0' '$(LOADS)'
 
 clean:
 	rm -rf c/*.o c/*.so c/*.dSYM *.sexpr scsh.image scsh go *.dSYM
