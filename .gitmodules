@@ -1,3 +1,3 @@
 [submodule "rx"]
 	path = rx
-	url = git://github.com/scheme/rx.git
+	url = https://github.com/scheme/rx.git
