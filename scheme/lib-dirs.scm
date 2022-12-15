@@ -75,6 +75,7 @@
               (let ((val (read)))
                 (cond ((eof-object? val) '())
                       ((string? val) (cons val (recur)))
+                      ((symbol? val) (cons (symbol->string val) (recur)))
                       ((not val) (append default-lib-dirs (recur)))
                       (else 
                        (error 
