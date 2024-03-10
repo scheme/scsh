@@ -35,7 +35,7 @@
 #endif
 
 #ifdef HAVE_UTIL_H
-#include <util.h>		/* openpty() on NetBSD */
+#include <util.h>		/* openpty() on NetBSD, macOS */
 #endif
 
 #ifndef countof
